@@ -1,0 +1,47 @@
+.option {
+    display: flex;
+}
+.optionText {
+    flex: 1;
+}
+.score {
+    width: 50px;
+    margin-left: 8px;
+    
+    & input {
+        font-family: monospace;
+    }
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
+.header {
+    display: flex;
+    align-items: flex-start;
+}
+.title {
+    flex: 1;
+}
+.action {
+    margin-left: 16px !important;
+}
+.add {
+    align-self: flex-start;
+}
+table.options {
+    &, & td {
+        border-collapse: collapse;
+        border: 1px solid #ddd;
+    }
+    border-radius: 4px;
+}
+
+.list {
+    margin: 40px 20px;
+    width: 800px;
+}
