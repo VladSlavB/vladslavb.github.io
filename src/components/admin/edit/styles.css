@@ -22,7 +22,7 @@ input[type=number] {
 }
 .header {
     display: flex;
-    align-items: flex-start;
+    align-items: baseline;
 }
 .title {
     flex: 1;
@@ -42,6 +42,6 @@ table.options {
 }
 
 .list {
-    margin: 40px 20px;
-    width: 800px;
+    padding: 40px 20px 100px;
+    max-width: 800px;
 }

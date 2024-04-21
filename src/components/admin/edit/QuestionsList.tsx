@@ -1,41 +1,42 @@
-import React, { useState } from 'react'
-import { useSelector } from '../../../store'
+import styles from './styles.css'
+import React, { useEffect, useState } from 'react'
+import { finishEditing, startAdding, startEditing, useDispatch, useSelector } from '../../../store'
 import Button from '@mui/joy/Button'
 import StaticQuestion from './StaticQuestion'
 import QuestionEdit from './QuestionEdit'
 import Stack from '@mui/joy/Stack'
 import Add from '@mui/icons-material/Add'
 
-import styles from './styles.css'
-
-type Mode = 
-| {action: 'view'}
-| {action: 'edit', index: number}
-| {action: 'add'}
-
 const QuestionsList: React.FC = () => {
   const numQuestions = useSelector(state => state.questions.length)
-  const [ mode, setMode ] = useState<Mode>({action: 'view'})
+  const editor = useSelector(state => state.editor)
+  const gameActive = useSelector(state => state.game.active)
+  useEffect(() => {
+    if (editor.mode === 'add') {
+      window.scrollTo(0, document.body.clientHeight)
+    }
+  }, [editor.mode])
+  const dispatch = useDispatch()
 
   return (
     <Stack spacing={2} className={styles.list}>
       {Array(numQuestions).fill(0).map((_, index) => (
-        (mode.action === 'edit' && index === mode.index) ? (
-          <QuestionEdit editIndex={index} onDone={() => setMode({action: 'view'})} key={index} />
+        (editor.mode === 'edit' && index === editor.index) ? (
+          <QuestionEdit editIndex={index} onDone={() => dispatch(finishEditing())} key={index} />
         ) : (
           <StaticQuestion
-            index={index} onEdit={() => setMode({action: 'edit', index})} key={index}
-            canEdit={mode.action === 'view'}
+            index={index} onEdit={() => dispatch(startEditing(index))} key={index}
+            canEdit={editor.mode === 'view' && !gameActive}
           />
         )
       ))}
-      {mode.action === 'add' && (
-        <QuestionEdit onDone={() => setMode({action: 'view'})} />
+      {editor.mode === 'add' && (
+        <QuestionEdit onDone={() => dispatch(finishEditing())} />
       )}
-      {mode.action === 'view' && (
+      {editor.mode === 'view' && !gameActive && (
         <Button
           className={styles.add} size='lg' variant='soft' startDecorator={<Add />}
-          onClick={() => setMode({action: 'add'})}
+          onClick={() => dispatch(startAdding())}
         >
           Добавить вопрос
         </Button>

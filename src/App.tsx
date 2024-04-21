@@ -1,5 +1,5 @@
 import React from 'react'
-import PublicScreen from './screens/PublicScreen'
+import GameScreen from './screens/GameScreen'
 import store from './store'
 import { Provider } from 'react-redux'
 import AdminScreen from './screens/AdminScreen'
@@ -13,7 +13,7 @@ const App: React.FC = () => {
   return (
     <Provider store={showPublicScreen ? opener.store : store}>
       {showPublicScreen ? (
-        <PublicScreen />
+        <GameScreen />
       ) : (
         <AdminScreen />
       )}

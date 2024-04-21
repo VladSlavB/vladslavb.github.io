@@ -38,20 +38,46 @@ const questionsSlice = createSlice({
 
 export const { addQuestion, removeQuestion, editQuestion } = questionsSlice.actions
 
+type EditorMode =
+| {mode: 'view'}
+| {mode: 'edit', index: number}
+| {mode: 'add'}
+
+const editorSlice = createSlice({
+  name: 'editor',
+  initialState: {mode: 'view'} as EditorMode,
+  reducers: {
+    startEditing(_, action: PayloadAction<number>) {
+      return {mode: 'edit', index: action.payload}
+    },
+    finishEditing(_) {
+      return {mode: 'view'}
+    },
+    startAdding(_) {
+      return {mode: 'add'}
+    }
+  }
+})
+
+export const { startEditing, finishEditing, startAdding } = editorSlice.actions
+
+const GAME_INITIAL_STATE = {
+  active: false,
+  currentQuestion: -1,
+  leftTeam: {
+    score: 0,
+    health: 3,
+  },
+  rightTeam: {
+    score: 0,
+    health: 3,
+  },
+  currentTeam: 'leftTeam' as 'leftTeam' | 'rightTeam'
+}
+
 const gameSlice = createSlice({
   name: 'game',
-  initialState: {
-    currentQuestion: -1,
-    leftTeam: {
-      score: 0,
-      health: 3,
-    },
-    rightTeam: {
-      score: 0,
-      health: 3,
-    },
-    currentTeam: 'leftTeam' as 'leftTeam' | 'rightTeam'
-  },
+  initialState: GAME_INITIAL_STATE,
   reducers: {
     nextQuestion(state) {
       state.currentQuestion++
@@ -71,23 +97,31 @@ const gameSlice = createSlice({
     },
     minusHealth(state) {
       state[state.currentTeam].health--
+    },
+    startGame(state) {
+      state.active = true
+    },
+    finishGame(_) {
+      return GAME_INITIAL_STATE
     }
   }
 })
 
-export const { nextQuestion, previousQuestion, toggleCurrentTeam, addScore, minusHealth } = gameSlice.actions
+export const {
+  nextQuestion, previousQuestion, toggleCurrentTeam, addScore, minusHealth,
+  startGame, finishGame,
+} = gameSlice.actions
 
 const store = configureStore({
   reducer: {
     [questionsSlice.name]: questionsSlice.reducer,
-    [gameSlice.name]: gameSlice.reducer
+    [gameSlice.name]: gameSlice.reducer,
+    [editorSlice.name]: editorSlice.reducer
   }
 })
 export default store
 
 type RootState = ReturnType<typeof store.getState>
 type AppDispatch = typeof store.dispatch
-type Store = typeof store
 export const useDispatch: () => AppDispatch = useOriginalDispatch
 export const useSelector: TypedUseSelectorHook<RootState> = useOriginalSelector
-export const useStore: () => Store = useOriginalStore

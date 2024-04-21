@@ -138,10 +138,10 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
           </TwoColumns>
           <Grid xs={12}>
             <Stack direction='row' spacing={1}>
-              <Button variant='outlined' color='neutral' onClick={setAscendingScores}>
+              <Button variant='outlined' color='neutral' onClick={setAscendingScores} size='sm'>
                 Установить очки 1 &#10230; {NUM_OPTIONS}
               </Button>
-              <Button variant='outlined' color='neutral' onClick={setDescendingScores}>
+              <Button variant='outlined' color='neutral' onClick={setDescendingScores} size='sm'>
                 Установить очки {NUM_OPTIONS} &#10230; 1
               </Button>
             </Stack>

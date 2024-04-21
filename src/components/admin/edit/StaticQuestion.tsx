@@ -17,28 +17,33 @@ type Props = {
 const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const question = useSelector(state => state.questions[index])
   const dispatch = useDispatch()
+  const gameActive = useSelector(state => state.game.active)
+  const currentQuestion = useSelector(state => state.game.currentQuestion)
+  const variant = gameActive && index === currentQuestion ? 'soft' : 'outlined'
 
   return (
-    <Card variant='outlined'>
+    <Card variant={variant}>
       <Stack spacing={2}>
         <div className={styles.header}>
-          <Typography level='h1' className={styles.title}>{question.value}</Typography>
+          <Typography level='title-lg' className={styles.title}>{question.value}</Typography>
           {canEdit && (
-            <Button onClick={onEdit} variant='outlined' className={styles.action}>Редактировать</Button>
+            <>
+              <Button onClick={onEdit} variant='outlined' className={styles.action}>Редактировать</Button>
+              <Button
+                onClick={() => dispatch(removeQuestion(index))}
+                variant='outlined' color='danger' className={styles.action}
+              >
+                Удалить
+              </Button>
+            </>
           )}
-          <Button
-            onClick={() => dispatch(removeQuestion(index))}
-            variant='outlined' color='danger' className={styles.action}
-          >
-            Удалить
-          </Button>
         </div>
         <table className={styles.options}>
           <TwoColumns>
             {question.options.map((option, i) => (
-              <Box sx={{p: 0.5}}>
+              <Box sx={{p: 0.5}} key={i}>
                 <Stack direction='row' spacing={2} alignItems='baseline'>
-                  <Typography>{`${i + 1}. `}<b>{option.value}</b></Typography>
+                  <Typography>{option.value}</Typography>
                   <Typography variant='soft'>{option.score}{option.withBonus && '*'}</Typography>
                 </Stack>
               </Box>
@@ -64,12 +69,12 @@ function TwoColumns({children}: {children: JSX.Element[]}) {
     rows.push(row)
   }
   return (
-    <>
+    <tbody>
       {rows.map((row, i) => (
         <tr key={i}>{row.map((cell, j) => (
           <td key={j}>{cell}</td>
         ))}</tr>
       ))}
-    </>
+    </tbody>
   )
 }
