@@ -2,10 +2,11 @@ import styles from './styles.css'
 import React, { useEffect, useRef, useState } from 'react'
 import QuestionsList from '../components/admin/edit/QuestionsList'
 import Button from '@mui/joy/Button/Button'
-import { finishGame, startGame, useDispatch, useSelector } from '../store'
+import { closeAllOptions, finishGame, startGame, useDispatch, useSelector } from '../store'
 import ControlPanel from '../components/admin/play/ControlPanel'
 import OpenInNew from '@mui/icons-material/OpenInNew'
 import Stack from '@mui/joy/Stack'
+import Typography from '@mui/joy/Typography'
 
 const GameScreenOpener: React.FC = () => {
   const gameActive = useSelector(state => state.game.active)
@@ -37,6 +38,7 @@ const GameScreenOpener: React.FC = () => {
             if (confirm('Точно завершить игру? Все набранные командами очки сбросятся')) {
               setScreenOpen(false)
               dispatch(finishGame())
+              dispatch(closeAllOptions())
             }
           }}>
             Завершить игру
@@ -61,8 +63,14 @@ const GameScreenOpener: React.FC = () => {
 
 const AdminScreen: React.FC = () => {
   const hasQuestions = useSelector(state => state.questions.length > 0)
+  const editorActive = useSelector(state => state.editor.mode !== 'view')
   return (
     <div>
+      {!hasQuestions && !editorActive && (
+        <Typography className={styles.welcome}>
+          Это пункт управления игрой. Прежде всего, нужно создать вопросы викторины
+        </Typography>
+      )}
       <QuestionsList />
       {hasQuestions && (
         <GameScreenOpener />

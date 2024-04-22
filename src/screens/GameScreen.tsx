@@ -1,9 +1,12 @@
 import Options from '../components/game/Options'
 import Question from '../components/game/Question'
 import styles from './styles.css'
+import background from '../../assets/background.svg'
 import React, { useEffect, useState } from 'react'
 
 const CANVAS_W = 1920, CANVAS_H = 1080
+
+console.log(background)
 
 const GameScreen: React.FC = () => {
   const [ { scale, left, top }, setTransform ] = useState({scale: 0, left: 0, top: 0})
@@ -21,7 +24,7 @@ const GameScreen: React.FC = () => {
     setTransform({scale, left, top})
   }
   return (
-    <div className={styles.game}>
+    <div className={styles.game} style={{background: `url(${background})`}}>
       <div className={styles.canvas} style={{
         transform: `scale(${scale})`, marginLeft: left, marginTop: top
       }}>

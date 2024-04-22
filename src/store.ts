@@ -32,11 +32,20 @@ const questionsSlice = createSlice({
     },
     editQuestion(state, action: PayloadAction<{index: number, newQuestion: Question}>) {
       state[action.payload.index] = action.payload.newQuestion
+    },
+    openOption(state, action: PayloadAction<{questionIndex: number, optionIndex: number}>) {
+      state[action.payload.questionIndex].options[action.payload.optionIndex].opened = true
+    },
+    closeAllOptions(state) {
+      state.forEach(question => question.options.forEach(option => option.opened = false))
     }
   }
 })
 
-export const { addQuestion, removeQuestion, editQuestion } = questionsSlice.actions
+export const {
+  addQuestion, removeQuestion, editQuestion,
+  openOption, closeAllOptions
+} = questionsSlice.actions
 
 type EditorMode =
 | {mode: 'view'}

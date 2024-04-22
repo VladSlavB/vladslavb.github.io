@@ -39,9 +39,9 @@ const validateScore = (score: number) => !isNaN(score)
 
 const NUM_OPTIONS = 10
 const DEFAULT_QUESTION: InputQuestion = {
-  value: 'Question',
+  value: '',
   options: Array<InputOption>(NUM_OPTIONS).fill({
-    value: 'Option',
+    value: '',
     score: NaN,
     withBonus: false,
     check: false,
@@ -125,7 +125,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
                   error={option.checkScore && !validateScore(option.score)}
                   type='number' placeholder='0'
                 />
-                <IconButton tabIndex={-1}><AttachFile /></IconButton>
+                {/* <IconButton tabIndex={-1}><AttachFile /></IconButton> */}
                 <Tooltip title='Допбалл' placement='right'>
                   <IconButton tabIndex={-1} onClick={() => setQuestion(draft => {
                     draft.options[i].withBonus = !draft.options[i].withBonus

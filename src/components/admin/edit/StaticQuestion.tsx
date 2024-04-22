@@ -1,5 +1,5 @@
 import React from 'react'
-import { removeQuestion, useDispatch, useSelector } from '../../../store'
+import { openOption, removeQuestion, useDispatch, useSelector } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -19,7 +19,8 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const dispatch = useDispatch()
   const gameActive = useSelector(state => state.game.active)
   const currentQuestion = useSelector(state => state.game.currentQuestion)
-  const variant = gameActive && index === currentQuestion ? 'soft' : 'outlined'
+  const questionActive = gameActive && currentQuestion === index
+  const variant = questionActive ? 'soft' : 'outlined'
 
   return (
     <Card variant={variant}>
@@ -38,16 +39,25 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
             </>
           )}
         </div>
+        {questionActive && <Typography>Кликните на вариант, чтобы открыть его</Typography>}
         <table className={styles.options}>
           <TwoColumns>
-            {question.options.map((option, i) => (
-              <Box sx={{p: 0.5}} key={i}>
-                <Stack direction='row' spacing={2} alignItems='baseline'>
-                  <Typography>{option.value}</Typography>
-                  <Typography variant='soft'>{option.score}{option.withBonus && '*'}</Typography>
-                </Stack>
-              </Box>
-            ))}
+            {question.options.map((option, i) => {
+              const className = questionActive ? (
+                option.opened ? styles.opened : styles.interactive
+              ) : undefined
+              const onClick = questionActive ? (
+                () => dispatch(openOption({questionIndex: index, optionIndex: i}))
+              ) : undefined
+              return (
+                <Box sx={{p: 0.5}} key={i} className={className} onClick={onClick}>
+                  <Stack direction='row' spacing={2} alignItems='baseline'>
+                    <Typography>{option.value}</Typography>
+                    <Typography variant='soft'>{option.score}{option.withBonus && '*'}</Typography>
+                  </Stack>
+                </Box>
+              )
+            })}
           </TwoColumns>
         </table>
       </Stack>
