@@ -3,6 +3,7 @@ import Question from '../components/game/Question'
 import styles from './styles.css'
 import background from '../../assets/background.svg'
 import React, { useEffect, useState } from 'react'
+import Teams from '../components/game/Teams'
 
 const CANVAS_W = 1920, CANVAS_H = 1080
 
@@ -24,12 +25,13 @@ const GameScreen: React.FC = () => {
     setTransform({scale, left, top})
   }
   return (
-    <div className={styles.game} style={{background: `url(${background})`}}>
+    <div className={styles.game} style={{backgroundImage: `url(${background})`}}>
       <div className={styles.canvas} style={{
         transform: `scale(${scale})`, marginLeft: left, marginTop: top
       }}>
         <Question />
         <Options />
+        <Teams />
       </div>
     </div>
   )

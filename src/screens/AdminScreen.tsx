@@ -53,7 +53,7 @@ const GameScreenOpener: React.FC = () => {
             }}
             size='lg' endDecorator={<OpenInNew />}
           >
-            Открыть игровое окно
+            Открыть табло
           </Button>
         )}
       </Stack>

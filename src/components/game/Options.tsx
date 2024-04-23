@@ -33,8 +33,10 @@ function Option(props: Option & {index: number}) {
         {props.index + 1}{props.withBonus && '*'}
       </div>
       <div className={styles.option}>
-        <span>{props.value}</span>
-        <span>{props.score}</span>
+        {props.opened && <>
+          <span>{props.value}</span>
+          <span>{props.score}</span>
+        </>}
       </div>
     </div>
   )

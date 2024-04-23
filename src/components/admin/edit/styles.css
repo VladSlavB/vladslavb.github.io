@@ -4,7 +4,7 @@
 .optionText {
     flex: 1;
 }
-.score {
+.scoreEdit {
     width: 50px;
     margin-left: 8px;
     
@@ -36,11 +36,19 @@ input[type=number] {
 table.options {
     &, & td {
         border-collapse: collapse;
-        border: 1px solid #ddd;
+        border: 1px solid rgba(0, 0, 0, 0.1);
     }
+    & td {
+        width: 50%;
+    }
+    width: 100%;
     border-radius: 4px;
 }
-
+.score {
+    /* #6183a8 */
+    background: rgba(100, 128, 150, 0.1);
+    padding: 0 5px;
+}
 .list {
     padding: 40px 20px 100px;
     max-width: 800px;
@@ -52,5 +60,5 @@ table.options {
     }
 }
 .opened {
-    opacity: 0.5;
+    opacity: 0.3;
 }

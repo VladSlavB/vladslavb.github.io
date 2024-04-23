@@ -1,5 +1,5 @@
 import React from 'react'
-import { openOption, removeQuestion, useDispatch, useSelector } from '../../../store'
+import { addScore, openOption, removeQuestion, useDispatch, useSelector } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -47,13 +47,16 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
                 option.opened ? styles.opened : styles.interactive
               ) : undefined
               const onClick = questionActive ? (
-                () => dispatch(openOption({questionIndex: index, optionIndex: i}))
+                () => {
+                  dispatch(openOption({questionIndex: index, optionIndex: i}))
+                  dispatch(addScore(option.score))
+                }
               ) : undefined
               return (
                 <Box sx={{p: 0.5}} key={i} className={className} onClick={onClick}>
-                  <Stack direction='row' spacing={2} alignItems='baseline'>
+                  <Stack direction='row' spacing={2} alignItems='baseline' justifyContent='space-between'>
                     <Typography>{option.value}</Typography>
-                    <Typography variant='soft'>{option.score}{option.withBonus && '*'}</Typography>
+                    <Typography className={styles.score}>{option.score}{option.withBonus && '*'}</Typography>
                   </Stack>
                 </Box>
               )

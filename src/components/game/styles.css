@@ -68,5 +68,83 @@
   justify-content: space-between;
   padding: 0 20px;
   transform: rotateX(180deg);
+  background: black;
+  color: var(--bg-color);
+}
+.team {
+  width: 428px;
+  height: 308px;
+  position: absolute;
+  top: 64px;
+  border: 1px solid black;
+  border-radius: 24px;
+  background: #C6F1FF;
+
+  &.left {
+    left: 61px;
+    & .score {
+      background: #0066FF;
+    }
+    & .health {
+      flex-direction: row;
+    }
+    & .heartholder.holds {
+      background: #0066FF;
+    }
+  }
+  &.right {
+    right: 61px;
+    & .score {
+      background: red;
+    }
+    & .health {
+      flex-direction: row-reverse;
+    }
+    & .heartholder.holds {
+      background: red;
+    }
+  }
+}
+.score {
+  width: 378px;
+  height: 130px;
+  border: 1px solid black;
+  margin: 18px 24px 24px;
+  color: white;
+  font-size: 100px;
+  text-align: center;
+  line-height: 120px;
+  border-radius: 24px;
+}
+.health {
+  padding: 0 25px;
+  display: flex;
+  justify-content: space-between;
+  transition: 1s;
+
+}
+.heartholder {
+  width: 110px;
+  height: 110px;
+  border: 1px solid black;
+  border-radius: 55px;
   background: white;
+  display: flex;
+  justify-content: center;
+  padding-top: 31px;
+  transition: 0.5s;
+
+  &.holds img {
+    margin-top: 0;
+    opacity: 1;
+  }
+
+  & img {
+    width: 58px;
+    height: 49px;
+    transition: 0.5s;
+
+    margin-top: -50px;
+    opacity: 0;
+  }
 }

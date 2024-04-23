@@ -39,9 +39,9 @@ const validateScore = (score: number) => !isNaN(score)
 
 const NUM_OPTIONS = 10
 const DEFAULT_QUESTION: InputQuestion = {
-  value: '',
+  value: 'Вопрос',
   options: Array<InputOption>(NUM_OPTIONS).fill({
-    value: '',
+    value: 'Ответ',
     score: NaN,
     withBonus: false,
     check: false,
@@ -115,7 +115,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
                   type='text' placeholder={`Ответ #${i + 1}`} className={styles.optionText}
                 />
                 <Input
-                  className={styles.score}
+                  className={styles.scoreEdit}
                   value={isNaN(option.score) ? '' : option.score}
                   onChange={e => setQuestion(draft => {
                     draft.options[i].score = clip(parseInt(e.target.value), 1, 99)

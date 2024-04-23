@@ -1,3 +1,7 @@
 .gameControl {
     flex: 1;
 }
+.toggle {
+    cursor: pointer;
+    user-select: none;
+}
