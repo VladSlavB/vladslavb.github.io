@@ -1,5 +1,6 @@
 .gameControl {
     flex: 1;
+    align-items: baseline;
 }
 .toggle {
     cursor: pointer;

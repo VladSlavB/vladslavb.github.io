@@ -2,7 +2,6 @@ import {
   TypedUseSelectorHook,
   useDispatch as useOriginalDispatch,
   useSelector as useOriginalSelector,
-  useStore as useOriginalStore,
 } from 'react-redux'
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 
@@ -70,9 +69,13 @@ const editorSlice = createSlice({
 
 export const { startEditing, finishEditing, startAdding } = editorSlice.actions
 
+
 const GAME_INITIAL_STATE = {
   active: false,
   currentQuestion: -1,
+  drawFinished: false,
+  currentTeam: null as null | 'leftTeam' | 'rightTeam',
+  bidScore: null as null | number,
   leftTeam: {
     score: 0,
     health: 3,
@@ -81,7 +84,10 @@ const GAME_INITIAL_STATE = {
     score: 0,
     health: 3,
   },
-  currentTeam: 'leftTeam' as 'leftTeam' | 'rightTeam'
+}
+
+function theOtherTeam(team: 'leftTeam' | 'rightTeam'): typeof team {
+  return team === 'leftTeam' ? 'rightTeam' : 'leftTeam'
 }
 
 const gameSlice = createSlice({
@@ -90,22 +96,56 @@ const gameSlice = createSlice({
   reducers: {
     nextQuestion(state) {
       state.currentQuestion++
+      state.leftTeam.health = state.rightTeam.health = 3
+      state.bidScore = null
+      state.drawFinished = false
+      state.currentTeam = null
     },
-    previousQuestion(state) {
-      state.currentQuestion--
+    chooseTeam(state, action: PayloadAction<'leftTeam' | 'rightTeam'>) {
+      state.currentTeam = action.payload
     },
-    toggleCurrentTeam(state) {
-      if (state.currentTeam === 'leftTeam') {
-        state.currentTeam = 'rightTeam'
-      } else {
-        state.currentTeam = 'leftTeam'
+    correctAnswer(state, action: PayloadAction<{score: number, best?: boolean, worst?: boolean}>) {
+      if (state.currentTeam != null) {
+        state[state.currentTeam].score += action.payload.score
+        if (state.drawFinished) {
+          const newTeam = theOtherTeam(state.currentTeam)
+          if (state[newTeam].health > 0) {
+            state.currentTeam = newTeam
+          }
+        } else {
+          if (state.bidScore == null) {
+            if (action.payload.best) {
+              state.drawFinished = true
+            } else if (action.payload.worst) {
+              state.drawFinished = true
+              state.currentTeam = theOtherTeam(state.currentTeam)
+            } else {
+              state.bidScore = action.payload.score
+              state.currentTeam = theOtherTeam(state.currentTeam)
+            }
+          } else {
+            if (state.bidScore >= action.payload.score) {
+              state.currentTeam = theOtherTeam(state.currentTeam)
+            }
+            state.drawFinished = true
+          }
+        }
       }
     },
-    addScore(state, action: PayloadAction<number>) {
-      state[state.currentTeam].score += action.payload
-    },
-    minusHealth(state) {
-      state[state.currentTeam].health--
+    wrongAnswer(state) {
+      if (state.currentTeam != null) {
+        state[state.currentTeam].health--
+        const newTeam = theOtherTeam(state.currentTeam)
+        if (state[newTeam].health > 0) {
+          state.currentTeam = newTeam
+        }
+        if (!state.drawFinished) {
+          state.drawFinished = true
+        }
+        if (state.leftTeam.health === 0 && state.rightTeam.health === 0) {
+          state.currentTeam = null
+        }
+      }
     },
     startGame(state) {
       state.active = true
@@ -113,13 +153,10 @@ const gameSlice = createSlice({
     finishGame(_) {
       return GAME_INITIAL_STATE
     }
-  }
+  },
 })
 
-export const {
-  nextQuestion, previousQuestion, toggleCurrentTeam, addScore, minusHealth,
-  startGame, finishGame,
-} = gameSlice.actions
+export const { nextQuestion, chooseTeam, correctAnswer, wrongAnswer, startGame, finishGame } = gameSlice.actions
 
 const store = configureStore({
   reducer: {

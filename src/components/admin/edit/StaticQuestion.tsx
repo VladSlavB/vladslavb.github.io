@@ -1,5 +1,7 @@
 import React from 'react'
-import { addScore, openOption, removeQuestion, useDispatch, useSelector } from '../../../store'
+import {
+  correctAnswer, openOption, removeQuestion, useDispatch, useSelector, wrongAnswer
+} from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -14,13 +16,31 @@ type Props = {
   canEdit?: boolean
 }
 
+
+
 const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const question = useSelector(state => state.questions[index])
-  const dispatch = useDispatch()
   const gameActive = useSelector(state => state.game.active)
   const currentQuestion = useSelector(state => state.game.currentQuestion)
+  const currentTeam = useSelector(state => state.game.currentTeam)
+  const everyoneDead = useSelector(state => state.game.leftTeam.health + state.game.rightTeam.health === 0)
+  const allOptionsOpen = useSelector(state => currentQuestion >= 0 && (
+    state.questions[currentQuestion].options.every(option => option.opened)
+  ))
   const questionActive = gameActive && currentQuestion === index
   const variant = questionActive ? 'soft' : 'outlined'
+  const canClick = (currentTeam != null || everyoneDead) && questionActive
+  const dispatch = useDispatch()
+
+  function onOptionClick(optionIndex: number) {
+    const option = question.options[optionIndex]
+    dispatch(openOption({questionIndex: index, optionIndex}))
+    dispatch(correctAnswer({
+      score: option.score,
+      best: question.options.every(other => other.score <= option.score),
+      worst: question.options.every(other => other.score > option.score || other == option)
+    }))
+  }
 
   return (
     <Card variant={variant}>
@@ -39,19 +59,14 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
             </>
           )}
         </div>
-        {questionActive && <Typography>Кликните на вариант, чтобы открыть его</Typography>}
+        {canClick && <Typography>Кликните на вариант, чтобы открыть его</Typography>}
         <table className={styles.options}>
           <TwoColumns>
             {question.options.map((option, i) => {
               const className = questionActive ? (
                 option.opened ? styles.opened : styles.interactive
               ) : undefined
-              const onClick = questionActive ? (
-                () => {
-                  dispatch(openOption({questionIndex: index, optionIndex: i}))
-                  dispatch(addScore(option.score))
-                }
-              ) : undefined
+              const onClick = canClick && !option.opened ? () => onOptionClick(i) : undefined
               return (
                 <Box sx={{p: 0.5}} key={i} className={className} onClick={onClick}>
                   <Stack direction='row' spacing={2} alignItems='baseline' justifyContent='space-between'>
@@ -63,6 +78,16 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
             })}
           </TwoColumns>
         </table>
+        {currentTeam != null && currentQuestion === index && !allOptionsOpen && (
+          <Button
+            className={styles.wrong}
+            color='danger' variant='outlined'
+            onClick={() => dispatch(wrongAnswer())}
+            disabled={everyoneDead}
+          >
+            Промах
+          </Button>
+        )}
       </Stack>
     </Card>
   )
