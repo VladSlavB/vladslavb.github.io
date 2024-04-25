@@ -2,9 +2,10 @@ import styles from './styles.css'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import React from 'react'
-import { nextQuestion, chooseTeam, useDispatch, useSelector } from '../../../store'
+import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer } from '../../../store'
 import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
+import Box from '@mui/joy/Box'
 
 const ControlPanel: React.FC = () => {
   const dispatch = useDispatch()
@@ -18,6 +19,18 @@ const ControlPanel: React.FC = () => {
   const lastQuestion = currentQuestion === totalQuestions - 1
   return (
     <Stack direction='row' spacing={2} className={styles.gameControl} flexWrap='wrap'>
+      <Box flexGrow={1}>
+        {currentTeam != null && !allOptionsOpen && (
+          <Button
+            className={styles.wrong}
+            color='danger' variant='outlined'
+            onClick={() => dispatch(wrongAnswer())}
+            disabled={everyoneDead}
+          >
+            Промах
+          </Button>
+        )}
+      </Box>
       {currentQuestion >= 0 && (
         <>
           {!drawFinished && <Typography variant='soft'>Розыгрыш хода</Typography>}
@@ -39,19 +52,19 @@ const ControlPanel: React.FC = () => {
           ) : (
             !allOptionsOpen && (
               <Typography color={currentColor}>
-                &bull; Отвечают {currentTeam === 'leftTeam' ? 'синие' : 'красные'}
+                Отвечают {currentTeam === 'leftTeam' ? 'синие' : 'красные'}
               </Typography>
             )
           )}
         </>
       )}
-      {(currentQuestion < 0 || (allOptionsOpen && !lastQuestion)) && (
+      {allOptionsOpen && !lastQuestion && (
         <Button
           style={{alignSelf: 'flex-start'}}
           color='primary'
           onClick={() => dispatch(nextQuestion())}
         >
-          {currentQuestion >= 0 ? 'Следующий вопрос' : 'Показать первый вопрос'}
+          Следующий вопрос
         </Button>
       )}
     </Stack>

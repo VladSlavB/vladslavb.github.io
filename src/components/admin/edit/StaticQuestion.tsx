@@ -1,14 +1,15 @@
+import styles from './styles.css'
 import React from 'react'
-import {
-  correctAnswer, openOption, removeQuestion, useDispatch, useSelector, wrongAnswer
-} from '../../../store'
+import { correctAnswer, openOption, removeQuestion, useDispatch, useSelector } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
 import Stack from '@mui/joy/Stack'
-import Box from '@mui/joy/Box'
-
-import styles from './styles.css'
+import VisibilityOff from '@mui/icons-material/VisibilityOffOutlined'
+import Visibility from '@mui/icons-material/VisibilityOutlined'
+import Edit from '@mui/icons-material/Edit'
+import Delete from '@mui/icons-material/Delete'
+import ControlPanel from '../play/ControlPanel'
 
 type Props = {
   index: number
@@ -24,12 +25,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const currentQuestion = useSelector(state => state.game.currentQuestion)
   const currentTeam = useSelector(state => state.game.currentTeam)
   const everyoneDead = useSelector(state => state.game.leftTeam.health + state.game.rightTeam.health === 0)
-  const allOptionsOpen = useSelector(state => currentQuestion >= 0 && (
-    state.questions[currentQuestion].options.every(option => option.opened)
-  ))
   const questionActive = gameActive && currentQuestion === index
-  const variant = questionActive ? 'soft' : 'outlined'
-  const canClick = (currentTeam != null || everyoneDead) && questionActive
   const dispatch = useDispatch()
 
   function onOptionClick(optionIndex: number) {
@@ -43,50 +39,62 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   }
 
   return (
-    <Card variant={variant}>
+    <Card color={questionActive ? 'warning' : 'neutral'}>
       <Stack spacing={2}>
         <div className={styles.header}>
-          <Typography level='title-lg' className={styles.title}>{question.value}</Typography>
+          <Typography
+            level='title-lg'
+            flexGrow={1}
+            whiteSpace='pre-wrap'
+            color={gameActive && !questionActive ? 'neutral' : undefined}
+          >{question.value}</Typography>
           {canEdit && (
-            <>
-              <Button onClick={onEdit} variant='outlined' className={styles.action}>Редактировать</Button>
+            <div className={styles.actions}>
+              <Button onClick={onEdit} variant='plain' size='sm'><Edit /></Button>
               <Button
-                onClick={() => dispatch(removeQuestion(index))}
-                variant='outlined' color='danger' className={styles.action}
+                onClick={() => {
+                  if (confirm(`Удалить вопрос "${question.value}"?`)) {
+                    dispatch(removeQuestion(index))
+                  }
+                }}
+                variant='plain' color='danger' size='sm'
               >
-                Удалить
+                <Delete />
               </Button>
-            </>
+            </div>
           )}
         </div>
-        {canClick && <Typography>Кликните на вариант, чтобы открыть его</Typography>}
         <table className={styles.options}>
           <TwoColumns>
             {question.options.map((option, i) => {
-              const className = questionActive ? (
-                option.opened ? styles.opened : styles.interactive
-              ) : undefined
-              const onClick = canClick && !option.opened ? () => onOptionClick(i) : undefined
+              const canClick = (currentTeam != null || everyoneDead) && questionActive && !option.opened
+              let className = styles.optionText
+              if (!gameActive) className += ' ' + styles.black
+              if (questionActive && option.opened) className += ' ' + styles.tiny
               return (
-                <Box sx={{p: 0.5}} key={i} className={className} onClick={onClick}>
-                  <Stack direction='row' spacing={2} alignItems='baseline' justifyContent='space-between'>
-                    <Typography>{option.value}</Typography>
-                    <Typography className={styles.score}>{option.score}{option.withBonus && '*'}</Typography>
-                  </Stack>
-                </Box>
+                <Button
+                  fullWidth
+                  key={i} onClick={() => onOptionClick(i)} size='sm'
+                  variant='plain'
+                  color='neutral'
+                  disabled={!canClick}
+                  startDecorator={
+                    questionActive ? (
+                      option.opened ? <Visibility /> : <VisibilityOff />
+                    ) : undefined
+                  }
+                  endDecorator={
+                    <>{option.score}{option.withBonus && '*'}</>
+                  }
+                >
+                  <span className={className}>{option.value}</span>
+                </Button>
               )
             })}
           </TwoColumns>
         </table>
-        {currentTeam != null && currentQuestion === index && !allOptionsOpen && (
-          <Button
-            className={styles.wrong}
-            color='danger' variant='outlined'
-            onClick={() => dispatch(wrongAnswer())}
-            disabled={everyoneDead}
-          >
-            Промах
-          </Button>
+        {gameActive && currentQuestion === index && (
+          <ControlPanel />
         )}
       </Stack>
     </Card>

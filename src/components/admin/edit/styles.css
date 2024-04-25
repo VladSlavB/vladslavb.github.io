@@ -23,15 +23,13 @@ input[type=number] {
 .header {
     display: flex;
     align-items: baseline;
+    margin-right: -8px !important;
 }
-.title {
-    flex: 1;
-}
-.action {
-    margin-left: 16px !important;
+.actions {
+    margin: -8px 0 -4px;
 }
 .add {
-    align-self: flex-start;
+    align-self: center;
 }
 .wrong {
     align-self: flex-start;
@@ -55,13 +53,14 @@ table.options {
 .list {
     padding: 40px 20px 100px;
     max-width: 800px;
+    margin: 0 auto;
 }
-.interactive {
-    cursor: pointer;
-    &:hover {
-        background: #ccc; 
+.optionText {
+    flex: 1;
+    &.black {
+        color: black;
     }
-}
-.opened {
-    opacity: 0.3;
+    &.tiny {
+        font-weight: normal;
+    }
 }

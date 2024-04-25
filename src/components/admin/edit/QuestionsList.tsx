@@ -1,5 +1,5 @@
 import styles from './styles.css'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { finishEditing, startAdding, startEditing, useDispatch, useSelector } from '../../../store'
 import Button from '@mui/joy/Button'
 import StaticQuestion from './StaticQuestion'

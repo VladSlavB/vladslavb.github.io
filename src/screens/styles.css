@@ -1,5 +1,6 @@
 .welcome {
     padding: 40px 0 0 20px;
+    text-align: center;
 }
 
 .game {
@@ -20,18 +21,13 @@
     font-family: 'Dela Gothic One';
 }
 
-.panel {
+.leftButton, .rightButton {
     position: fixed !important;
-    bottom: 0;
-    right: 0;
-    padding: 20px;
-
-    &.contained {
-        width: 100%;
-        background: white;
-        box-shadow: 0 -8px 8px rgba(0, 0, 0, 0.1);
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-    }
+    bottom: 20px;
+}
+.leftButton {
+    left: 20px;
+}
+.rightButton {
+    right: 20px;
 }

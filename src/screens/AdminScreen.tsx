@@ -2,8 +2,7 @@ import styles from './styles.css'
 import React, { useEffect, useRef, useState } from 'react'
 import QuestionsList from '../components/admin/edit/QuestionsList'
 import Button from '@mui/joy/Button/Button'
-import { closeAllOptions, finishGame, startGame, useDispatch, useSelector } from '../store'
-import ControlPanel from '../components/admin/play/ControlPanel'
+import { closeAllOptions, finishGame, nextQuestion, startGame, useDispatch, useSelector } from '../store'
 import OpenInNew from '@mui/icons-material/OpenInNew'
 import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
@@ -12,6 +11,7 @@ const GameScreenOpener: React.FC = () => {
   const gameActive = useSelector(state => state.game.active)
   const editorActive = useSelector(state => state.editor.mode !== 'view')
   const [ screenOpen, setScreenOpen ] = useState(false)
+  const currentQuestion = useSelector(state => state.game.currentQuestion)
   const dispatch = useDispatch()
   const windowRef = useRef<Window | null>(null)
   useEffect(() => {
@@ -24,41 +24,42 @@ const GameScreenOpener: React.FC = () => {
     }
     return () => windowRef.current?.close()
   }, [screenOpen])
-  let className = styles.panel
-  if (gameActive) className += ' ' + styles.contained
 
-  return (
-    <div className={className}>
-      {gameActive && (
-        <ControlPanel />
-      )}
-      <Stack direction='row' spacing={1}>
-        {gameActive && (
-          <Button color='danger' size='lg' onClick={() => {
-            if (confirm('Точно завершить игру? Все набранные командами очки сбросятся')) {
-              setScreenOpen(false)
-              dispatch(finishGame())
-              dispatch(closeAllOptions())
-            }
-          }}>
-            Завершить игру
-          </Button>
-        )}
-        {!screenOpen && (
-          <Button
-            disabled={editorActive}
-            onClick={() => {
-              dispatch(startGame())
-              setScreenOpen(true)
-            }}
-            size='lg' endDecorator={<OpenInNew />}
-          >
-            Открыть табло
-          </Button>
-        )}
-      </Stack>
-    </div>
-  )
+  return <>
+    {screenOpen ? (
+      currentQuestion < 0 && (
+        <Button
+          className={styles.leftButton} color='primary' size='lg'
+          onClick={() => dispatch(nextQuestion())}
+        >
+          Открыть первый вопрос
+        </Button>
+      )
+    ) : (
+      <Button
+        className={styles.leftButton} size='lg'
+        disabled={editorActive}
+        onClick={() => {
+          dispatch(startGame())
+          setScreenOpen(true)
+        }}
+        endDecorator={<OpenInNew />}
+      >
+        Открыть табло
+      </Button>
+    )}
+    {gameActive && (
+      <Button className={styles.rightButton} color='danger' size='lg' onClick={() => {
+        if (confirm('Точно завершить игру? Все набранные командами очки сбросятся')) {
+          setScreenOpen(false)
+          dispatch(finishGame())
+          dispatch(closeAllOptions())
+        }
+      }}>
+        Завершить игру
+      </Button>
+    )}
+  </>
 }
 
 const AdminScreen: React.FC = () => {

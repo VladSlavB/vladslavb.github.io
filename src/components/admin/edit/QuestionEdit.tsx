@@ -1,3 +1,4 @@
+import styles from './styles.css'
 import React, { FormEvent, useCallback } from 'react'
 import { useImmer } from 'use-immer'
 import { Option, Question, addQuestion, editQuestion, useDispatch, useSelector } from '../../../store'
@@ -11,8 +12,7 @@ import AttachFile from '@mui/icons-material/AttachFile'
 import Star from '@mui/icons-material/Star'
 import StarBorder from '@mui/icons-material/StarBorder'
 import Tooltip from '@mui/joy/Tooltip'
-
-import styles from './styles.css'
+import Textarea from '@mui/joy/Textarea'
 
 function clip(x: number, min: number, max: number) {
   return Math.min(Math.max(x, min), max)
@@ -39,9 +39,9 @@ const validateScore = (score: number) => !isNaN(score)
 
 const NUM_OPTIONS = 10
 const DEFAULT_QUESTION: InputQuestion = {
-  value: '',
+  value: 'Question',
   options: Array<InputOption>(NUM_OPTIONS).fill({
-    value: '',
+    value: 'Option',
     score: NaN,
     withBonus: false,
     check: false,
@@ -90,7 +90,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
       <form onSubmit={onSubmit} onReset={onDone}>
         <Grid container columnSpacing={4} rowSpacing={2}>
           <Grid xs={12}>
-            <Input
+            <Textarea
               value={question.value} onChange={e => {
                 setQuestion(draft => {
                   draft.value = e.target.value
@@ -99,7 +99,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
               }}
               onBlur={() => setQuestion(draft => {draft.check = true})}
               error={question.check && !validateQuestionValue(question.value)}
-              type='text' placeholder='Вопрос' autoFocus
+              placeholder='Вопрос' autoFocus
             />
           </Grid>
           <TwoColumns>
