@@ -134,16 +134,27 @@ const gameSlice = createSlice({
     },
     wrongAnswer(state) {
       if (state.currentTeam != null) {
-        state[state.currentTeam].health--
-        const newTeam = theOtherTeam(state.currentTeam)
-        if (state[newTeam].health > 0) {
-          state.currentTeam = newTeam
-        }
         if (!state.drawFinished) {
-          state.drawFinished = true
-        }
-        if (state.leftTeam.health === 0 && state.rightTeam.health === 0) {
-          state.currentTeam = null
+          if (state.bidScore == null) {
+            state.bidScore = 0
+            state.currentTeam = theOtherTeam(state.currentTeam)
+          } else if (state.bidScore == 0) {
+            state.bidScore = null
+            state.currentTeam = null
+          } else {
+            state.drawFinished = true
+            state.bidScore = null
+            state.currentTeam = theOtherTeam(state.currentTeam)
+          }
+        } else {
+          state[state.currentTeam].health--
+          const newTeam = theOtherTeam(state.currentTeam)
+          if (state[newTeam].health > 0) {
+            state.currentTeam = newTeam
+          }
+          if (state.leftTeam.health === 0 && state.rightTeam.health === 0) {
+            state.currentTeam = null
+          }
         }
       }
     },

@@ -17,7 +17,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 34px;
+    font-size: 35px;
     padding: 0 10px;
     text-transform: uppercase;
     white-space: pre-wrap;
@@ -60,8 +60,12 @@
 .faceDown {
   box-shadow: inset 0 4px 4px rgba(255, 255, 255, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.25);
   background: var(--bg-color);
-  font-size: 70px;
+  font: 96px 'Notable';
   justify-content: center;
+
+  & span {
+    margin-top: -28px;
+  }
 }
 .option {
   font-size: 34px;
@@ -110,19 +114,24 @@
   width: 378px;
   height: 130px;
   border: 1px solid black;
-  margin: 18px 24px 24px;
+  margin: 18px 24px;
   color: white;
-  font-size: 100px;
+  font: 107px Notable;
   text-align: center;
-  line-height: 120px;
+  line-height: 110px;
   border-radius: 24px;
 }
 .health {
-  padding: 0 25px;
+  padding: 0 19px;
   display: flex;
   justify-content: space-between;
   transition: 1s;
 
+}
+.wrapper {
+  padding: 3px;
+  border: 3px solid black;
+  border-radius: 61px;
 }
 .heartholder {
   width: 110px;

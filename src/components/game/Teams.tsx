@@ -25,8 +25,10 @@ function Team(props: {health: number, score: number, side: 'left' | 'right'}) {
           let className = styles.heartholder
           if (i < props.health) className += ' ' + styles.holds
           return (
-            <div className={className}>
-              <img src={heart} />
+            <div className={styles.wrapper}>
+              <div className={className}>
+                <img src={heart} />
+              </div>
             </div>
           )
         })}

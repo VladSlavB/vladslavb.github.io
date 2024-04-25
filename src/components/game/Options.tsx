@@ -30,7 +30,7 @@ function Option(props: Option & {index: number}) {
   return (
     <div className={className}>
       <div className={styles.faceDown}>
-        {props.index + 1}{props.withBonus && '*'}
+        <span>{props.index + 1}{props.withBonus && '*'}</span>
       </div>
       <div className={styles.option}>
         {props.opened && <>

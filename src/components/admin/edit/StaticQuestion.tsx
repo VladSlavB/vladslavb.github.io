@@ -10,6 +10,7 @@ import Visibility from '@mui/icons-material/VisibilityOutlined'
 import Edit from '@mui/icons-material/Edit'
 import Delete from '@mui/icons-material/Delete'
 import ControlPanel from '../play/ControlPanel'
+import { confirmBonusDialog } from '../play/ConfirmBonusDialog'
 
 type Props = {
   index: number
@@ -17,29 +18,32 @@ type Props = {
   canEdit?: boolean
 }
 
-
-
 const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const question = useSelector(state => state.questions[index])
   const gameActive = useSelector(state => state.game.active)
   const currentQuestion = useSelector(state => state.game.currentQuestion)
   const currentTeam = useSelector(state => state.game.currentTeam)
   const everyoneDead = useSelector(state => state.game.leftTeam.health + state.game.rightTeam.health === 0)
+  const drawFinished = useSelector(state => state.game.drawFinished)
   const questionActive = gameActive && currentQuestion === index
   const dispatch = useDispatch()
 
-  function onOptionClick(optionIndex: number) {
+  async function onOptionClick(optionIndex: number) {
     const option = question.options[optionIndex]
     dispatch(openOption({questionIndex: index, optionIndex}))
+    let score = option.score
+    if (drawFinished && option.withBonus && await confirmBonusDialog()) {
+      score += 1
+    }
     dispatch(correctAnswer({
-      score: option.score,
+      score,
       best: question.options.every(other => other.score <= option.score),
       worst: question.options.every(other => other.score > option.score || other == option)
     }))
   }
 
   return (
-    <Card color={questionActive ? 'warning' : 'neutral'}>
+    <Card variant={questionActive ? 'soft' : 'outlined'}>
       <Stack spacing={2}>
         <div className={styles.header}>
           <Typography
