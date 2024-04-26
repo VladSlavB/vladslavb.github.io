@@ -39,9 +39,9 @@ const validateScore = (score: number) => !isNaN(score)
 
 const NUM_OPTIONS = 10
 const DEFAULT_QUESTION: InputQuestion = {
-  value: 'Question',
+  value: 'уауауус',
   options: Array<InputOption>(NUM_OPTIONS).fill({
-    value: 'Option',
+    value: 'ауаумиапип',
     score: NaN,
     withBonus: false,
     check: false,

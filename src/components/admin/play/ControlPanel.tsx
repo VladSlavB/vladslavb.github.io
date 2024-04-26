@@ -8,6 +8,7 @@ import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
 import Box from '@mui/joy/Box'
 import { hitAnimation } from '../../game/Teams'
+import { wrongRingtone } from '../../../sounds'
 
 const ControlPanel: React.FC = () => {
   const dispatch = useDispatch()
@@ -24,6 +25,7 @@ const ControlPanel: React.FC = () => {
       hitAnimation(currentTeam)
     }
     dispatch(wrongAnswer())
+    wrongRingtone.play()
   }
 
   return (

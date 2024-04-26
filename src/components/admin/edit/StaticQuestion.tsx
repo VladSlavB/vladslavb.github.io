@@ -11,6 +11,7 @@ import Edit from '@mui/icons-material/Edit'
 import Delete from '@mui/icons-material/Delete'
 import ControlPanel from '../play/ControlPanel'
 import { confirmBonusDialog } from '../play/ConfirmBonusDialog'
+import { rightRingtone } from '../../../sounds'
 
 type Props = {
   index: number
@@ -40,6 +41,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
       best: question.options.every(other => other.score <= option.score),
       worst: question.options.every(other => other.score > option.score || other == option)
     }))
+    rightRingtone.play()
   }
 
   return (
