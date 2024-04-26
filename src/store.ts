@@ -6,11 +6,16 @@ import {
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 
+type Attachment =
+| {type: 'text', text: string}
+| {type: 'img', url: string}
+
 export type Option = {
   value: string
   score: number
   withBonus: boolean
   opened: boolean
+  attachment?: Attachment
 }
 
 export type Question = {

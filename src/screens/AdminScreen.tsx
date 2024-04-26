@@ -4,29 +4,35 @@ import QuestionsList from '../components/admin/edit/QuestionsList'
 import Button from '@mui/joy/Button/Button'
 import { closeAllOptions, finishGame, nextQuestion, startGame, useDispatch, useSelector } from '../store'
 import OpenInNew from '@mui/icons-material/OpenInNew'
-import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
+
+export let gameWindow: Window | null = null
 
 const GameScreenOpener: React.FC = () => {
   const gameActive = useSelector(state => state.game.active)
   const editorActive = useSelector(state => state.editor.mode !== 'view')
-  const [ screenOpen, setScreenOpen ] = useState(false)
+  const [ gameWindowOpen, setGameWindowOpen ] = useState(false)
   const currentQuestion = useSelector(state => state.game.currentQuestion)
   const dispatch = useDispatch()
-  const windowRef = useRef<Window | null>(null)
-  useEffect(() => {
-    if (screenOpen) {
-      const newWindow = open('.', '_blank', 'popup,width=640,height=360')
-      onClose(newWindow!, () => setScreenOpen(false))
-      windowRef.current = newWindow
+
+  function openGameWindow() {
+    gameWindow = open('.', '_blank', 'popup,width=640,height=360')
+    if (gameWindow != null) {
+      setGameWindowOpen(true)
+      onClose(gameWindow, () => setGameWindowOpen(false))
     } else {
-      windowRef.current?.close()
+      alert('Не удалось открыть игровое коно')
     }
-    return () => windowRef.current?.close()
-  }, [screenOpen])
+  }
+  function closeGameWindow() {
+    gameWindow?.close()
+    setGameWindowOpen(false)
+  }
+  // on unmount
+  useEffect(() => () => gameWindow?.close(), [])
 
   return <>
-    {screenOpen ? (
+    {gameWindowOpen ? (
       currentQuestion < 0 && (
         <Button
           className={styles.leftButton} color='primary' size='lg'
@@ -41,7 +47,7 @@ const GameScreenOpener: React.FC = () => {
         disabled={editorActive}
         onClick={() => {
           dispatch(startGame())
-          setScreenOpen(true)
+          openGameWindow()
         }}
         endDecorator={<OpenInNew />}
       >
@@ -51,7 +57,7 @@ const GameScreenOpener: React.FC = () => {
     {gameActive && (
       <Button className={styles.rightButton} color='danger' size='lg' onClick={() => {
         if (confirm('Точно завершить игру? Все набранные командами очки сбросятся')) {
-          setScreenOpen(false)
+          closeGameWindow()
           dispatch(finishGame())
           dispatch(closeAllOptions())
         }

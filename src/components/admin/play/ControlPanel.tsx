@@ -7,6 +7,7 @@ import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
 import Box from '@mui/joy/Box'
+import { hitAnimation } from '../../game/Teams'
 
 const ControlPanel: React.FC = () => {
   const dispatch = useDispatch()
@@ -17,6 +18,14 @@ const ControlPanel: React.FC = () => {
   const totalQuestions = useSelector(state => state.questions.length)
   const everyoneDead = currentTeam == null && drawFinished
   const lastQuestion = currentQuestion === totalQuestions - 1
+
+  function onFail() {
+    if (currentTeam != null) {
+      hitAnimation(currentTeam)
+    }
+    dispatch(wrongAnswer())
+  }
+
   return (
     <Stack direction='row' spacing={2} className={styles.gameControl} flexWrap='wrap'>
       <Box flexGrow={1}>
@@ -24,7 +33,7 @@ const ControlPanel: React.FC = () => {
           <Button
             className={styles.wrong}
             color='danger' variant='outlined'
-            onClick={() => dispatch(wrongAnswer())}
+            onClick={onFail}
             disabled={everyoneDead}
           >
             Промах
@@ -32,7 +41,7 @@ const ControlPanel: React.FC = () => {
         )}
       </Box>
       {currentQuestion >= 0 && <>
-        {!drawFinished && <Chip color='warning' variant='outlined'>Розыгрыш хода</Chip>}
+        {!drawFinished && <Chip color='warning' variant='soft'>Розыгрыш хода...</Chip>}
         {currentTeam == null ? (
           !everyoneDead && (
             <ButtonGroup>

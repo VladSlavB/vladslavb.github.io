@@ -1,4 +1,5 @@
 :root {
+  --blue: #0066FF;
   --bg-color: #FFE790;
   --shadow-color: rgba(0, 0, 0, 0.25);
 }
@@ -76,6 +77,28 @@
   background: black;
   color: var(--bg-color);
 }
+@keyframes hitBlue {
+  to {
+    background: var(--blue);
+  }
+}
+@keyframes hitRed {
+  to {
+    background: red;
+  }
+}
+.leftTeam.hit, .rightTeam.hit {
+  animation-duration: 0.1s;
+  animation-direction: alternate;
+  animation-iteration-count: 6;
+  animation-timing-function: linear;
+}
+.leftTeam.hit {
+  animation-name: hitBlue;
+}
+.rightTeam.hit {
+  animation-name: hitRed;
+}
 .team {
   width: 428px;
   height: 308px;
@@ -85,19 +108,20 @@
   border-radius: 24px;
   background: #C6F1FF;
 
-  &.left {
+  &.leftTeam {
     left: 61px;
+
     & .score {
-      background: #0066FF;
+      background: var(--blue);
     }
     & .health {
       flex-direction: row;
     }
     & .heartholder.holds {
-      background: #0066FF;
+      background: var(--blue);
     }
   }
-  &.right {
+  &.rightTeam {
     right: 61px;
     & .score {
       background: red;
