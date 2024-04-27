@@ -43,7 +43,7 @@ function makeInputQuestion(question: Question): InputQuestion {
   }
 }
 
-function transpormInputScore(value: string) {
+function transformInputScore(value: string) {
   const matches = value.match(/([^\+]*)\+(.*)/)
   if (matches != null) {
     let [ first, second ] = matches.slice(1)
@@ -144,27 +144,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
           </Grid>
           <TwoColumns>
             {question.options.map((option, i) => (
-              <div key={i} className={styles.option}>
-                <Input
-                  value={option.value} onChange={e => setQuestion(draft => {
-                    draft.options[i].value = e.target.value
-                  })}
-                  onBlur={() => setQuestion(draft => {draft.options[i].checkValue = true})}
-                  error={option.checkValue && !validateOptionValue(option.value)}
-                  type='text' placeholder={`Ответ #${i + 1}`} className={styles.optionText}
-                />
-                <Input
-                  className={styles.scoreEdit}
-                  value={option.score}
-                  onChange={e => setQuestion(draft => {
-                    draft.options[i].score = transpormInputScore(e.target.value)
-                  })}
-                  onBlur={() => setQuestion(draft => {draft.options[i].checkScore = true})}
-                  error={option.checkScore && !validateScore(option.score)}
-                  placeholder='00+0'
-                />
-                <IconButton tabIndex={-1}><AttachFile /></IconButton>
-              </div>
+              <OptionEdit option={option} setQuestion={setQuestion} index={i} key={i} />
             ))}
           </TwoColumns>
           <Grid xs={12}>
@@ -189,6 +169,36 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
 
 export default QuestionEdit
 
+const OptionEdit: React.FC<{
+  option: InputOption
+  setQuestion: (draftFunction: (draft: InputQuestion) => void) => void
+  index: number
+}> = props => {
+  const { option, setQuestion, index } = props
+  return (
+    <div className={styles.option}>
+      <Input
+        value={option.value} onChange={e => setQuestion(draft => {
+          draft.options[index].value = e.target.value
+        })}
+        onBlur={() => setQuestion(draft => {draft.options[index].checkValue = true})}
+        error={option.checkValue && !validateOptionValue(option.value)}
+        type='text' placeholder={`Ответ #${index + 1}`} className={styles.optionText}
+      />
+      <Input
+        className={styles.scoreEdit}
+        value={option.score}
+        onChange={e => setQuestion(draft => {
+          draft.options[index].score = transformInputScore(e.target.value)
+        })}
+        onBlur={() => setQuestion(draft => {draft.options[index].checkScore = true})}
+        error={option.checkScore && !validateScore(option.score)}
+        placeholder='00+0'
+      />
+      <IconButton tabIndex={-1}><AttachFile /></IconButton>
+    </div>
+  )
+}
 
 function TwoColumns({children}: {children: JSX.Element[]}) {
   const total = children.length

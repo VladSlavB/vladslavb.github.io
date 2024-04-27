@@ -13,6 +13,7 @@ export type Attachment =
 export type BonusOption = {
   score: number
   opened: boolean
+  attachment?: Attachment
 }
 
 export type Option = {
