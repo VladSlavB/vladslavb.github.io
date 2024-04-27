@@ -1,64 +1,31 @@
-import styles from './styles.css'
-import React, { FormEvent, useCallback, useState } from 'react'
+import React, { FormEvent, useCallback } from 'react'
 import { useImmer } from 'use-immer'
-import { Attachment, Question, addQuestion, editQuestion, useDispatch, useSelector } from '../../../store'
+import { Question, addQuestion, editQuestion, useDispatch, useSelector } from '../../../store'
 import Button from '@mui/joy/Button'
 import Grid from '@mui/joy/Grid'
 import Stack from '@mui/joy/Stack'
-import Input from '@mui/joy/Input'
 import Card from '@mui/joy/Card'
-import IconButton from '@mui/joy/IconButton'
-import AttachFile from '@mui/icons-material/AttachFile'
 import Textarea from '@mui/joy/Textarea'
-import Tooltip from '@mui/joy/Tooltip'
-import List from '@mui/joy/List'
-import ListItem from '@mui/joy/ListItem'
-import ListItemButton from '@mui/joy/ListItemButton'
+import { InputOption, InputQuestion } from './types'
+import OptionEdit from './OptionEdit'
 
-
-type InputOption = {
-  value: string
-  score: string
-  attachment?: Attachment
-  bonusAttachment?: Attachment
-  checkValue: boolean
-  checkScore: boolean
-}
-
-type InputQuestion = {
-  value: string
-  options: InputOption[]
-  check: boolean
-}
 
 function makeInputQuestion(question: Question): InputQuestion {
   return {
     ...question,
-    check: false,
     options: question.options.map(option => ({
       ...option,
-      score: `${option.score}${option.bonus != null ? `+${option.bonus.score}` : ''}`,
-      checkValue: false,
-      checkScore: false,
+      score: `${option.score}`,
+      bonus: option.bonus != null ? {
+        ...option.bonus,
+        score: `${option.bonus.score}`,
+      } : undefined,
     }))
   }
 }
 
-function transformInputScore(value: string) {
-  const matches = value.match(/([^\+]*)\+(.*)/)
-  if (matches != null) {
-    let [ first, second ] = matches.slice(1)
-    first = first.replace(/\D/g, '').substring(0, 2)
-    second = second.replace(/\D/g, '').substring(0, 1)
-    return `${first}+${second}`
-  } else {
-    return value.replace(/\D/g, '').substring(0, 2)
-  }
-}
-
 const validateQuestionValue = (value: string) => value.trim() !== ''
-const validateOptionValue = validateQuestionValue
-const validateScore = (score: string) => /^\d{1,2}(\+\d)?$/.test(score)
+const validateScore = (score: string) => parseInt(score) > 0
 
 const NUM_OPTIONS = 10
 const DEFAULT_QUESTION: InputQuestion = {
@@ -66,10 +33,7 @@ const DEFAULT_QUESTION: InputQuestion = {
   options: Array<InputOption>(NUM_OPTIONS).fill({
     value: 'Option',
     score: '',
-    checkValue: false,
-    checkScore: false,
   }),
-  check: false,
 }
 
 type Props = {
@@ -91,12 +55,12 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
 
   const setAscendingScores = () => setQuestion(draft => {
     draft.options.forEach((option, i) => {
-      option.score = option.score.replace(/[^\+]*/, `${i + 1}`)
+      option.score = `${i + 1}`
     })
   })
   const setDescendingScores = () => setQuestion(draft => {
     draft.options.forEach((option, i) => {
-      option.score = option.score.replace(/[^\+]*/, `${NUM_OPTIONS - i}`)
+      option.score = `${NUM_OPTIONS - i}`
     })
   })
 
@@ -105,16 +69,16 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
     const newQuestion: Question = {
       value: question.value,
       options: question.options.map(option => {
-        const matches = option.score.match(/^(\d{1,2})(\+(\d))?$/)!
-        const score = parseInt(matches[1])
-        const bonus = matches[3] != null ? (
-          {score: parseInt(matches[3]), opened: false}
-        ) : undefined
         return {
           value: option.value,
+          attachment: option.attachment,
           opened: false,
-          score,
-          bonus
+          score: parseInt(option.score),
+          bonus: option.bonus != null ? {
+            score: parseInt(option.bonus.score),
+            opened: false,
+            attachment: option.bonus.attachment
+          } : undefined
         }
       })
     }
@@ -175,69 +139,6 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
 
 export default QuestionEdit
 
-
-const NewAttachment: React.FC<{withBonus?: boolean}> = props => {
-  const [ open, setOpen ] = useState(false)
-  return (
-    <Tooltip 
-      placement='right' variant='outlined'
-      open={open} onClose={() => setOpen(false)}
-      title={
-        <List size='sm'>
-          <Tooltip placement='right' variant='outlined' title={
-            <List size='sm'>
-              <ListItem><ListItemButton>Изображение</ListItemButton></ListItem>
-              <ListItem><ListItemButton>Текст</ListItemButton></ListItem>
-            </List>
-          }>
-            <ListItem><ListItemButton>Прикрепить к основному ответу</ListItemButton></ListItem>
-          </Tooltip>
-          <Tooltip placement='right' variant='outlined' title={
-            <List size='sm'>
-              <ListItem><ListItemButton>Изображение</ListItemButton></ListItem>
-              <ListItem><ListItemButton>Текст</ListItemButton></ListItem>
-            </List>
-          }>
-            <ListItem><ListItemButton>Прикрепить к бонусу</ListItemButton></ListItem>
-          </Tooltip>
-        </List>
-      }
-    >
-      <IconButton onClick={() => setOpen(true)}><AttachFile /></IconButton>
-    </Tooltip>
-  )
-}
-
-const OptionEdit: React.FC<{
-  option: InputOption
-  onEdit: (draftFunction: (draft: InputOption) => void) => void
-  placeholder?: string
-}> = props => {
-  const { option, onEdit, placeholder } = props
-  return (
-    <div className={styles.option}>
-      <Input
-        value={option.value} onChange={e => onEdit(draft => {
-          draft.value = e.target.value
-        })}
-        onBlur={() => onEdit(draft => {draft.checkValue = true})}
-        error={option.checkValue && !validateOptionValue(option.value)}
-        type='text' placeholder={placeholder} className={styles.optionText}
-      />
-      <Input
-        className={styles.scoreEdit}
-        value={option.score}
-        onChange={e => onEdit(draft => {
-          draft.score = transformInputScore(e.target.value)
-        })}
-        onBlur={() => onEdit(draft => {draft.checkScore = true})}
-        error={option.checkScore && !validateScore(option.score)}
-        placeholder='00+0'
-      />
-      <NewAttachment />
-    </div>
-  )
-}
 
 function TwoColumns({children}: {children: JSX.Element[]}) {
   const total = children.length

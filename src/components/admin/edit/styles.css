@@ -1,18 +1,30 @@
-.option {
-    display: flex;
-}
 .optionText {
     flex: 1;
 }
-.scoreEdit, .bonusEdit {
-    margin-left: 8px;
-    
+.scoreEdit, .bonusEdit {    
     & input {
         font-family: monospace;
     }
 }
 .scoreEdit {
-    width: 65px;
+    margin-left: 8px;
+    width: 45px;
+}
+.bonusEdit {
+    margin-left: 8px;
+    width: 27px;
+}
+.optionExtra {
+    display: flex;
+}
+.attachments, .bonus {
+    flex: 1;
+    padding-top: 4px;
+}
+.bonus {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
 }
 .header {
     display: flex;
