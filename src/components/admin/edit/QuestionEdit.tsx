@@ -1,5 +1,5 @@
 import styles from './styles.css'
-import React, { FormEvent, useCallback } from 'react'
+import React, { FormEvent, useCallback, useState } from 'react'
 import { useImmer } from 'use-immer'
 import { Attachment, Question, addQuestion, editQuestion, useDispatch, useSelector } from '../../../store'
 import Button from '@mui/joy/Button'
@@ -9,17 +9,18 @@ import Input from '@mui/joy/Input'
 import Card from '@mui/joy/Card'
 import IconButton from '@mui/joy/IconButton'
 import AttachFile from '@mui/icons-material/AttachFile'
-import Add from '@mui/icons-material/Add'
 import Textarea from '@mui/joy/Textarea'
+import Tooltip from '@mui/joy/Tooltip'
+import List from '@mui/joy/List'
+import ListItem from '@mui/joy/ListItem'
+import ListItemButton from '@mui/joy/ListItemButton'
 
-function clip(x: number, min: number, max: number) {
-  return Math.min(Math.max(x, min), max)
-}
 
 type InputOption = {
   value: string
   score: string
   attachment?: Attachment
+  bonusAttachment?: Attachment
   checkValue: boolean
   checkScore: boolean
 }
@@ -144,7 +145,12 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
           </Grid>
           <TwoColumns>
             {question.options.map((option, i) => (
-              <OptionEdit option={option} setQuestion={setQuestion} index={i} key={i} />
+              <OptionEdit
+                option={option}
+                onEdit={optionEditFunc => setQuestion(draft => optionEditFunc(draft.options[i]))}
+                placeholder={`Ответ #${i + 1}`}
+                key={i}
+              />
             ))}
           </TwoColumns>
           <Grid xs={12}>
@@ -169,33 +175,66 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
 
 export default QuestionEdit
 
+
+const NewAttachment: React.FC<{withBonus?: boolean}> = props => {
+  const [ open, setOpen ] = useState(false)
+  return (
+    <Tooltip 
+      placement='right' variant='outlined'
+      open={open} onClose={() => setOpen(false)}
+      title={
+        <List size='sm'>
+          <Tooltip placement='right' variant='outlined' title={
+            <List size='sm'>
+              <ListItem><ListItemButton>Изображение</ListItemButton></ListItem>
+              <ListItem><ListItemButton>Текст</ListItemButton></ListItem>
+            </List>
+          }>
+            <ListItem><ListItemButton>Прикрепить к основному ответу</ListItemButton></ListItem>
+          </Tooltip>
+          <Tooltip placement='right' variant='outlined' title={
+            <List size='sm'>
+              <ListItem><ListItemButton>Изображение</ListItemButton></ListItem>
+              <ListItem><ListItemButton>Текст</ListItemButton></ListItem>
+            </List>
+          }>
+            <ListItem><ListItemButton>Прикрепить к бонусу</ListItemButton></ListItem>
+          </Tooltip>
+        </List>
+      }
+    >
+      <IconButton onClick={() => setOpen(true)}><AttachFile /></IconButton>
+    </Tooltip>
+  )
+}
+
 const OptionEdit: React.FC<{
   option: InputOption
-  setQuestion: (draftFunction: (draft: InputQuestion) => void) => void
-  index: number
+  onEdit: (draftFunction: (draft: InputOption) => void) => void
+  placeholder?: string
 }> = props => {
-  const { option, setQuestion, index } = props
+  const { option, onEdit, placeholder } = props
   return (
     <div className={styles.option}>
       <Input
-        value={option.value} onChange={e => setQuestion(draft => {
-          draft.options[index].value = e.target.value
+        value={option.value} onChange={e => onEdit(draft => {
+          draft.value = e.target.value
         })}
-        onBlur={() => setQuestion(draft => {draft.options[index].checkValue = true})}
+        onBlur={() => onEdit(draft => {draft.checkValue = true})}
         error={option.checkValue && !validateOptionValue(option.value)}
-        type='text' placeholder={`Ответ #${index + 1}`} className={styles.optionText}
+        type='text' placeholder={placeholder} className={styles.optionText}
       />
       <Input
         className={styles.scoreEdit}
         value={option.score}
-        onChange={e => setQuestion(draft => {
-          draft.options[index].score = transformInputScore(e.target.value)
+        onChange={e => onEdit(draft => {
+          draft.score = transformInputScore(e.target.value)
         })}
-        onBlur={() => setQuestion(draft => {draft.options[index].checkScore = true})}
+        onBlur={() => onEdit(draft => {draft.checkScore = true})}
         error={option.checkScore && !validateScore(option.score)}
         placeholder='00+0'
       />
-      <IconButton tabIndex={-1}><AttachFile /></IconButton>
+      <NewAttachment />
     </div>
   )
 }
