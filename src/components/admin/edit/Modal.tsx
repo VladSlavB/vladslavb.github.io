@@ -17,23 +17,25 @@ type Props = {
   open: boolean
   onDone: (result: Attachment) => void
   onClose: () => void
+  initial?: Attachment
 }
 
-const Modal: React.FC<Props> = ({open, onClose, type, onDone}) => {
-  
+const Modal: React.FC<Props> = ({open, onClose, type, onDone, initial}) => {
   return (
     <ModalJoy open={open} onClose={onClose}>
       <ModalDialog>
         {type === 'img' ? (
-          <ImageForm onDone={url => {
+          <ImageForm initial={initial?.type === type ? initial.url : ''} onDone={url => {
             onDone({type: 'img', url})
             onClose()
           }} />
         ) : (
-          <TextForm onDone={text => {
-            onDone({type: 'text', text})
-            onClose()
-          }} />
+          type === 'text' ? (
+            <TextForm initial={initial?.type === type ? initial.text : ''} onDone={text => {
+              onDone({type: 'text', text})
+              onClose()
+            }} />
+          ) : null
         )}
       </ModalDialog>
     </ModalJoy>
@@ -43,10 +45,13 @@ const Modal: React.FC<Props> = ({open, onClose, type, onDone}) => {
 export default Modal
 
 
-const ImageForm: React.FC<{onDone: (url: string) => void}> = props => {
-  const [ value, setValue ] = useState('')
+const ImageForm: React.FC<{
+  onDone: (url: string) => void
+  initial?: string
+}> = props => {
+  const [ value, setValue ] = useState(props.initial ?? '')
   const [ loaded, setLoaded ] = useState(true)
-  const [ error, setError ] = useState(true)
+  const [ error, setError ] = useState(false)
   return <>
     <DialogContent>
       <FormControl>
@@ -73,8 +78,11 @@ const ImageForm: React.FC<{onDone: (url: string) => void}> = props => {
   </>
 }
 
-const TextForm: React.FC<{onDone: (text: string) => void}> = props => {
-  const [ value, setValue ] = useState('')
+const TextForm: React.FC<{
+  onDone: (text: string) => void
+  initial?: string
+}> = props => {
+  const [ value, setValue ] = useState(props.initial ?? '')
   return <>
     <DialogContent>
       <Textarea value={value} onChange={e => setValue(e.target.value)} autoFocus />

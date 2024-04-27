@@ -15,6 +15,7 @@ import ImageOutlined from '@mui/icons-material/ImageOutlined'
 import TextFields from '@mui/icons-material/TextFields'
 import Modal from './Modal'
 import { Attachment } from '../../../store'
+import Chip from '@mui/joy/Chip'
 
 
 const OptionEdit: React.FC<{
@@ -132,23 +133,27 @@ function useAttachments(
   ]
   const modal = (
     <Modal
+      initial={option.attachment}
       open={modalType != null} onClose={() => setModalType(undefined)}
       type={modalType}
       onDone={attachment => onEdit(draft => {draft.attachment = attachment})}
     />
   )
+  const deleter = (
+    <div
+      className={styles.close}
+      onClick={() => onEdit(draft => {delete draft.attachment})}
+    >
+      <Close fontSize='small' />
+    </div>
+  )
   const attachment = option.attachment && (option.attachment.type === 'img' ? (
     <div className={styles.imgWrapper}>
       <img src={option.attachment.url} className={styles.image} />
-      <IconButton
-        className={styles.close} variant='solid'
-        onClick={() => onEdit(draft => {delete draft.attachment})}
-      >
-        <Close />
-      </IconButton>
+      {deleter}
     </div>
   ) : (
-    <div className={styles.text}>{option.attachment.text}</div>
+    <div className={styles.text}>{option.attachment.text}{deleter}</div>
   ))
   return {buttons, modal, attachment}
 }

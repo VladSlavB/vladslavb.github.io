@@ -65,7 +65,7 @@ table.options {
 }
 .list {
     padding: 40px 20px 100px;
-    max-width: 800px;
+    max-width: 600px;
     margin: 0 auto;
 }
 .optionText {
@@ -79,25 +79,40 @@ table.options {
 }
 .image {
     width: 100%;
-    max-height: 200px;
+    max-height: 100px;
     object-fit: contain;
 }
-.imgWrapper {
-    margin-top: 4px;
-    position: relative;
-
-    &:hover .close {
-        visibility: visible;
-    }
-}
-.text {
+.imgWrapper, .text {
     margin-top: 4px;
     white-space: pre-wrap;
     position: relative;
+    
+    &:hover .close, &:hover .toggleShow {
+        visibility: visible;
+    }
 }
 .close {
     visibility: hidden;
     position: absolute !important;
     top: 0;
     right: 0;
+    padding: 2px;
+    background: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    line-height: 0;
+    &:hover {
+        background: black;
+    }
+    & svg {
+        color: white;
+    }
+}
+.toggleShow {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.7;
+    visibility: hidden;
 }

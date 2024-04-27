@@ -4,6 +4,11 @@ import styles from './styles.css'
 import background from '../../assets/background.svg'
 import React, { useEffect, useState } from 'react'
 import Teams from '../components/game/Teams'
+import { useSelector } from '../store'
+import DialogContent from '@mui/joy/DialogContent'
+import Modal from '@mui/joy/Modal'
+import ModalDialog from '@mui/joy/ModalDialog'
+import { Typography } from '@mui/joy'
 
 const CANVAS_W = 1920, CANVAS_H = 1080
 
@@ -33,8 +38,22 @@ const GameScreen: React.FC = () => {
         <Options />
         <Teams />
       </div>
+      <Demonstration />
     </div>
   )
 }
 
 export default GameScreen
+
+const Demonstration: React.FC = () => {
+  const shownAttachment = useSelector(state => state.game.shownAttachment)
+  return (
+    <Modal open={shownAttachment != null}>
+      {shownAttachment != null ? (shownAttachment.type === 'img' ? (
+        <img src={shownAttachment.url} style={{objectFit: 'contain'}} />
+      ) : (
+        <Typography fontSize='xl'>{shownAttachment.text}</Typography>
+      )) : <span />}
+    </Modal>
+  )
+}

@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React from 'react'
-import { correctAnswer, correctBonus, openBonus, openOption, removeQuestion, useDispatch, useSelector } from '../../../store'
+import { Attachment, correctAnswer, correctBonus, hideAttachment, openBonus, openOption, removeQuestion, showAttachment, useDispatch, useSelector } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -13,6 +13,7 @@ import ControlPanel from '../play/ControlPanel'
 import { confirmBonusDialog } from '../play/ConfirmBonusDialog'
 import { rightSound } from '../../../sounds'
 import ButtonGroup from '@mui/joy/ButtonGroup'
+import IconButton from '@mui/joy/IconButton'
 
 type Props = {
   index: number
@@ -115,18 +116,35 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
                 <Button
                   variant='soft'
                   color='neutral'
+                  size='sm'
                   disabled={!questionActive || option.bonus.opened || !option.opened}
                   onClick={() => onBonusClick(i)}
                 >
                   +{option.bonus.score}
                 </Button>
               )
-              return bonusButton ? (
-                <ButtonGroup>
-                  {optionButton}
-                  {bonusButton}
-                </ButtonGroup>
-              ) : optionButton
+              return (
+                <div>
+                  {bonusButton ? (
+                    <ButtonGroup>
+                      {optionButton}
+                      {bonusButton}
+                    </ButtonGroup>
+                  ) : optionButton}
+                  <div className={styles.optionExtra}>
+                    <div className={styles.attachmentsContainer}>
+                      {option.attachment != null && (!gameActive || option.opened) && (
+                        <AttachmentComponent {...option.attachment} />
+                      )}
+                    </div>
+                    <div className={styles.bonusContainer}>
+                      {option.bonus?.attachment != null && (!gameActive || option.bonus.opened) && (
+                        <AttachmentComponent {...option.bonus.attachment} />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
             })}
           </TwoColumns>
         </table>
@@ -160,4 +178,40 @@ function TwoColumns({children}: {children: JSX.Element[]}) {
       ))}
     </tbody>
   )
+}
+
+function attachmentsEqual(a: Attachment | null | undefined, b: Attachment | null | undefined) {
+  if (a == null || b == null) return false
+  if (a.type === 'img' && b.type === 'img') {
+    return a.url === b.url
+  }
+  if (a.type === 'text' && b.type === 'text') {
+    return a.text === b.text
+  }
+  return false
+}
+
+const AttachmentComponent: React.FC<Attachment> = attachment => {
+  const gameActive = useSelector(state => state.game.active)
+  const shownAttachment = useSelector(state => state.game.shownAttachment)
+  const isShown = attachmentsEqual(shownAttachment, attachment)
+  const dispatch = useDispatch()
+
+  const button = gameActive ? (
+    <IconButton
+      className={styles.toggleShow}
+      onClick={() => isShown ? dispatch(hideAttachment()) : dispatch(showAttachment(attachment))}
+    >
+      {isShown ? <VisibilityOff /> : <Visibility />}
+    </IconButton>
+  ) : null
+
+  return (attachment.type === 'img' ? (
+    <div className={styles.imgWrapper}>
+      <img src={attachment.url} className={styles.image} />
+      {button}
+    </div>
+  ) : (
+    <div className={styles.text}>{attachment.text}{button}</div>
+  ))
 }

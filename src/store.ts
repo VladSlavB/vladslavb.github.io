@@ -99,6 +99,7 @@ const GAME_INITIAL_STATE = {
   drawFinished: false,
   currentTeam: null as null | Team,
   bidScore: null as null | number,
+  shownAttachment: null as null | Attachment,
   leftTeam: {
     score: 0,
     health: 3,
@@ -193,6 +194,12 @@ const gameSlice = createSlice({
     },
     finishGame(_) {
       return GAME_INITIAL_STATE
+    },
+    showAttachment(state, action: PayloadAction<Attachment>) {
+      state.shownAttachment = action.payload
+    },
+    hideAttachment(state) {
+      state.shownAttachment = null
     }
   },
 })
@@ -200,7 +207,8 @@ const gameSlice = createSlice({
 export const {
   nextQuestion, chooseTeam,
   correctAnswer, wrongAnswer, correctBonus,
-  startGame, finishGame
+  startGame, finishGame,
+  showAttachment, hideAttachment,
 } = gameSlice.actions
 
 const store = configureStore({
