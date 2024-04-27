@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React from 'react'
-import { correctAnswer, openOption, removeQuestion, useDispatch, useSelector } from '../../../store'
+import { correctAnswer, correctBonus, openBonus, openOption, removeQuestion, useDispatch, useSelector } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -11,7 +11,8 @@ import Edit from '@mui/icons-material/Edit'
 import Delete from '@mui/icons-material/Delete'
 import ControlPanel from '../play/ControlPanel'
 import { confirmBonusDialog } from '../play/ConfirmBonusDialog'
-import { rightRingtone } from '../../../sounds'
+import { rightSound } from '../../../sounds'
+import ButtonGroup from '@mui/joy/ButtonGroup'
 
 type Props = {
   index: number
@@ -25,23 +26,36 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const currentQuestion = useSelector(state => state.game.currentQuestion)
   const currentTeam = useSelector(state => state.game.currentTeam)
   const everyoneDead = useSelector(state => state.game.leftTeam.health + state.game.rightTeam.health === 0)
-  const drawFinished = useSelector(state => state.game.drawFinished)
   const questionActive = gameActive && currentQuestion === index
   const dispatch = useDispatch()
 
   async function onOptionClick(optionIndex: number) {
     const option = question.options[optionIndex]
     dispatch(openOption({questionIndex: index, optionIndex}))
-    let score = option.score
-    if (drawFinished && option.withBonus && await confirmBonusDialog()) {
-      score += 1
-    }
     dispatch(correctAnswer({
-      score,
+      score: option.score,
       best: question.options.every(other => other.score <= option.score),
       worst: question.options.every(other => other.score > option.score || other == option)
     }))
-    rightRingtone.play()
+    if (currentTeam != null) {
+      rightSound.play()
+      if (option.bonus != null && await confirmBonusDialog()) {
+        dispatch(openBonus({questionIndex: index, optionIndex}))
+        dispatch(correctBonus({team: currentTeam, score: option.bonus.score}))
+        rightSound.play()
+      }
+    }
+  }
+
+  function onBonusClick(optionIndex: number) {
+    const option = question.options[optionIndex]
+    if (option.bonus != null) {
+      dispatch(openBonus({questionIndex: index, optionIndex}))
+      if (currentTeam != null) {
+        dispatch(correctBonus({team: currentTeam, score: option.bonus.score}))
+        rightSound.play()
+      }
+    }
   }
 
   return (
@@ -77,7 +91,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
               let className = styles.optionText
               if (!gameActive) className += ' ' + styles.black
               if (questionActive && option.opened) className += ' ' + styles.tiny
-              return (
+              const optionButton = (
                 <Button
                   fullWidth
                   key={i} onClick={() => onOptionClick(i)} size='sm'
@@ -89,13 +103,30 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
                       option.opened ? <Visibility /> : <VisibilityOff />
                     ) : undefined
                   }
-                  endDecorator={
-                    <>{option.score}{option.withBonus && '*'}</>
-                  }
+                  endDecorator={<>
+                    {option.score}
+                    {option.bonus != null && !gameActive && `(+${option.bonus.score})`}
+                  </>}
                 >
                   <span className={className}>{option.value}</span>
                 </Button>
               )
+              const bonusButton = option.bonus != null && gameActive && (
+                <Button
+                  variant='soft'
+                  color='neutral'
+                  disabled={!questionActive || option.bonus.opened || !option.opened}
+                  onClick={() => onBonusClick(i)}
+                >
+                  +{option.bonus.score}
+                </Button>
+              )
+              return bonusButton ? (
+                <ButtonGroup>
+                  {optionButton}
+                  {bonusButton}
+                </ButtonGroup>
+              ) : optionButton
             })}
           </TwoColumns>
         </table>

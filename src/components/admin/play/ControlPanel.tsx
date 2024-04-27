@@ -8,7 +8,7 @@ import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
 import Box from '@mui/joy/Box'
 import { hitAnimation } from '../../game/Teams'
-import { wrongRingtone } from '../../../sounds'
+import { wrongSound } from '../../../sounds'
 
 const ControlPanel: React.FC = () => {
   const dispatch = useDispatch()
@@ -25,7 +25,7 @@ const ControlPanel: React.FC = () => {
       hitAnimation(currentTeam)
     }
     dispatch(wrongAnswer())
-    wrongRingtone.play()
+    wrongSound.play()
   }
 
   return (
@@ -34,7 +34,7 @@ const ControlPanel: React.FC = () => {
         {currentTeam != null && !allOptionsOpen && (
           <Button
             className={styles.wrong}
-            color='danger' variant='outlined'
+            color='danger' variant='solid'
             onClick={onFail}
             disabled={everyoneDead}
           >

@@ -4,21 +4,15 @@
 .optionText {
     flex: 1;
 }
-.scoreEdit {
-    width: 50px;
+.scoreEdit, .bonusEdit {
     margin-left: 8px;
     
     & input {
         font-family: monospace;
     }
 }
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-input[type=number] {
-  -moz-appearance: textfield;
+.scoreEdit {
+    width: 65px;
 }
 .header {
     display: flex;

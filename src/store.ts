@@ -6,16 +6,21 @@ import {
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 
-type Attachment =
+export type Attachment =
 | {type: 'text', text: string}
 | {type: 'img', url: string}
+
+export type BonusOption = {
+  score: number
+  opened: boolean
+}
 
 export type Option = {
   value: string
   score: number
-  withBonus: boolean
   opened: boolean
   attachment?: Attachment
+  bonus?: BonusOption
 }
 
 export type Question = {
@@ -40,15 +45,26 @@ const questionsSlice = createSlice({
     openOption(state, action: PayloadAction<{questionIndex: number, optionIndex: number}>) {
       state[action.payload.questionIndex].options[action.payload.optionIndex].opened = true
     },
+    openBonus(state, action: PayloadAction<{questionIndex: number, optionIndex: number}>) {
+      const bonus = state[action.payload.questionIndex].options[action.payload.optionIndex].bonus
+      if (bonus != null) {
+        bonus.opened = true
+      }
+    },
     closeAllOptions(state) {
-      state.forEach(question => question.options.forEach(option => option.opened = false))
+      state.forEach(question => question.options.forEach(option => {
+        option.opened = false
+        if (option.bonus != null) {
+          option.bonus.opened = false
+        }
+      }))
     }
   }
 })
 
 export const {
   addQuestion, removeQuestion, editQuestion,
-  openOption, closeAllOptions
+  openOption, openBonus, closeAllOptions
 } = questionsSlice.actions
 
 type EditorMode =
@@ -74,12 +90,13 @@ const editorSlice = createSlice({
 
 export const { startEditing, finishEditing, startAdding } = editorSlice.actions
 
+export type Team = 'leftTeam' | 'rightTeam'
 
 const GAME_INITIAL_STATE = {
   active: false,
   currentQuestion: -1,
   drawFinished: false,
-  currentTeam: null as null | 'leftTeam' | 'rightTeam',
+  currentTeam: null as null | Team,
   bidScore: null as null | number,
   leftTeam: {
     score: 0,
@@ -91,7 +108,7 @@ const GAME_INITIAL_STATE = {
   },
 }
 
-function theOtherTeam(team: 'leftTeam' | 'rightTeam'): typeof team {
+function theOtherTeam(team: Team): Team {
   return team === 'leftTeam' ? 'rightTeam' : 'leftTeam'
 }
 
@@ -109,7 +126,10 @@ const gameSlice = createSlice({
     chooseTeam(state, action: PayloadAction<'leftTeam' | 'rightTeam'>) {
       state.currentTeam = action.payload
     },
-    correctAnswer(state, action: PayloadAction<{score: number, best?: boolean, worst?: boolean}>) {
+    correctAnswer(
+      state,
+      action: PayloadAction<{score: number, best?: boolean, worst?: boolean}>
+    ) {
       if (state.currentTeam != null) {
         state[state.currentTeam].score += action.payload.score
         if (state.drawFinished) {
@@ -136,6 +156,10 @@ const gameSlice = createSlice({
           }
         }
       }
+    },
+    correctBonus(state, action: PayloadAction<{team: Team, score: number}>) {
+      state[action.payload.team].score += action.payload.score
+      state.currentTeam = theOtherTeam(action.payload.team)
     },
     wrongAnswer(state) {
       if (state.currentTeam != null) {
@@ -172,7 +196,11 @@ const gameSlice = createSlice({
   },
 })
 
-export const { nextQuestion, chooseTeam, correctAnswer, wrongAnswer, startGame, finishGame } = gameSlice.actions
+export const {
+  nextQuestion, chooseTeam,
+  correctAnswer, wrongAnswer, correctBonus,
+  startGame, finishGame
+} = gameSlice.actions
 
 const store = configureStore({
   reducer: {

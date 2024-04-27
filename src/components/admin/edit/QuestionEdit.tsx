@@ -1,7 +1,7 @@
 import styles from './styles.css'
 import React, { FormEvent, useCallback } from 'react'
 import { useImmer } from 'use-immer'
-import { Option, Question, addQuestion, editQuestion, useDispatch, useSelector } from '../../../store'
+import { Attachment, Question, addQuestion, editQuestion, useDispatch, useSelector } from '../../../store'
 import Button from '@mui/joy/Button'
 import Grid from '@mui/joy/Grid'
 import Stack from '@mui/joy/Stack'
@@ -9,18 +9,23 @@ import Input from '@mui/joy/Input'
 import Card from '@mui/joy/Card'
 import IconButton from '@mui/joy/IconButton'
 import AttachFile from '@mui/icons-material/AttachFile'
-import Star from '@mui/icons-material/Star'
-import StarBorder from '@mui/icons-material/StarBorder'
-import Tooltip from '@mui/joy/Tooltip'
+import Add from '@mui/icons-material/Add'
 import Textarea from '@mui/joy/Textarea'
 
 function clip(x: number, min: number, max: number) {
   return Math.min(Math.max(x, min), max)
 }
 
-type InputOption = Option & {check: boolean, checkScore: boolean}
+type InputOption = {
+  value: string
+  score: string
+  attachment?: Attachment
+  checkValue: boolean
+  checkScore: boolean
+}
 
-type InputQuestion = Omit<Question, 'options'> & {
+type InputQuestion = {
+  value: string
   options: InputOption[]
   check: boolean
 }
@@ -29,24 +34,39 @@ function makeInputQuestion(question: Question): InputQuestion {
   return {
     ...question,
     check: false,
-    options: question.options.map(option => ({...option, check: false, checkScore: false}))
+    options: question.options.map(option => ({
+      ...option,
+      score: `${option.score}${option.bonus != null ? `+${option.bonus.score}` : ''}`,
+      checkValue: false,
+      checkScore: false,
+    }))
+  }
+}
+
+function transpormInputScore(value: string) {
+  const matches = value.match(/([^\+]*)\+(.*)/)
+  if (matches != null) {
+    let [ first, second ] = matches.slice(1)
+    first = first.replace(/\D/g, '').substring(0, 2)
+    second = second.replace(/\D/g, '').substring(0, 1)
+    return `${first}+${second}`
+  } else {
+    return value.replace(/\D/g, '').substring(0, 2)
   }
 }
 
 const validateQuestionValue = (value: string) => value.trim() !== ''
 const validateOptionValue = validateQuestionValue
-const validateScore = (score: number) => !isNaN(score)
+const validateScore = (score: string) => /^\d{1,2}(\+\d)?$/.test(score)
 
 const NUM_OPTIONS = 10
 const DEFAULT_QUESTION: InputQuestion = {
-  value: 'уауауус',
+  value: 'Question',
   options: Array<InputOption>(NUM_OPTIONS).fill({
-    value: 'ауаумиапип',
-    score: NaN,
-    withBonus: false,
-    check: false,
+    value: 'Option',
+    score: '',
+    checkValue: false,
     checkScore: false,
-    opened: false
   }),
   check: false,
 }
@@ -69,18 +89,38 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
   )
 
   const setAscendingScores = () => setQuestion(draft => {
-    draft.options.forEach((option, i) => option.score = i + 1)
+    draft.options.forEach((option, i) => {
+      option.score = option.score.replace(/[^\+]*/, `${i + 1}`)
+    })
   })
   const setDescendingScores = () => setQuestion(draft => {
-    draft.options.forEach((option, i) => option.score = NUM_OPTIONS - i)
+    draft.options.forEach((option, i) => {
+      option.score = option.score.replace(/[^\+]*/, `${NUM_OPTIONS - i}`)
+    })
   })
 
   const onSubmit = useCallback((e: FormEvent) => {
     e.preventDefault()
+    const newQuestion: Question = {
+      value: question.value,
+      options: question.options.map(option => {
+        const matches = option.score.match(/^(\d{1,2})(\+(\d))?$/)!
+        const score = parseInt(matches[1])
+        const bonus = matches[3] != null ? (
+          {score: parseInt(matches[3]), opened: false}
+        ) : undefined
+        return {
+          value: option.value,
+          opened: false,
+          score,
+          bonus
+        }
+      })
+    }
     if (editIndex == null) {
-      dispatch(addQuestion(question))
+      dispatch(addQuestion(newQuestion))
     } else {
-      dispatch(editQuestion({index: editIndex, newQuestion: question}))
+      dispatch(editQuestion({index: editIndex, newQuestion}))
     }
     onDone?.()
   }, [question])
@@ -108,31 +148,22 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
                 <Input
                   value={option.value} onChange={e => setQuestion(draft => {
                     draft.options[i].value = e.target.value
-                    draft.options[i].check = true
                   })}
-                  onBlur={() => setQuestion(draft => {draft.options[i].check = true})}
-                  error={option.check && !validateOptionValue(option.value)}
+                  onBlur={() => setQuestion(draft => {draft.options[i].checkValue = true})}
+                  error={option.checkValue && !validateOptionValue(option.value)}
                   type='text' placeholder={`Ответ #${i + 1}`} className={styles.optionText}
                 />
                 <Input
                   className={styles.scoreEdit}
-                  value={isNaN(option.score) ? '' : option.score}
+                  value={option.score}
                   onChange={e => setQuestion(draft => {
-                    draft.options[i].score = clip(parseInt(e.target.value), 1, 99)
-                    draft.options[i].checkScore = true
+                    draft.options[i].score = transpormInputScore(e.target.value)
                   })}
                   onBlur={() => setQuestion(draft => {draft.options[i].checkScore = true})}
                   error={option.checkScore && !validateScore(option.score)}
-                  type='number' placeholder='0'
+                  placeholder='00+0'
                 />
-                {/* <IconButton tabIndex={-1}><AttachFile /></IconButton> */}
-                <Tooltip title='Допбалл' placement='right'>
-                  <IconButton tabIndex={-1} onClick={() => setQuestion(draft => {
-                    draft.options[i].withBonus = !draft.options[i].withBonus
-                  })}>
-                    {option.withBonus ? <Star /> : <StarBorder />}
-                  </IconButton>
-                </Tooltip>
+                <IconButton tabIndex={-1}><AttachFile /></IconButton>
               </div>
             ))}
           </TwoColumns>
