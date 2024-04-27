@@ -50,7 +50,9 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
   const everythingValid = (
     validateQuestionValue(question.value) &&
     question.options.every(option => validateQuestionValue(option.value)) &&
-    question.options.every(option => validateScore(option.score))
+    question.options.every(option => (
+      validateScore(option.score) && (option.bonus == null || validateScore(option.bonus.score))
+    ))
   )
 
   const setAscendingScores = () => setQuestion(draft => {
@@ -91,7 +93,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
   }, [question])
 
   return (
-    <Card variant='soft' size='sm'>
+    <Card variant='soft' size='sm'> 
       <form onSubmit={onSubmit} onReset={onDone}>
         <Grid container columnSpacing={4} rowSpacing={2}>
           <Grid xs={12}>

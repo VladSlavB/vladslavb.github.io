@@ -1,6 +1,6 @@
 import { Attachment } from "../../../store"
 
-type InputBonus = {
+export type InputBonus = {
   score: string
   attachment?: Attachment
   check?: boolean

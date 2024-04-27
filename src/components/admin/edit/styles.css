@@ -16,15 +16,21 @@
 }
 .optionExtra {
     display: flex;
+    gap: 4px;
 }
-.attachments, .bonus {
+.attachmentsContainer, .bonusContainer {
     flex: 1;
-    padding-top: 4px;
 }
-.bonus {
+.bonusContainer {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+}
+.more {
+    align-self: center;
+}
+.bonus {
+    margin-top: 4px;
 }
 .header {
     display: flex;
@@ -70,4 +76,28 @@ table.options {
     &.tiny {
         font-weight: normal;
     }
+}
+.image {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+}
+.imgWrapper {
+    margin-top: 4px;
+    position: relative;
+
+    &:hover .close {
+        visibility: visible;
+    }
+}
+.text {
+    margin-top: 4px;
+    white-space: pre-wrap;
+    position: relative;
+}
+.close {
+    visibility: hidden;
+    position: absolute !important;
+    top: 0;
+    right: 0;
 }
