@@ -3,7 +3,12 @@ import {
   useDispatch as useOriginalDispatch,
   useSelector as useOriginalSelector,
 } from 'react-redux'
+import { save, load } from 'redux-localstorage-simple'
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
+
+
+const localStorageConfig = {namespace: 'vladslav'}
+const defaultState = load(localStorageConfig)
 
 
 export type Attachment =
@@ -216,7 +221,9 @@ const store = configureStore({
     [questionsSlice.name]: questionsSlice.reducer,
     [gameSlice.name]: gameSlice.reducer,
     [editorSlice.name]: editorSlice.reducer
-  }
+  },
+  middleware: [save(localStorageConfig)],
+  preloadedState: defaultState,
 })
 export default store
 

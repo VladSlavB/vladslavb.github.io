@@ -7,15 +7,13 @@ import StarBorder from '@mui/icons-material/StarBorder'
 import Star from '@mui/icons-material/Star'
 import Typography from '@mui/joy/Typography'
 import Close from '@mui/icons-material/Close'
-import { InputBonus, InputOption } from "./types"
-// import NewAttachment, { AttachmentModalProvider } from './NewAttachment'
+import { InputBonus, InputOption } from './types'
 import Tooltip from '@mui/joy/Tooltip'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import ImageOutlined from '@mui/icons-material/ImageOutlined'
 import TextFields from '@mui/icons-material/TextFields'
 import Modal from './Modal'
 import { Attachment } from '../../../store'
-import Chip from '@mui/joy/Chip'
 
 
 const OptionEdit: React.FC<{
@@ -153,7 +151,12 @@ function useAttachments(
       {deleter}
     </div>
   ) : (
-    <div className={styles.text}>{option.attachment.text}{deleter}</div>
+    <Typography
+      className={styles.text}
+      level='body-xs' variant='outlined' color='warning'
+    >
+      {option.attachment.text}{deleter}
+    </Typography>
   ))
   return {buttons, modal, attachment}
 }

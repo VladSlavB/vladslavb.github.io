@@ -78,18 +78,22 @@ table.options {
     }
 }
 .image {
-    width: 100%;
+    max-width: 100%;
     max-height: 100px;
-    object-fit: contain;
+    border: 2px solid white;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 .imgWrapper, .text {
-    margin-top: 4px;
     white-space: pre-wrap;
     position: relative;
+    padding: 8px;
     
     &:hover .close, &:hover .toggleShow {
         visibility: visible;
     }
+}
+.text {
+    margin: 4px 0 !important;
 }
 .close {
     visibility: hidden;
@@ -115,4 +119,7 @@ table.options {
     height: 100%;
     opacity: 0.7;
     visibility: hidden;
+}
+.bonusBack {
+    background: #eee;
 }

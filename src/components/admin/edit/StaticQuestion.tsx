@@ -106,17 +106,16 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
                   }
                   endDecorator={<>
                     {option.score}
-                    {option.bonus != null && !gameActive && `(+${option.bonus.score})`}
                   </>}
                 >
                   <span className={className}>{option.value}</span>
                 </Button>
               )
-              const bonusButton = option.bonus != null && gameActive && (
+              const bonusButton = option.bonus != null && (
                 <Button
                   variant='soft'
-                  color='neutral'
                   size='sm'
+                  className={styles.bonusBack}
                   disabled={!questionActive || option.bonus.opened || !option.opened}
                   onClick={() => onBonusClick(i)}
                 >
@@ -124,7 +123,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
                 </Button>
               )
               return (
-                <div>
+                <div key={i}>
                   {bonusButton ? (
                     <ButtonGroup>
                       {optionButton}
@@ -137,7 +136,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
                         <AttachmentComponent {...option.attachment} />
                       )}
                     </div>
-                    <div className={styles.bonusContainer}>
+                    <div className={styles.bonusContainer + ' ' + styles.bonusBack}>
                       {option.bonus?.attachment != null && (!gameActive || option.bonus.opened) && (
                         <AttachmentComponent {...option.bonus.attachment} />
                       )}
@@ -212,6 +211,10 @@ const AttachmentComponent: React.FC<Attachment> = attachment => {
       {button}
     </div>
   ) : (
-    <div className={styles.text}>{attachment.text}{button}</div>
+    <Typography className={styles.text}
+      level='body-xs' variant='outlined' color='warning'
+    >
+      {attachment.text}{button}
+    </Typography>
   ))
 }
