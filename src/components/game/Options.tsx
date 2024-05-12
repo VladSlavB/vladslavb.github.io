@@ -1,6 +1,7 @@
 import styles from './styles.css'
 import React from 'react'
 import { Option, useSelector } from '../../store'
+import Star from '@mui/icons-material/Star'
 
 
 function transposeIndex(index: number) {
@@ -27,6 +28,11 @@ export default Options
 function Option(props: Option & {index: number}) {
   let className = styles.optionContainer
   if (props.opened) className += ' ' + styles.opened
+
+  let starClassName = styles.star
+  if (props.bonus?.opened) {
+    starClassName += ' ' + styles.opened
+  }
   return (
     <div className={className}>
       <div className={styles.faceDown}>
@@ -34,7 +40,10 @@ function Option(props: Option & {index: number}) {
       </div>
       <div className={styles.option}>
         {props.opened && <>
-          <span>{props.value}</span>
+          <span className={styles.value}>{props.value}</span>
+          {props.bonus != null && (
+              <Star className={starClassName} />
+            )}
           <span>{props.score}</span>
         </>}
       </div>

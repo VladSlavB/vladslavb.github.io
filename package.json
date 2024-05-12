@@ -1,7 +1,7 @@
 {
   "main": "src/index.js",
   "scripts": {
-    "build": "webpack -p",
+    "build": "rm -rf public/*; webpack -p",
     "start": "webpack-dev-server --hot --host 0.0.0.0 --port 3000"
   },
   "dependencies": {

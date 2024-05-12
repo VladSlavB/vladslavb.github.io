@@ -71,11 +71,31 @@
 .option {
   font-size: 34px;
   text-transform: uppercase;
-  justify-content: space-between;
   padding: 0 20px;
   transform: rotateX(180deg);
   background: black;
   color: var(--bg-color);
+
+  & .value {
+    flex: 1;
+  }
+}
+@keyframes disappear {
+  to {
+    opacity: 0;
+  }
+}
+.star.star {
+  color: var(--bg-color);
+  font-size: 36px;
+  margin-right: 8px;
+  opacity: 1;
+
+  &.opened {
+    animation-name: disappear;
+    animation-fill-mode: forwards;
+    animation-iteration-count: 5;
+  }
 }
 @keyframes hitBlue {
   to {
@@ -87,7 +107,7 @@
     background: red;
   }
 }
-.leftTeam.hit, .rightTeam.hit {
+.leftTeam.hit, .rightTeam.hit, .star.opened {
   animation-duration: 0.1s;
   animation-direction: alternate;
   animation-iteration-count: 6;

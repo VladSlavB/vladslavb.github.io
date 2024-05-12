@@ -7,7 +7,7 @@ module.exports = {
   entry: ["./main.ts"],
   output: {
     path: path.join(__dirname, "public"),
-    filename: "[hash].js"
+    filename: "[hash].js",
   },
   plugins: [
     new HtmlWebpackPlugin({template: 'index.html'}),
