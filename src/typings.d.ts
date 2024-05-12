@@ -10,3 +10,7 @@ declare module '*.wav' {
   const img: string
   export default img;
 }
+declare module '*.mp3' {
+  const img: string
+  export default img;
+}

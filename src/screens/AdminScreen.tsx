@@ -1,10 +1,12 @@
 import styles from './styles.css'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import QuestionsList from '../components/admin/edit/QuestionsList'
 import Button from '@mui/joy/Button/Button'
 import { closeAllOptions, finishGame, nextQuestion, startGame, useDispatch, useSelector } from '../store'
 import OpenInNew from '@mui/icons-material/OpenInNew'
 import Typography from '@mui/joy/Typography'
+import AudiotrackIcon from '@mui/icons-material/Audiotrack'
+import { introSound } from '../sounds'
 
 export let gameWindow: Window | null = null
 
@@ -71,12 +73,25 @@ const GameScreenOpener: React.FC = () => {
 const AdminScreen: React.FC = () => {
   const hasQuestions = useSelector(state => state.questions.length > 0)
   const editorActive = useSelector(state => state.editor.mode !== 'view')
+  const gameActive = useSelector(state => state.game.active)
   return (
     <div>
       {!hasQuestions && !editorActive && (
         <Typography className={styles.welcome}>
           Это пункт управления игрой. Прежде всего, нужно создать вопросы викторины
         </Typography>
+      )}
+      {gameActive && (
+        <div className={styles.musicButtonWrapper}>
+          <Button
+            startDecorator={<AudiotrackIcon />}
+            variant='soft'
+            size='lg'
+            onClick={() => introSound.play()}
+          >
+            Заставка
+          </Button>
+        </div>
       )}
       <QuestionsList />
       {hasQuestions && (

@@ -49,7 +49,7 @@ module.exports = {
         ],
       },
       {
-        test: /(\.wav|\.svg)$/,
+        test: /(\.wav|\.svg|\.mp3)$/,
         exclude: /node_modules/,
         use: ['file-loader?name=[name].[ext]']
       }

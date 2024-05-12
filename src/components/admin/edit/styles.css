@@ -126,3 +126,6 @@ table.options {
         color: white;
     }
 }
+:global .MuiModal-root.MuiModal-root {
+    z-index: 100500;
+}

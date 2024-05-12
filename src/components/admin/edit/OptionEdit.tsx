@@ -147,7 +147,7 @@ function useAttachments(
   )
   const attachment = option.attachment && (option.attachment.type === 'img' ? (
     <div className={styles.imgWrapper}>
-      <img src={option.attachment.url} className={styles.image} />
+      <img src={option.attachment.url} className={styles.image} height={80} />
       {deleter}
     </div>
   ) : (

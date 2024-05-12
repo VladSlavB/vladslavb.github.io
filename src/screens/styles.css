@@ -54,3 +54,8 @@
         opacity: 1;
     }
 }
+.musicButtonWrapper.musicButtonWrapper {
+    display: flex;
+    padding-top: 40px;
+    justify-content: center;
+}

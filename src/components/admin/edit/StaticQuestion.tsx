@@ -196,7 +196,7 @@ function TwoColumns({children}: {children: JSX.Element[]}) {
 export const AttachmentComponent: React.FC<Attachment> = attachment => (
   attachment.type === 'img' ? (
     <div className={styles.imgWrapper}>
-      <img src={attachment.url} className={styles.image} />
+      <img src={attachment.url} className={styles.image} height={80} />
     </div>
   ) : (
     <Typography className={styles.text}
