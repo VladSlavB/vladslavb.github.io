@@ -67,6 +67,7 @@ const ImageForm: React.FC<{
           }
         }} autoFocus />
         <FormHelperText>Ссылка на изображение</FormHelperText>
+        <br />
         {value != '' && (loaded ? (
         <img src={value} className={error ? undefined : styles.image} />
         ) : <LinearProgress />)}

@@ -63,7 +63,7 @@ const OptionEdit: React.FC<{
             />
         </Stack>
       </Tooltip>
-      <div className={styles.optionExtra}>
+      <div className={styles.optionExtra} style={{gap : 8}}>
         <div className={styles.attachmentsContainer}>
           {attachment}
         </div>

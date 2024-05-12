@@ -5,14 +5,8 @@ import background from '../../assets/background.svg'
 import React, { useEffect, useState } from 'react'
 import Teams from '../components/game/Teams'
 import { useSelector } from '../store'
-import DialogContent from '@mui/joy/DialogContent'
-import Modal from '@mui/joy/Modal'
-import ModalDialog from '@mui/joy/ModalDialog'
-import { Typography } from '@mui/joy'
 
 const CANVAS_W = 1920, CANVAS_H = 1080
-
-console.log(background)
 
 const GameScreen: React.FC = () => {
   const [ { scale, left, top }, setTransform ] = useState({scale: 0, left: 0, top: 0})
@@ -46,14 +40,16 @@ const GameScreen: React.FC = () => {
 export default GameScreen
 
 const Demonstration: React.FC = () => {
-  const shownAttachment = useSelector(state => state.game.shownAttachment)
+  const currentAttachment = useSelector(state => state.game.currentAttachment)
+  let className = styles.imgModal
+  if (currentAttachment?.type === 'img' && currentAttachment.show) {
+    className += ' ' + styles.shown
+  }
   return (
-    <Modal open={shownAttachment != null}>
-      {shownAttachment != null ? (shownAttachment.type === 'img' ? (
-        <img src={shownAttachment.url} style={{objectFit: 'contain'}} />
-      ) : (
-        <Typography fontSize='xl'>{shownAttachment.text}</Typography>
-      )) : <span />}
-    </Modal>
+    <div className={className}>
+      {currentAttachment?.type === 'img' ? (
+        <img src={currentAttachment.url} className={styles.img} />
+      ) : <span />}
+    </div>
   )
 }

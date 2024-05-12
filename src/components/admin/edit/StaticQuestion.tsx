@@ -1,19 +1,17 @@
 import styles from './styles.css'
 import React from 'react'
-import { Attachment, correctAnswer, correctBonus, hideAttachment, openBonus, openOption, removeQuestion, showAttachment, useDispatch, useSelector } from '../../../store'
+import { Attachment, correctAnswer, correctBonus, openBonus, openOption, removeQuestion, setActiveAttachment, setBonusChance, useDispatch, useSelector } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
 import Stack from '@mui/joy/Stack'
-import VisibilityOff from '@mui/icons-material/VisibilityOffOutlined'
-import Visibility from '@mui/icons-material/VisibilityOutlined'
+import ImageOutlined from '@mui/icons-material/ImageOutlined'
+import TextFields from '@mui/icons-material/TextFields'
 import Edit from '@mui/icons-material/Edit'
 import Delete from '@mui/icons-material/Delete'
 import ControlPanel from '../play/ControlPanel'
-import { confirmBonusDialog } from '../play/ConfirmBonusDialog'
 import { rightSound } from '../../../sounds'
 import ButtonGroup from '@mui/joy/ButtonGroup'
-import IconButton from '@mui/joy/IconButton'
 
 type Props = {
   index: number
@@ -27,6 +25,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const currentQuestion = useSelector(state => state.game.currentQuestion)
   const currentTeam = useSelector(state => state.game.currentTeam)
   const everyoneDead = useSelector(state => state.game.leftTeam.health + state.game.rightTeam.health === 0)
+  const bonusChance = useSelector(state => state.game.bonusChance)
   const questionActive = gameActive && currentQuestion === index
   const dispatch = useDispatch()
 
@@ -38,12 +37,16 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
       best: question.options.every(other => other.score <= option.score),
       worst: question.options.every(other => other.score > option.score || other == option)
     }))
+    dispatch(setActiveAttachment(option.attachment))
     if (currentTeam != null) {
       rightSound.play()
-      if (option.bonus != null && await confirmBonusDialog()) {
-        dispatch(openBonus({questionIndex: index, optionIndex}))
-        dispatch(correctBonus({team: currentTeam, score: option.bonus.score}))
-        rightSound.play()
+      if (option.bonus != null) {
+        dispatch(setBonusChance({
+          team: currentTeam,
+          optionIndex,
+          score: option.bonus.score,
+          attachment: option.bonus?.attachment
+        }))
       }
     }
   }
@@ -56,6 +59,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
         dispatch(correctBonus({team: currentTeam, score: option.bonus.score}))
         rightSound.play()
       }
+      dispatch(setActiveAttachment(option.bonus.attachment))
     }
   }
 
@@ -88,7 +92,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
         <table className={styles.options}>
           <TwoColumns>
             {question.options.map((option, i) => {
-              const canClick = (currentTeam != null || everyoneDead) && questionActive && !option.opened
+              const canClick = (currentTeam != null || everyoneDead) && questionActive && !option.opened && bonusChance == null
               let className = styles.optionText
               if (!gameActive) className += ' ' + styles.black
               if (questionActive && option.opened) className += ' ' + styles.tiny
@@ -99,9 +103,13 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
                   variant='plain'
                   color='neutral'
                   disabled={!canClick}
-                  startDecorator={
-                    questionActive ? (
-                      option.opened ? <Visibility /> : <VisibilityOff />
+                  startDecorator={ 
+                    questionActive && option.attachment != null ? (
+                      option.attachment.type === 'img' ? (
+                        <ImageOutlined />
+                      ) : (
+                        <TextFields />
+                      )
                     ) : undefined
                   }
                   endDecorator={<>
@@ -115,9 +123,17 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
                 <Button
                   variant='soft'
                   size='sm'
-                  className={styles.bonusBack}
-                  disabled={!questionActive || option.bonus.opened || !option.opened}
+                  disabled={!questionActive || option.bonus.opened || !option.opened || bonusChance != null}
                   onClick={() => onBonusClick(i)}
+                  startDecorator={ 
+                    questionActive && option.bonus.attachment != null ? (
+                      option.bonus.attachment.type === 'img' ? (
+                        <ImageOutlined />
+                      ) : (
+                        <TextFields />
+                      )
+                    ) : undefined
+                  }
                 >
                   +{option.bonus.score}
                 </Button>
@@ -130,18 +146,16 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
                       {bonusButton}
                     </ButtonGroup>
                   ) : optionButton}
-                  <div className={styles.optionExtra}>
-                    <div className={styles.attachmentsContainer}>
-                      {option.attachment != null && (!gameActive || option.opened) && (
-                        <AttachmentComponent {...option.attachment} />
-                      )}
+                  {!gameActive && (
+                    <div className={styles.optionExtra + ' ' + styles.pad}>
+                      <div className={styles.attachmentsContainer}>
+                        {option.attachment != null && <AttachmentComponent {...option.attachment} />}
+                      </div>
+                      <div className={styles.bonusContainer + ' ' + styles.bonusBack}>
+                        {option.bonus?.attachment != null && <AttachmentComponent {...option.bonus.attachment} />}
+                      </div>
                     </div>
-                    <div className={styles.bonusContainer + ' ' + styles.bonusBack}>
-                      {option.bonus?.attachment != null && (!gameActive || option.bonus.opened) && (
-                        <AttachmentComponent {...option.bonus.attachment} />
-                      )}
-                    </div>
-                  </div>
+                  )}
                 </div>
               )
             })}
@@ -179,42 +193,16 @@ function TwoColumns({children}: {children: JSX.Element[]}) {
   )
 }
 
-function attachmentsEqual(a: Attachment | null | undefined, b: Attachment | null | undefined) {
-  if (a == null || b == null) return false
-  if (a.type === 'img' && b.type === 'img') {
-    return a.url === b.url
-  }
-  if (a.type === 'text' && b.type === 'text') {
-    return a.text === b.text
-  }
-  return false
-}
-
-const AttachmentComponent: React.FC<Attachment> = attachment => {
-  const gameActive = useSelector(state => state.game.active)
-  const shownAttachment = useSelector(state => state.game.shownAttachment)
-  const isShown = attachmentsEqual(shownAttachment, attachment)
-  const dispatch = useDispatch()
-
-  const button = gameActive ? (
-    <IconButton
-      className={styles.toggleShow}
-      onClick={() => isShown ? dispatch(hideAttachment()) : dispatch(showAttachment(attachment))}
-    >
-      {isShown ? <VisibilityOff /> : <Visibility />}
-    </IconButton>
-  ) : null
-
-  return (attachment.type === 'img' ? (
+export const AttachmentComponent: React.FC<Attachment> = attachment => (
+  attachment.type === 'img' ? (
     <div className={styles.imgWrapper}>
       <img src={attachment.url} className={styles.image} />
-      {button}
     </div>
   ) : (
     <Typography className={styles.text}
       level='body-xs' variant='outlined' color='warning'
     >
-      {attachment.text}{button}
+      {attachment.text}
     </Typography>
-  ))
-}
+  )
+)

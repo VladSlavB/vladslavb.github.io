@@ -104,7 +104,13 @@ const GAME_INITIAL_STATE = {
   drawFinished: false,
   currentTeam: null as null | Team,
   bidScore: null as null | number,
-  shownAttachment: null as null | Attachment,
+  currentAttachment: null as null | Attachment & {show: boolean},
+  bonusChance: null as null | {
+    team: Team
+    optionIndex: number
+    score: number
+    attachment?: Attachment
+  },
   leftTeam: {
     score: 0,
     health: 3,
@@ -200,12 +206,26 @@ const gameSlice = createSlice({
     finishGame(_) {
       return GAME_INITIAL_STATE
     },
-    showAttachment(state, action: PayloadAction<Attachment>) {
-      state.shownAttachment = action.payload
+    showAttachment(state) {
+      if (state.currentAttachment != null) {
+        state.currentAttachment.show = true
+      }
     },
     hideAttachment(state) {
-      state.shownAttachment = null
-    }
+      if (state.currentAttachment != null) {
+        state.currentAttachment.show = false
+      }
+    },
+    setActiveAttachment(state, action: PayloadAction<Attachment | null | undefined>) {
+      if (action.payload) {
+        state.currentAttachment = {...action.payload, show: false}
+      } else {
+        state.currentAttachment = null
+      }
+    },
+    setBonusChance(state, action: PayloadAction<typeof GAME_INITIAL_STATE['bonusChance']>) {
+      state.bonusChance = action.payload
+    },
   },
 })
 
@@ -213,7 +233,8 @@ export const {
   nextQuestion, chooseTeam,
   correctAnswer, wrongAnswer, correctBonus,
   startGame, finishGame,
-  showAttachment, hideAttachment,
+  showAttachment, hideAttachment, setActiveAttachment,
+  setBonusChance,
 } = gameSlice.actions
 
 const store = configureStore({

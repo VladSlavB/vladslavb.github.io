@@ -3,7 +3,6 @@ import GameScreen from './screens/GameScreen'
 import store from './store'
 import { Provider } from 'react-redux'
 import AdminScreen from './screens/AdminScreen'
-import ConfirmBonusDialog from './components/admin/play/ConfirmBonusDialog'
 
 
 const App: React.FC = () => {
@@ -18,7 +17,6 @@ const App: React.FC = () => {
       ) : (
         <AdminScreen />
       )}
-      <ConfirmBonusDialog />
     </Provider>
   )
 }

@@ -29,9 +29,9 @@ const validateScore = (score: string) => parseInt(score) > 0
 
 const NUM_OPTIONS = 10
 const DEFAULT_QUESTION: InputQuestion = {
-  value: 'Question',
+  value: '',
   options: Array<InputOption>(NUM_OPTIONS).fill({
-    value: 'Option',
+    value: '',
     score: '',
   }),
 }

@@ -8,8 +8,13 @@ const Question: React.FC = () => {
       state.questions[state.game.currentQuestion].value
     ) : null
   ))
+  const textAttachment = useSelector(state => (
+    state.game.currentAttachment?.type === 'text' && state.game.currentAttachment.show ? (
+      state.game.currentAttachment.text
+    ) : null
+  ))
   return question != null ? (
-    <div className={styles.question}>{question}</div>
+    <div className={styles.question}>{textAttachment ?? question}</div>
   ) : null
 }
 
