@@ -4,7 +4,8 @@ import {
   useSelector as useOriginalSelector,
 } from 'react-redux'
 import { save, load } from 'redux-localstorage-simple'
-import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { combineReducers, configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
+import undoable from 'redux-undo'
 
 
 const localStorageConfig = {namespace: 'vladslav'}
@@ -177,16 +178,14 @@ const gameSlice = createSlice({
     wrongAnswer(state) {
       if (state.currentTeam != null) {
         if (!state.drawFinished) {
+          state.currentTeam = theOtherTeam(state.currentTeam)
           if (state.bidScore == null) {
             state.bidScore = 0
-            state.currentTeam = theOtherTeam(state.currentTeam)
-          } else if (state.bidScore == 0) {
+          } else if (state.bidScore === 0) {
             state.bidScore = null
-            state.currentTeam = null
           } else {
             state.drawFinished = true
             state.bidScore = null
-            state.currentTeam = theOtherTeam(state.currentTeam)
           }
         } else {
           state[state.currentTeam].health--
@@ -238,17 +237,18 @@ export const {
 } = gameSlice.actions
 
 const store = configureStore({
-  reducer: {
+  reducer: undoable(combineReducers({
     [questionsSlice.name]: questionsSlice.reducer,
     [gameSlice.name]: gameSlice.reducer,
     [editorSlice.name]: editorSlice.reducer
-  },
+  })),
   middleware: [save(localStorageConfig)],
   preloadedState: defaultState,
 })
 export default store
 
-type RootState = ReturnType<typeof store.getState>
+type UndoableState = ReturnType<typeof store.getState>
+type RootState = UndoableState['present']
 type AppDispatch = typeof store.dispatch
 export const useDispatch: () => AppDispatch = useOriginalDispatch
-export const useSelector: TypedUseSelectorHook<RootState> = useOriginalSelector
+export const useSelector: TypedUseSelectorHook<RootState> = selector => (useOriginalSelector as TypedUseSelectorHook<UndoableState>)(state => selector(state.present))

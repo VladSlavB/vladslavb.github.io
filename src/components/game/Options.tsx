@@ -36,15 +36,15 @@ function Option(props: Option & {index: number}) {
   return (
     <div className={className}>
       <div className={styles.faceDown}>
-        <span>{props.index + 1}{props.bonus != null && '*'}</span>
+        <span>{props.index + 1}{props.bonus != null && <Star className={styles.starClosed} />}</span>
       </div>
       <div className={styles.option}>
         {props.opened && <>
           <span className={styles.value}>{props.value}</span>
           {props.bonus != null && (
-              <Star className={starClassName} />
+              <span className={starClassName}><Star className={starClassName} /></span>
             )}
-          <span>{props.score}</span>
+          <span className={styles.optionScore}>{props.score}</span>
         </>}
       </div>
     </div>

@@ -38,16 +38,14 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
       worst: question.options.every(other => other.score > option.score || other == option)
     }))
     dispatch(setActiveAttachment(option.attachment))
-    if (currentTeam != null) {
-      rightSound.play()
-      if (option.bonus != null) {
-        dispatch(setBonusChance({
-          team: currentTeam,
-          optionIndex,
-          score: option.bonus.score,
-          attachment: option.bonus?.attachment
-        }))
-      }
+    rightSound.play()
+    if (currentTeam != null && option.bonus != null) {
+      dispatch(setBonusChance({
+        team: currentTeam,
+        optionIndex,
+        score: option.bonus.score,
+        attachment: option.bonus?.attachment
+      }))
     }
   }
 
@@ -57,9 +55,9 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
       dispatch(openBonus({questionIndex: index, optionIndex}))
       if (currentTeam != null) {
         dispatch(correctBonus({team: currentTeam, score: option.bonus.score}))
-        rightSound.play()
       }
       dispatch(setActiveAttachment(option.bonus.attachment))
+      rightSound.play()
     }
   }
 
