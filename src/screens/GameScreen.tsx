@@ -4,16 +4,26 @@ import styles from './styles.css'
 import background from '../../assets/background.svg'
 import React, { useEffect, useState } from 'react'
 import Teams from '../components/game/Teams'
-import { useSelector } from '../store'
+import { useGameSelector, useSelector } from '../store'
+import { useStore } from 'react-redux'
 
 const CANVAS_W = 1920, CANVAS_H = 1080
 
 const GameScreen: React.FC = () => {
   const [ { scale, left, top }, setTransform ] = useState({scale: 0, left: 0, top: 0})
+  const store = useStore()
   useEffect(() => {
     adaptSize()
     window.addEventListener('resize', adaptSize)
-    return () => window.removeEventListener('resize', adaptSize)
+    const interval = setInterval(() => {
+      if (opener?.store != store) {
+        close()
+      }
+    }, 500)
+    return () => {
+      window.removeEventListener('resize', adaptSize)
+      clearInterval(interval)
+    }
   }, [])
   function adaptSize() {
     const windowW = document.body.clientWidth
@@ -40,9 +50,10 @@ const GameScreen: React.FC = () => {
 export default GameScreen
 
 const Demonstration: React.FC = () => {
-  const currentAttachment = useSelector(state => state.game.currentAttachment)
+  const currentAttachment = useGameSelector(game => game.currentAttachment)
+  const attachmentShown = useSelector(state => state.attachmentVisible)
   let className = styles.imgModal
-  if (currentAttachment?.type === 'img' && currentAttachment.show) {
+  if (currentAttachment?.type === 'img' && attachmentShown) {
     className += ' ' + styles.shown
   }
   return (

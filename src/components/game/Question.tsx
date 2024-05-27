@@ -1,19 +1,19 @@
-import { useSelector } from '../../store'
+import { useGameSelector, useSelector } from '../../store'
 import styles from './styles.css'
 import React from 'react'
 
 const Question: React.FC = () => {
   const question = useSelector(state => (
-    state.game.currentQuestion >= 0 ? (
-      state.questions[state.game.currentQuestion].value
+    state.game.present.currentQuestion >= 0 ? (
+      state.questions[state.game.present.currentQuestion].value
     ) : null
   ))
-  const textAttachment = useSelector(state => (
-    state.game.currentAttachment?.type === 'text' ? (
-      state.game.currentAttachment.text
+  const textAttachment = useGameSelector(game => (
+    game.currentAttachment?.type === 'text' ? (
+      game.currentAttachment.text
     ) : null
   ))
-  const attachmentShown = useSelector(state => state.game.currentAttachment?.show ?? false)
+  const attachmentShown = useSelector(state => state.attachmentVisible)
   let className = styles.question
   if (textAttachment != null && attachmentShown) {
     className += ' ' + styles.attachmentShown

@@ -18,3 +18,23 @@
 .showButton {
     z-index: 101;
 }
+
+.panel {
+    position: fixed;
+    bottom: 20px;
+    height: 0;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    z-index: 2;
+}
+.spacer {
+    flex: 1;
+}
+
+.historyActions {
+    background: white;
+}

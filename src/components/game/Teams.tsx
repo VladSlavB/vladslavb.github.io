@@ -1,14 +1,14 @@
 import styles from './styles.css'
 import heart from '../../../assets/heart.svg'
 import React from 'react'
-import { useSelector } from '../../store'
-import { gameWindow } from '../../screens/AdminScreen'
+import { useGameSelector } from '../../store'
+import { gameWindow } from '../admin/play/SticklyControls'
 
 
 const Teams: React.FC = () => {
-  const leftTeam = useSelector(state => state.game.leftTeam)
-  const rightTeam = useSelector(state => state.game.rightTeam)
-  const display = useSelector(state => state.game.currentQuestion >= 0)
+  const leftTeam = useGameSelector(game => game.leftTeam)
+  const rightTeam = useGameSelector(game => game.rightTeam)
+  const display = useGameSelector(game => game.currentQuestion >= 0)
   return display ? <>
     <Team {...leftTeam} team='leftTeam' />
     <Team {...rightTeam} team='rightTeam' />

@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React from 'react'
-import { Option, useSelector } from '../../store'
+import { Option, useGameSelector, useSelector } from '../../store'
 import Star from '@mui/icons-material/Star'
 
 
@@ -10,27 +10,38 @@ function transposeIndex(index: number) {
 
 const Options: React.FC = () => {
   const options = useSelector(state => (
-    state.game.currentQuestion >= 0 ? (
-      state.questions[state.game.currentQuestion].options
+    state.game.present.currentQuestion >= 0 ? (
+      state.questions[state.game.present.currentQuestion].options
     ) : null
   ))
+  const openedOptions = useGameSelector(game => game.openedOptions)
+  const openedBonuses = useGameSelector(game => game.openedBonuses)
   return options != null ? (
     <div className={styles.options}>
-      {options.map((_, i) => (
-        <Option {...options[transposeIndex(i)]} key={i} index={transposeIndex(i)} />
-      ))}
+      {options.map((_, i) => {
+        const index = transposeIndex(i)
+        return (
+          <Option
+            {...options[index]}
+            opened={openedOptions[index]}
+            key={index}
+            bonusOpened={openedBonuses[index]}
+            index={index}
+          />
+        )
+      })}
     </div>
   ) : null
 }
 
 export default Options
 
-function Option(props: Option & {index: number}) {
+function Option(props: Option & {index: number, opened: boolean, bonusOpened: boolean}) {
   let className = styles.optionContainer
   if (props.opened) className += ' ' + styles.opened
 
   let starClassName = styles.star
-  if (props.bonus?.opened) {
+  if (props.bonusOpened) {
     starClassName += ' ' + styles.opened
   }
   return (

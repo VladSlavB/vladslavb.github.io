@@ -74,11 +74,9 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
         return {
           value: option.value,
           attachment: option.attachment,
-          opened: false,
           score: parseInt(option.score),
           bonus: option.bonus != null ? {
             score: parseInt(option.bonus.score),
-            opened: false,
             attachment: option.bonus.attachment
           } : undefined
         }

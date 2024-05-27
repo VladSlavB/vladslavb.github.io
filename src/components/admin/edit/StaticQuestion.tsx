@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React from 'react'
-import { Attachment, correctAnswer, correctBonus, openBonus, openOption, removeQuestion, setActiveAttachment, setBonusChance, useDispatch, useSelector } from '../../../store'
+import { Attachment, correctAnswer, correctBonus, removeQuestion, useDispatch, useSelector, useGameSelector } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -9,7 +9,7 @@ import ImageOutlined from '@mui/icons-material/ImageOutlined'
 import TextFields from '@mui/icons-material/TextFields'
 import Edit from '@mui/icons-material/Edit'
 import Delete from '@mui/icons-material/Delete'
-import ControlPanel from '../play/ControlPanel'
+import QuestionControls from '../play/QuestionControls'
 import { rightSound } from '../../../sounds'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 
@@ -21,42 +21,37 @@ type Props = {
 
 const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const question = useSelector(state => state.questions[index])
-  const gameActive = useSelector(state => state.game.active)
-  const currentQuestion = useSelector(state => state.game.currentQuestion)
-  const currentTeam = useSelector(state => state.game.currentTeam)
-  const everyoneDead = useSelector(state => state.game.leftTeam.health + state.game.rightTeam.health === 0)
-  const bonusChance = useSelector(state => state.game.bonusChance)
+  const gameActive = useSelector(state => state.game.present.active)
+  const currentQuestion = useSelector(state => state.game.present.currentQuestion)
+  const currentTeam = useGameSelector(game => game.currentTeam)
+  const everyoneDead = useGameSelector(game => game.leftTeam.health + game.rightTeam.health === 0)
+  const bonusChance = useGameSelector(game => game.bonusChance)
   const questionActive = gameActive && currentQuestion === index
+  const openedOptions = useGameSelector(game => game.openedOptions)
+  const openedBonuses = useGameSelector(game => game.openedBonuses)
   const dispatch = useDispatch()
 
   async function onOptionClick(optionIndex: number) {
     const option = question.options[optionIndex]
-    dispatch(openOption({questionIndex: index, optionIndex}))
     dispatch(correctAnswer({
+      index: optionIndex,
       score: option.score,
       best: question.options.every(other => other.score <= option.score),
-      worst: question.options.every(other => other.score > option.score || other == option)
+      attachment: option.attachment,
+      bonus: option.bonus,
     }))
-    dispatch(setActiveAttachment(option.attachment))
     rightSound.play()
-    if (currentTeam != null && option.bonus != null) {
-      dispatch(setBonusChance({
-        team: currentTeam,
-        optionIndex,
-        score: option.bonus.score,
-        attachment: option.bonus?.attachment
-      }))
-    }
   }
 
   function onBonusClick(optionIndex: number) {
     const option = question.options[optionIndex]
     if (option.bonus != null) {
-      dispatch(openBonus({questionIndex: index, optionIndex}))
-      if (currentTeam != null) {
-        dispatch(correctBonus({team: currentTeam, score: option.bonus.score}))
-      }
-      dispatch(setActiveAttachment(option.bonus.attachment))
+      dispatch(correctBonus({
+        index: optionIndex,
+        team: currentTeam,
+        score: option.bonus.score,
+        attachment: option.bonus.attachment,
+      }))
       rightSound.play()
     }
   }
@@ -90,10 +85,10 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
         <table className={styles.options}>
           <TwoColumns>
             {question.options.map((option, i) => {
-              const canClick = (currentTeam != null || everyoneDead) && questionActive && !option.opened && bonusChance == null
+              const canClick = (currentTeam != null || everyoneDead) && questionActive && !openedOptions[i] && bonusChance == null
               let className = styles.optionText
               if (!gameActive) className += ' ' + styles.black
-              if (questionActive && option.opened) className += ' ' + styles.tiny
+              if (questionActive && openedOptions[i]) className += ' ' + styles.tiny
               const optionButton = (
                 <Button
                   fullWidth
@@ -121,7 +116,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
                 <Button
                   variant='soft'
                   size='sm'
-                  disabled={!questionActive || option.bonus.opened || !option.opened || bonusChance != null}
+                  disabled={!questionActive || openedBonuses[i] || !openedOptions[i] || bonusChance != null}
                   onClick={() => onBonusClick(i)}
                   startDecorator={ 
                     questionActive && option.bonus.attachment != null ? (
@@ -160,7 +155,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
           </TwoColumns>
         </table>
         {gameActive && currentQuestion === index && (
-          <ControlPanel />
+          <QuestionControls />
         )}
       </Stack>
     </Card>

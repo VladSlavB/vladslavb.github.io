@@ -4,8 +4,9 @@ import {
   useSelector as useOriginalSelector,
 } from 'react-redux'
 import { save, load } from 'redux-localstorage-simple'
-import { combineReducers, configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import undoable from 'redux-undo'
+import { createContext } from 'react'
 
 
 const localStorageConfig = {namespace: 'vladslav'}
@@ -18,14 +19,12 @@ export type Attachment =
 
 export type BonusOption = {
   score: number
-  opened: boolean
   attachment?: Attachment
 }
 
 export type Option = {
   value: string
   score: number
-  opened: boolean
   attachment?: Attachment
   bonus?: BonusOption
 }
@@ -49,29 +48,11 @@ const questionsSlice = createSlice({
     editQuestion(state, action: PayloadAction<{index: number, newQuestion: Question}>) {
       state[action.payload.index] = action.payload.newQuestion
     },
-    openOption(state, action: PayloadAction<{questionIndex: number, optionIndex: number}>) {
-      state[action.payload.questionIndex].options[action.payload.optionIndex].opened = true
-    },
-    openBonus(state, action: PayloadAction<{questionIndex: number, optionIndex: number}>) {
-      const bonus = state[action.payload.questionIndex].options[action.payload.optionIndex].bonus
-      if (bonus != null) {
-        bonus.opened = true
-      }
-    },
-    closeAllOptions(state) {
-      state.forEach(question => question.options.forEach(option => {
-        option.opened = false
-        if (option.bonus != null) {
-          option.bonus.opened = false
-        }
-      }))
-    }
   }
 })
 
 export const {
   addQuestion, removeQuestion, editQuestion,
-  openOption, openBonus, closeAllOptions
 } = questionsSlice.actions
 
 type EditorMode =
@@ -98,6 +79,7 @@ const editorSlice = createSlice({
 export const { startEditing, finishEditing, startAdding } = editorSlice.actions
 
 export type Team = 'leftTeam' | 'rightTeam'
+const NUM_OPTIONS = 10
 
 const GAME_INITIAL_STATE = {
   active: false,
@@ -105,12 +87,12 @@ const GAME_INITIAL_STATE = {
   drawFinished: false,
   currentTeam: null as null | Team,
   bidScore: null as null | number,
-  currentAttachment: null as null | Attachment & {show: boolean},
+  currentAttachment: null as null | undefined | Attachment,
+  openedOptions: Array<boolean>(NUM_OPTIONS).fill(false),
+  openedBonuses: Array<boolean>(NUM_OPTIONS).fill(false),
   bonusChance: null as null | {
     team: Team
     optionIndex: number
-    score: number
-    attachment?: Attachment
   },
   leftTeam: {
     score: 0,
@@ -136,16 +118,32 @@ const gameSlice = createSlice({
       state.bidScore = null
       state.drawFinished = false
       state.currentTeam = null
+      state.openedOptions.fill(false)
+      state.openedBonuses.fill(false)
     },
     chooseTeam(state, action: PayloadAction<'leftTeam' | 'rightTeam'>) {
       state.currentTeam = action.payload
     },
     correctAnswer(
       state,
-      action: PayloadAction<{score: number, best?: boolean, worst?: boolean}>
+      action: PayloadAction<{
+        index: number,
+        score: number,
+        best?: boolean,
+        attachment?: Attachment,
+        bonus?: BonusOption,
+      }>
     ) {
+      state.openedOptions[action.payload.index] = true
+      state.currentAttachment = action.payload.attachment
       if (state.currentTeam != null) {
         state[state.currentTeam].score += action.payload.score
+        if (action.payload.bonus != null) {
+          state.bonusChance = {
+            team: state.currentTeam,
+            optionIndex: action.payload.index,
+          }
+        }
         if (state.drawFinished) {
           const newTeam = theOtherTeam(state.currentTeam)
           if (state[newTeam].health > 0) {
@@ -155,9 +153,6 @@ const gameSlice = createSlice({
           if (state.bidScore == null) {
             if (action.payload.best) {
               state.drawFinished = true
-            } else if (action.payload.worst) {
-              state.drawFinished = true
-              state.currentTeam = theOtherTeam(state.currentTeam)
             } else {
               state.bidScore = action.payload.score
               state.currentTeam = theOtherTeam(state.currentTeam)
@@ -171,9 +166,19 @@ const gameSlice = createSlice({
         }
       }
     },
-    correctBonus(state, action: PayloadAction<{team: Team, score: number}>) {
-      state[action.payload.team].score += action.payload.score
-      state.currentTeam = theOtherTeam(action.payload.team)
+    correctBonus(state, action: PayloadAction<{
+      index: number,
+      team: Team | null,
+      score: number,
+      attachment?: Attachment,
+    }>) {
+      state.openedBonuses[action.payload.index] = true
+      state.bonusChance = null
+      state.currentAttachment = action.payload.attachment
+      if (action.payload.team != null) {
+        state[action.payload.team].score += action.payload.score
+        state.currentTeam = theOtherTeam(action.payload.team)
+      }
     },
     wrongAnswer(state) {
       if (state.currentTeam != null) {
@@ -199,56 +204,54 @@ const gameSlice = createSlice({
         }
       }
     },
+    discardChance(state) {
+      state.bonusChance = null
+    },
     startGame(state) {
       state.active = true
     },
     finishGame(_) {
       return GAME_INITIAL_STATE
     },
-    showAttachment(state) {
-      if (state.currentAttachment != null) {
-        state.currentAttachment.show = true
-      }
-    },
-    hideAttachment(state) {
-      if (state.currentAttachment != null) {
-        state.currentAttachment.show = false
-      }
-    },
-    setActiveAttachment(state, action: PayloadAction<Attachment | null | undefined>) {
-      if (action.payload) {
-        state.currentAttachment = {...action.payload, show: false}
-      } else {
-        state.currentAttachment = null
-      }
-    },
-    setBonusChance(state, action: PayloadAction<typeof GAME_INITIAL_STATE['bonusChance']>) {
-      state.bonusChance = action.payload
-    },
   },
 })
 
 export const {
   nextQuestion, chooseTeam,
-  correctAnswer, wrongAnswer, correctBonus,
+  correctAnswer, wrongAnswer, correctBonus, discardChance,
   startGame, finishGame,
-  showAttachment, hideAttachment, setActiveAttachment,
-  setBonusChance,
 } = gameSlice.actions
 
+const attachmentVisibilitySlice = createSlice({
+  name: 'attachmentVisible',
+  initialState: false,
+  reducers: {
+    toggleAttachmentVisibility(state) {
+      return !state
+    }
+  }
+})
+
+export const {
+  toggleAttachmentVisibility,
+} = attachmentVisibilitySlice.actions
+
 const store = configureStore({
-  reducer: undoable(combineReducers({
+  reducer: {
     [questionsSlice.name]: questionsSlice.reducer,
-    [gameSlice.name]: gameSlice.reducer,
-    [editorSlice.name]: editorSlice.reducer
-  })),
+    [gameSlice.name]: undoable(gameSlice.reducer),
+    [editorSlice.name]: editorSlice.reducer,
+    [attachmentVisibilitySlice.name]: attachmentVisibilitySlice.reducer,
+  },
   middleware: [save(localStorageConfig)],
   preloadedState: defaultState,
 })
 export default store
 
-type UndoableState = ReturnType<typeof store.getState>
-type RootState = UndoableState['present']
+type RootState = ReturnType<typeof store.getState>
 type AppDispatch = typeof store.dispatch
 export const useDispatch: () => AppDispatch = useOriginalDispatch
-export const useSelector: TypedUseSelectorHook<RootState> = selector => (useOriginalSelector as TypedUseSelectorHook<UndoableState>)(state => selector(state.present))
+export const useSelector: TypedUseSelectorHook<RootState> = useOriginalSelector
+export function useGameSelector<T>(selector: (_: typeof GAME_INITIAL_STATE) => T) {
+  return useSelector(state => selector(state.game.present))
+}

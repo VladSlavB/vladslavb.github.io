@@ -2,7 +2,7 @@ import styles from './styles.css'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import React from 'react'
-import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, openBonus, correctBonus, setBonusChance, showAttachment, hideAttachment, setActiveAttachment } from '../../../store'
+import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardChance, useGameSelector, toggleAttachmentVisibility } from '../../../store'
 import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
@@ -19,17 +19,36 @@ function teamColor(team: string) {
   }
 }
 
-const ControlPanel: React.FC = () => {
+const QuestionControls: React.FC = () => {
   const dispatch = useDispatch()
-  const { currentTeam, currentQuestion, drawFinished, bonusChance } = useSelector(state => state.game)
-  const allOptionsOpen = useSelector(state => currentQuestion >= 0 && (
-    state.questions[currentQuestion].options.every(option => option.opened)
-  ))
+  const currentTeam = useGameSelector(game => game.currentTeam)
+  const currentQuestion = useGameSelector(game => game.currentQuestion)
+  const drawFinished = useGameSelector(game => game.drawFinished)
+  const bonusChance = useGameSelector(game => game.bonusChance)
+  const questionComplete = useSelector(state => {
+    const game = state.game.present
+    if (game.currentQuestion >= 0) {
+      const currentOptions = state.questions[game.currentQuestion].options
+      return game.openedOptions.every(_ => _) && (
+        game.openedBonuses.every((open, i) => open || currentOptions[i].bonus == null)
+      )
+    }
+    return false
+  })
+  const bonusInChance = useSelector(state => {
+    const game = state.game.present
+    if (game.bonusChance != null) {
+      return state.questions[game.currentQuestion]?.options[game.bonusChance?.optionIndex].bonus
+    }
+    return null
+  })
   const totalQuestions = useSelector(state => state.questions.length)
   const everyoneDead = currentTeam == null && drawFinished
   const lastQuestion = currentQuestion === totalQuestions - 1
 
-  const currentAttachment = useSelector(state => state.game.currentAttachment)
+  const currentAttachment = useGameSelector(game => game.currentAttachment)
+
+  const attachmentShown = useSelector(state => state.attachmentVisible)
 
   function onFail() {
     if (currentTeam != null) {
@@ -40,14 +59,18 @@ const ControlPanel: React.FC = () => {
   }
 
   function onChanceClick(success: boolean) {
-    if (bonusChance != null) {
+    if (bonusChance != null && bonusInChance != null) {
       if (success) {
-        dispatch(openBonus({questionIndex: currentQuestion, optionIndex: bonusChance.optionIndex}))
-        dispatch(correctBonus({team: bonusChance.team, score: bonusChance.score}))
-        dispatch(setActiveAttachment(bonusChance.attachment))
+        dispatch(correctBonus({
+          index: bonusChance.optionIndex,
+          team: bonusChance.team,
+          score: bonusInChance.score,
+          attachment: bonusInChance.attachment,
+        }))
         rightSound.play()
+      } else {
+        dispatch(discardChance())
       }
-      dispatch(setBonusChance(null))
     }
   }
 
@@ -56,7 +79,7 @@ const ControlPanel: React.FC = () => {
       <Stack direction='row' spacing={2} className={styles.gameControl} flexWrap='wrap'>
         {bonusChance == null ? <>
           <Box flexGrow={1}>
-            {currentTeam != null && !allOptionsOpen && (
+            {currentTeam != null && !questionComplete && (
               <Button
                 className={styles.wrong}
                 color='danger' variant='solid'
@@ -85,14 +108,14 @@ const ControlPanel: React.FC = () => {
                 </ButtonGroup>
               )
             ) : (
-              !allOptionsOpen && (
+              !questionComplete && (
                 <Typography color={teamColor(currentTeam)}>
                   Отвечают {currentTeam === 'leftTeam' ? 'синие' : 'красные'}
                 </Typography>
               )
             )}
           </>}
-          {allOptionsOpen && !lastQuestion && (
+          {questionComplete && !lastQuestion && (
             <Button
               style={{alignSelf: 'flex-start'}}
               color='primary'
@@ -113,14 +136,14 @@ const ControlPanel: React.FC = () => {
       </Stack>
       {currentAttachment && (
         <Stack direction='row' gap={2} alignItems='center'>
-          {currentAttachment.show && <div className={styles.overlay} />}
+          {attachmentShown && <div className={styles.overlay} />}
           <AttachmentComponent {...currentAttachment} />
           <Button
             variant='soft'
-            onClick={() => dispatch(currentAttachment.show ? hideAttachment() : showAttachment())}
+            onClick={() => dispatch(toggleAttachmentVisibility())}
             className={styles.showButton}
           >
-            {currentAttachment.show ? 'Скрыть' : 'Показать'}
+            {attachmentShown ? 'Скрыть' : 'Показать'}
           </Button>
         </Stack>
       )}
@@ -128,4 +151,4 @@ const ControlPanel: React.FC = () => {
   )
 }
 
-export default ControlPanel
+export default QuestionControls

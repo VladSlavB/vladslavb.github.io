@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React, { useEffect } from 'react'
-import { finishEditing, startAdding, startEditing, useDispatch, useSelector } from '../../../store'
+import { finishEditing, startAdding, startEditing, useDispatch, useGameSelector, useSelector } from '../../../store'
 import Button from '@mui/joy/Button'
 import StaticQuestion from './StaticQuestion'
 import QuestionEdit from './QuestionEdit'
@@ -10,7 +10,7 @@ import Add from '@mui/icons-material/Add'
 const QuestionsList: React.FC = () => {
   const numQuestions = useSelector(state => state.questions.length)
   const editor = useSelector(state => state.editor)
-  const gameActive = useSelector(state => state.game.active)
+  const gameActive = useGameSelector(game => game.active)
   useEffect(() => {
     if (editor.mode === 'add') {
       window.scrollTo(0, document.body.clientHeight)
