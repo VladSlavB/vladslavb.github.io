@@ -2,13 +2,13 @@ import styles from './styles.css'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import React from 'react'
-import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardChance, useGameSelector, toggleAttachmentVisibility } from '../../../store'
+import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance } from '../../../store'
 import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
 import Box from '@mui/joy/Box'
 import { hitAnimation } from '../../game/Teams'
-import { rightSound, wrongSound } from '../../../sounds'
+import { finishSound, rightSound, wrongSound } from '../../../sounds'
 import { AttachmentComponent } from '../edit/StaticQuestion'
 
 function teamColor(team: string) {
@@ -45,10 +45,12 @@ const QuestionControls: React.FC = () => {
   const totalQuestions = useSelector(state => state.questions.length)
   const everyoneDead = currentTeam == null && drawFinished
   const lastQuestion = currentQuestion === totalQuestions - 1
+  const almostEveryoneDead = useGameSelector(game => game.leftTeam.health + game.rightTeam.health === 0)
 
   const currentAttachment = useGameSelector(game => game.currentAttachment)
 
   const attachmentShown = useSelector(state => state.attachmentVisible)
+  const healthChance = useGameSelector(game => game.healthChance)
 
   function onFail() {
     if (currentTeam != null) {
@@ -58,7 +60,7 @@ const QuestionControls: React.FC = () => {
     wrongSound.play()
   }
 
-  function onChanceClick(success: boolean) {
+  function onBonusChanceClick(success: boolean) {
     if (bonusChance != null && bonusInChance != null) {
       if (success) {
         dispatch(correctBonus({
@@ -69,7 +71,19 @@ const QuestionControls: React.FC = () => {
         }))
         rightSound.play()
       } else {
-        dispatch(discardChance())
+        dispatch(discardBonusChance())
+      }
+    }
+  }
+
+  function onHealthChanceClick(utilize: boolean) {
+    if (utilize) {
+      dispatch(utilizeHealthChance())
+    } else {
+      dispatch(discardHealthChance())
+      if (almostEveryoneDead) {
+        // now completely dead
+        finishSound.play()
       }
     }
   }
@@ -77,7 +91,23 @@ const QuestionControls: React.FC = () => {
   return (
     <>
       <Stack direction='row' spacing={2} className={styles.gameControl} flexWrap='wrap'>
-        {bonusChance == null ? <>
+        {bonusChance != null ? <>
+          <Typography>
+            Команда <Typography color={teamColor(bonusChance.team)}>
+              {bonusChance.team === 'leftTeam' ? 'синих' : 'красных'}
+            </Typography> правильно ответила на допвопрос?
+          </Typography>
+          <Button color='success' onClick={() => onBonusChanceClick(true)}>Да</Button>
+          <Button color='danger' onClick={() => onBonusChanceClick(false)}>Нет</Button>
+        </> : healthChance != null ? <>
+          <Typography>
+            Оставить команду <Typography color={teamColor(healthChance)}>
+              {healthChance === 'leftTeam' ? 'синих' : 'красных'}
+            </Typography> в живых, <b>вернув</b> им жизнь?
+          </Typography>
+          <Button color='success' onClick={() => onHealthChanceClick(true)}>Да</Button>
+          <Button color='danger' onClick={() => onHealthChanceClick(false)}>Нет</Button>
+        </> : <>
           <Box flexGrow={1}>
             {currentTeam != null && !questionComplete && (
               <Button
@@ -124,14 +154,6 @@ const QuestionControls: React.FC = () => {
               Следующий вопрос
             </Button>
           )}
-        </> : <>
-          <Typography>
-            Команда <Typography color={teamColor(bonusChance.team)}>
-              {bonusChance.team === 'leftTeam' ? 'синих' : 'красных'}
-            </Typography> правильно ответила на допвопрос?
-          </Typography>
-          <Button color='success' onClick={() => onChanceClick(true)}>Да</Button>
-          <Button color='danger' onClick={() => onChanceClick(false)}>Нет</Button>
         </>}
       </Stack>
       {currentAttachment && (

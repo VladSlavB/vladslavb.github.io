@@ -6,7 +6,6 @@ import {
 import { save, load } from 'redux-localstorage-simple'
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import undoable from 'redux-undo'
-import { createContext } from 'react'
 
 
 const localStorageConfig = {namespace: 'vladslav'}
@@ -94,6 +93,7 @@ const GAME_INITIAL_STATE = {
     team: Team
     optionIndex: number
   },
+  healthChance: null as null | Team,
   leftTeam: {
     score: 0,
     health: 3,
@@ -136,33 +136,32 @@ const gameSlice = createSlice({
     ) {
       state.openedOptions[action.payload.index] = true
       state.currentAttachment = action.payload.attachment
-      if (state.currentTeam != null) {
-        state[state.currentTeam].score += action.payload.score
-        if (action.payload.bonus != null) {
-          state.bonusChance = {
-            team: state.currentTeam,
-            optionIndex: action.payload.index,
-          }
+      if (state.currentTeam == null) return
+      state[state.currentTeam].score += action.payload.score
+      if (action.payload.bonus != null) {
+        state.bonusChance = {
+          team: state.currentTeam,
+          optionIndex: action.payload.index,
         }
-        if (state.drawFinished) {
-          const newTeam = theOtherTeam(state.currentTeam)
-          if (state[newTeam].health > 0) {
-            state.currentTeam = newTeam
+      }
+      if (state.drawFinished) {
+        const newTeam = theOtherTeam(state.currentTeam)
+        if (state[newTeam].health > 0) {
+          state.currentTeam = newTeam
+        }
+      } else {
+        if (state.bidScore == null) {
+          if (action.payload.best) {
+            state.drawFinished = true
+          } else {
+            state.bidScore = action.payload.score
+            state.currentTeam = theOtherTeam(state.currentTeam)
           }
         } else {
-          if (state.bidScore == null) {
-            if (action.payload.best) {
-              state.drawFinished = true
-            } else {
-              state.bidScore = action.payload.score
-              state.currentTeam = theOtherTeam(state.currentTeam)
-            }
-          } else {
-            if (state.bidScore >= action.payload.score) {
-              state.currentTeam = theOtherTeam(state.currentTeam)
-            }
-            state.drawFinished = true
+          if (state.bidScore >= action.payload.score) {
+            state.currentTeam = theOtherTeam(state.currentTeam)
           }
+          state.drawFinished = true
         }
       }
     },
@@ -181,31 +180,49 @@ const gameSlice = createSlice({
       }
     },
     wrongAnswer(state) {
-      if (state.currentTeam != null) {
-        if (!state.drawFinished) {
-          state.currentTeam = theOtherTeam(state.currentTeam)
-          if (state.bidScore == null) {
-            state.bidScore = 0
-          } else if (state.bidScore === 0) {
-            state.bidScore = null
-          } else {
-            state.drawFinished = true
-            state.bidScore = null
-          }
+      if (state.currentTeam == null) return
+      if (!state.drawFinished) {
+        state.currentTeam = theOtherTeam(state.currentTeam)
+        if (state.bidScore == null) {
+          state.bidScore = 0
+        } else if (state.bidScore === 0) {
+          state.bidScore = null
         } else {
-          state[state.currentTeam].health--
-          const newTeam = theOtherTeam(state.currentTeam)
-          if (state[newTeam].health > 0) {
-            state.currentTeam = newTeam
-          }
-          if (state.leftTeam.health === 0 && state.rightTeam.health === 0) {
-            state.currentTeam = null
-          }
+          state.drawFinished = true
+          state.bidScore = null
+        }
+      } else {
+        state[state.currentTeam].health--
+        if (state[state.currentTeam].health === 0) {
+          state.healthChance = state.currentTeam
+        }
+        const newTeam = theOtherTeam(state.currentTeam)
+        if (state[newTeam].health > 0) {
+          state.currentTeam = newTeam
         }
       }
     },
-    discardChance(state) {
+    utilizeHealthChance(state) {
+      if (state.healthChance == null) return
+      state[state.healthChance].health++
+      state.healthChance = null
+    },
+    discardHealthChance(state) {
+      if (state.leftTeam.health === 0 && state.rightTeam.health === 0) {
+        state.currentTeam = null
+      }
+      state.healthChance = null
+    },
+    discardBonusChance(state) {
       state.bonusChance = null
+    },
+    deltaScore(state, action: PayloadAction<{team: Team, value: number}>) {
+      state[action.payload.team].score += action.payload.value
+    },
+    plusHealth(state, action: PayloadAction<Team>) {
+      if (state[action.payload].health < 3) {
+        state[action.payload].health += 1
+      }
     },
     startGame(state) {
       state.active = true
@@ -218,7 +235,9 @@ const gameSlice = createSlice({
 
 export const {
   nextQuestion, chooseTeam,
-  correctAnswer, wrongAnswer, correctBonus, discardChance,
+  correctAnswer, wrongAnswer, correctBonus, discardBonusChance,
+  utilizeHealthChance, discardHealthChance,
+  deltaScore, plusHealth,
   startGame, finishGame,
 } = gameSlice.actions
 

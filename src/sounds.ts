@@ -1,6 +1,7 @@
 import right from '../assets/right.wav'
 import wrong from '../assets/wrong.wav'
 import intro from '../assets/intro.mp3'
+import finish from '../assets/finish.mp3'
 
 class Sound {
   audio: HTMLAudioElement
@@ -26,3 +27,4 @@ class Sound {
 export const rightSound = new Sound(right)
 export const wrongSound = new Sound(wrong)
 export const introSound = new Sound(intro)
+export const finishSound = new Sound(finish)
