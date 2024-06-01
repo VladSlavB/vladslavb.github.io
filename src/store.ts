@@ -8,10 +8,6 @@ import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import undoable from 'redux-undo'
 
 
-const localStorageConfig = {namespace: 'vladslav'}
-const defaultState = load(localStorageConfig)
-
-
 export type Attachment =
 | {type: 'text', text: string}
 | {type: 'img', url: string}
@@ -78,7 +74,20 @@ const editorSlice = createSlice({
 export const { startEditing, finishEditing, startAdding } = editorSlice.actions
 
 export type Team = 'leftTeam' | 'rightTeam'
+
 const NUM_OPTIONS = 10
+function makeDefaultOptions() {
+  return Array(NUM_OPTIONS).fill(null).map(_ => ({
+    opened: false,
+    bonus: {
+      opened: false,
+      vacantFor: {
+        leftTeam: true,
+        rightTeam: true,
+      }
+    }
+  }))
+}
 
 const GAME_INITIAL_STATE = {
   active: false,
@@ -87,8 +96,7 @@ const GAME_INITIAL_STATE = {
   currentTeam: null as null | Team,
   bidScore: null as null | number,
   currentAttachment: null as null | undefined | Attachment,
-  openedOptions: Array<boolean>(NUM_OPTIONS).fill(false),
-  openedBonuses: Array<boolean>(NUM_OPTIONS).fill(false),
+  options: makeDefaultOptions(),
   bonusChance: null as null | {
     team: Team
     optionIndex: number
@@ -118,8 +126,7 @@ const gameSlice = createSlice({
       state.bidScore = null
       state.drawFinished = false
       state.currentTeam = null
-      state.openedOptions.fill(false)
-      state.openedBonuses.fill(false)
+      state.options = makeDefaultOptions()
     },
     chooseTeam(state, action: PayloadAction<'leftTeam' | 'rightTeam'>) {
       state.currentTeam = action.payload
@@ -134,7 +141,7 @@ const gameSlice = createSlice({
         bonus?: BonusOption,
       }>
     ) {
-      state.openedOptions[action.payload.index] = true
+      state.options[action.payload.index].opened = true
       state.currentAttachment = action.payload.attachment
       if (state.currentTeam == null) return
       state[state.currentTeam].score += action.payload.score
@@ -171,7 +178,7 @@ const gameSlice = createSlice({
       score: number,
       attachment?: Attachment,
     }>) {
-      state.openedBonuses[action.payload.index] = true
+      state.options[action.payload.index].bonus.opened = true
       state.bonusChance = null
       state.currentAttachment = action.payload.attachment
       if (action.payload.team != null) {
@@ -202,6 +209,10 @@ const gameSlice = createSlice({
         }
       }
     },
+    wrongBonus(state, action: PayloadAction<number>) {
+      if (state.currentTeam == null) return
+      state.options[action.payload].bonus.vacantFor[state.currentTeam] = false
+    },
     utilizeHealthChance(state) {
       if (state.healthChance == null) return
       state[state.healthChance].health++
@@ -214,6 +225,8 @@ const gameSlice = createSlice({
       state.healthChance = null
     },
     discardBonusChance(state) {
+      if (state.bonusChance == null) return
+      state.options[state.bonusChance.optionIndex].bonus.vacantFor[state.bonusChance.team] = false
       state.bonusChance = null
     },
     deltaScore(state, action: PayloadAction<{team: Team, value: number}>) {
@@ -235,7 +248,8 @@ const gameSlice = createSlice({
 
 export const {
   nextQuestion, chooseTeam,
-  correctAnswer, wrongAnswer, correctBonus, discardBonusChance,
+  correctAnswer, wrongAnswer,
+  correctBonus, discardBonusChance, wrongBonus,
   utilizeHealthChance, discardHealthChance,
   deltaScore, plusHealth,
   startGame, finishGame,
@@ -254,6 +268,21 @@ const attachmentVisibilitySlice = createSlice({
 export const {
   toggleAttachmentVisibility,
 } = attachmentVisibilitySlice.actions
+
+
+const localStorageConfig = {namespace: 'vladslav'}
+const defaultState = load(localStorageConfig)
+
+// managing old versions
+const CURRENT_VERSION = 1
+;(function() {
+  const state = defaultState as any
+  if (localStorage.vladslav_version != CURRENT_VERSION) {
+    state.game = GAME_INITIAL_STATE
+    localStorage.vladslav_version = CURRENT_VERSION
+  }
+})()
+
 
 const store = configureStore({
   reducer: {

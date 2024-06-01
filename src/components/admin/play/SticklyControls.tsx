@@ -49,7 +49,7 @@ const StickyControls: React.FC = () => {
         ) : (
           <ButtonGroup className={styles.outlined}>
             <Button color='primary' onClick={() => dispatch(deltaScore({team: 'leftTeam', value: -1}))}>
-              -1
+              &minus;1
             </Button>
             <Button color='primary' onClick={() => dispatch(deltaScore({team: 'leftTeam', value: 1}))}>
               +1
@@ -64,7 +64,7 @@ const StickyControls: React.FC = () => {
               +1
             </Button>
             <Button color='danger' onClick={() => dispatch(deltaScore({team: 'rightTeam', value: -1}))}>
-              -1
+              &minus;1
             </Button>
           </ButtonGroup>
         )

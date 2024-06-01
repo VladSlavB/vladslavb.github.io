@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React from 'react'
-import { Attachment, correctAnswer, correctBonus, removeQuestion, useDispatch, useSelector, useGameSelector } from '../../../store'
+import { Attachment, correctAnswer, correctBonus, removeQuestion, useDispatch, useSelector, useGameSelector, wrongBonus } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -10,8 +10,11 @@ import TextFields from '@mui/icons-material/TextFields'
 import Edit from '@mui/icons-material/Edit'
 import Delete from '@mui/icons-material/Delete'
 import QuestionControls from '../play/QuestionControls'
-import { rightSound } from '../../../sounds'
+import { rightSound, wrongSound } from '../../../sounds'
 import ButtonGroup from '@mui/joy/ButtonGroup'
+import Close from '@mui/icons-material/Close'
+import IconButton from '@mui/joy/IconButton'
+import { hitAnimation } from '../../game/Teams'
 
 type Props = {
   index: number
@@ -27,11 +30,10 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const everyoneDead = useGameSelector(game => game.leftTeam.health + game.rightTeam.health === 0)
   const bonusChance = useGameSelector(game => game.bonusChance)
   const questionActive = gameActive && currentQuestion === index
-  const openedOptions = useGameSelector(game => game.openedOptions)
-  const openedBonuses = useGameSelector(game => game.openedBonuses)
+  const optionsState = useGameSelector(game => game.options)
   const dispatch = useDispatch()
 
-  async function onOptionClick(optionIndex: number) {
+  function onOptionClick(optionIndex: number) {
     const option = question.options[optionIndex]
     dispatch(correctAnswer({
       index: optionIndex,
@@ -54,6 +56,13 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
       }))
       rightSound.play()
     }
+  }
+
+  function onBonusWrong(optionIndex: number) {
+    if (currentTeam == null) return
+    dispatch(wrongBonus(optionIndex))
+    hitAnimation(currentTeam)
+    wrongSound.play()
   }
 
   return (
@@ -85,60 +94,62 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
         <table className={styles.options}>
           <TwoColumns>
             {question.options.map((option, i) => {
-              const canClick = (currentTeam != null || everyoneDead) && questionActive && !openedOptions[i] && bonusChance == null
+              const canClick = (currentTeam != null || everyoneDead) && questionActive && !optionsState[i].opened && bonusChance == null
               let className = styles.optionText
               if (!gameActive) className += ' ' + styles.black
-              if (questionActive && openedOptions[i]) className += ' ' + styles.tiny
-              const optionButton = (
-                <Button
-                  fullWidth
-                  key={i} onClick={() => onOptionClick(i)} size='sm'
+              if (questionActive && optionsState[i].opened) className += ' ' + styles.tiny
+              const size = gameActive ? 'lg' : 'sm'
+              const buttons = [(
+                <Button fullWidth
+                  key='option'
                   variant='plain'
                   color='neutral'
+                  onClick={() => onOptionClick(i)}
+                  size={size}
                   disabled={!canClick}
-                  startDecorator={ 
-                    questionActive && option.attachment != null ? (
-                      option.attachment.type === 'img' ? (
-                        <ImageOutlined />
-                      ) : (
-                        <TextFields />
-                      )
-                    ) : undefined
-                  }
+                  startDecorator={questionActive && attachmentIcon(option.attachment)}
                   endDecorator={<>
                     {option.score}
                   </>}
                 >
                   <span className={className}>{option.value}</span>
                 </Button>
+              )]
+              const disabled = !questionActive || optionsState[i].bonus.opened || !optionsState[i].opened || bonusChance != null || (
+                currentTeam != null && !optionsState[i].bonus.vacantFor[currentTeam]
               )
-              const bonusButton = option.bonus != null && (
-                <Button
-                  variant='soft'
-                  size='sm'
-                  disabled={!questionActive || openedBonuses[i] || !openedOptions[i] || bonusChance != null}
-                  onClick={() => onBonusClick(i)}
-                  startDecorator={ 
-                    questionActive && option.bonus.attachment != null ? (
-                      option.bonus.attachment.type === 'img' ? (
-                        <ImageOutlined />
-                      ) : (
-                        <TextFields />
-                      )
-                    ) : undefined
-                  }
-                >
-                  +{option.bonus.score}
-                </Button>
-              )
+              if (option.bonus != null) {
+                buttons.push(
+                  <Button
+                    key='bonus'
+                    title='Правильный ответ на звёздочку'
+                    variant='soft'
+                    disabled={disabled}
+                    size={size}
+                    onClick={() => onBonusClick(i)}
+                    startDecorator={questionActive && attachmentIcon(option.bonus.attachment)}
+                  >
+                    +{option.bonus.score}
+                  </Button>
+                )
+              }
+              if (!disabled && currentTeam != null) {
+                buttons.push(
+                  <IconButton
+                    key='bonus-wrong'
+                    title='Неправильный ответ на звёздочку'
+                    variant='soft' color='danger'
+                    onClick={() => onBonusWrong(i)}
+                  >
+                    <Close />
+                  </IconButton>
+                )
+              }
               return (
                 <div key={i}>
-                  {bonusButton ? (
-                    <ButtonGroup>
-                      {optionButton}
-                      {bonusButton}
-                    </ButtonGroup>
-                  ) : optionButton}
+                  <ButtonGroup size={size}>
+                    {buttons}
+                  </ButtonGroup>
                   {!gameActive && (
                     <div className={styles.optionExtra + ' ' + styles.pad}>
                       <div className={styles.attachmentsContainer}>
@@ -199,3 +210,13 @@ export const AttachmentComponent: React.FC<Attachment> = attachment => (
     </Typography>
   )
 )
+
+function attachmentIcon(attachment?: Attachment | null) {
+  return attachment != null ? (
+    attachment.type === 'img' ? (
+      <ImageOutlined fontSize='small' />
+    ) : (
+      <TextFields fontSize='small' />
+    )
+  ) : undefined
+}

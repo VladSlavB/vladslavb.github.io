@@ -29,9 +29,9 @@ const QuestionControls: React.FC = () => {
     const game = state.game.present
     if (game.currentQuestion >= 0) {
       const currentOptions = state.questions[game.currentQuestion].options
-      return game.openedOptions.every(_ => _) && (
-        game.openedBonuses.every((open, i) => open || currentOptions[i].bonus == null)
-      )
+      return game.options.every((option, i) => (
+        option.opened && (currentOptions[i].bonus == null || option.bonus.opened)
+      ))
     }
     return false
   })
@@ -61,18 +61,19 @@ const QuestionControls: React.FC = () => {
   }
 
   function onBonusChanceClick(success: boolean) {
-    if (bonusChance != null && bonusInChance != null) {
-      if (success) {
-        dispatch(correctBonus({
-          index: bonusChance.optionIndex,
-          team: bonusChance.team,
-          score: bonusInChance.score,
-          attachment: bonusInChance.attachment,
-        }))
-        rightSound.play()
-      } else {
-        dispatch(discardBonusChance())
-      }
+    if (bonusChance == null || bonusInChance == null) return
+    if (success) {
+      dispatch(correctBonus({
+        index: bonusChance.optionIndex,
+        team: bonusChance.team,
+        score: bonusInChance.score,
+        attachment: bonusInChance.attachment,
+      }))
+      rightSound.play()
+    } else {
+      dispatch(discardBonusChance())
+      hitAnimation(bonusChance.team)
+      wrongSound.play()
     }
   }
 
@@ -111,6 +112,7 @@ const QuestionControls: React.FC = () => {
           <Box flexGrow={1}>
             {currentTeam != null && !questionComplete && (
               <Button
+                size='lg'
                 className={styles.wrong}
                 color='danger' variant='solid'
                 onClick={onFail}
@@ -129,11 +131,13 @@ const QuestionControls: React.FC = () => {
                     onClick={() => dispatch(chooseTeam('leftTeam'))}
                     variant='outlined'
                     color='primary'
+                    size='lg'
                   >Синие быстрее</Button>
                   <Button
                     onClick={() => dispatch(chooseTeam('rightTeam'))}
                     variant='outlined'
                     color='danger'
+                    size='lg'
                   >Красные быстрее</Button>
                 </ButtonGroup>
               )
@@ -161,9 +165,9 @@ const QuestionControls: React.FC = () => {
           {attachmentShown && <div className={styles.overlay} />}
           <AttachmentComponent {...currentAttachment} />
           <Button
-            variant='soft'
+            variant='soft' size='lg'
             onClick={() => dispatch(toggleAttachmentVisibility())}
-            className={styles.showButton}
+            className={attachmentShown ? styles.hideButton : undefined}
           >
             {attachmentShown ? 'Скрыть' : 'Показать'}
           </Button>

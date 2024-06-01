@@ -14,8 +14,7 @@ const Options: React.FC = () => {
       state.questions[state.game.present.currentQuestion].options
     ) : null
   ))
-  const openedOptions = useGameSelector(game => game.openedOptions)
-  const openedBonuses = useGameSelector(game => game.openedBonuses)
+  const optionsState = useGameSelector(game => game.options)
   return options != null ? (
     <div className={styles.options}>
       {options.map((_, i) => {
@@ -23,9 +22,9 @@ const Options: React.FC = () => {
         return (
           <Option
             {...options[index]}
-            opened={openedOptions[index]}
+            opened={optionsState[index].opened}
             key={index}
-            bonusOpened={openedBonuses[index]}
+            bonusOpened={optionsState[index].bonus.opened}
             index={index}
           />
         )
