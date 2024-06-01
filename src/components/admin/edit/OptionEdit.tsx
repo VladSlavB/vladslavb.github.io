@@ -166,7 +166,7 @@ function transformInputScore(value: string) {
 }
 
 function transformInputBonusScore(value: string) {
-  return value.replace(/\D/g, '').substring(0, 1)
+  return transformInputScore(value)
 }
 
 const validateOptionValue = (value: string) => value.trim() !== ''

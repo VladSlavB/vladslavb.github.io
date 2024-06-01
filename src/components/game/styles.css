@@ -113,7 +113,7 @@
   &.opened {
     animation-name: disappear;
     animation-fill-mode: forwards;
-    animation-iteration-count: 5;
+    animation-iteration-count: 7;
   }
 }
 .optionScore {

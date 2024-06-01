@@ -17,9 +17,13 @@ const QuestionsList: React.FC = () => {
     }
   }, [editor.mode])
   const dispatch = useDispatch()
+  let className = styles.list
+  if (gameActive) {
+    className += ' ' + styles.wide
+  }
 
   return (
-    <Stack spacing={2} className={styles.list}>
+    <Stack spacing={2} className={className}>
       {Array(numQuestions).fill(0).map((_, index) => (
         (editor.mode === 'edit' && index === editor.index) ? (
           <QuestionEdit editIndex={index} onDone={() => dispatch(finishEditing())} key={index} />

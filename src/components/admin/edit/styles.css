@@ -12,7 +12,7 @@
 }
 .bonusEdit {
     margin-left: 8px;
-    width: 27px;
+    width: 36px;
 }
 .optionExtra {
     display: flex;
@@ -68,8 +68,12 @@ table.options {
 }
 .list {
     padding: 40px 20px 300px;
-    max-width: 1000px;
+    max-width: 800px;
     margin: 0 auto;
+
+    &.wide {
+        max-width: 1000px;
+    }
 }
 .optionText {
     flex: 1;

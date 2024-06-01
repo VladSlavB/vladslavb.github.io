@@ -153,10 +153,7 @@ const gameSlice = createSlice({
         }
       }
       if (state.drawFinished) {
-        const newTeam = theOtherTeam(state.currentTeam)
-        if (state[newTeam].health > 0) {
-          state.currentTeam = newTeam
-        }
+        switchTeamIfAlive(state)
       } else {
         if (state.bidScore == null) {
           if (action.payload.best) {
@@ -184,7 +181,7 @@ const gameSlice = createSlice({
       state.currentAttachment = action.payload.attachment
       if (action.payload.team != null) {
         state[action.payload.team].score += action.payload.score
-        state.currentTeam = theOtherTeam(action.payload.team)
+        switchTeamIfAlive(state, action.payload.team)
       }
     },
     wrongAnswer(state) {
@@ -204,15 +201,13 @@ const gameSlice = createSlice({
         if (state[state.currentTeam].health === 0) {
           state.healthChance = state.currentTeam
         }
-        const newTeam = theOtherTeam(state.currentTeam)
-        if (state[newTeam].health > 0) {
-          state.currentTeam = newTeam
-        }
+        switchTeamIfAlive(state)
       }
     },
     wrongBonus(state, action: PayloadAction<number>) {
       if (state.currentTeam == null) return
       state.options[action.payload].bonus.vacantFor[state.currentTeam] = false
+      switchTeamIfAlive(state)
     },
     utilizeHealthChance(state) {
       if (state.healthChance == null) return
@@ -246,6 +241,14 @@ const gameSlice = createSlice({
     },
   },
 })
+
+function switchTeamIfAlive(state: typeof GAME_INITIAL_STATE, targetTeam?: Team) {
+  if (state.currentTeam == null) return
+  const newTeam = theOtherTeam(targetTeam ?? state.currentTeam)
+  if (state[newTeam].health > 0) {
+    state.currentTeam = newTeam
+  }
+}
 
 export const {
   nextQuestion, chooseTeam,
