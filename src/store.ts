@@ -127,6 +127,7 @@ const gameSlice = createSlice({
       state.drawFinished = false
       state.currentTeam = null
       state.options = makeDefaultOptions()
+      state.currentAttachment = null
     },
     chooseTeam(state, action: PayloadAction<'leftTeam' | 'rightTeam'>) {
       state.currentTeam = action.payload

@@ -1,5 +1,5 @@
 import styles from './styles.css'
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Attachment, correctAnswer, correctBonus, removeQuestion, useDispatch, useSelector, useGameSelector, wrongBonus } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
@@ -32,6 +32,15 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const questionActive = gameActive && currentQuestion === index
   const optionsState = useGameSelector(game => game.options)
   const dispatch = useDispatch()
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (questionActive && ref.current != null) {
+      const gap = 40
+      var elementPosition = ref.current.getBoundingClientRect().top;
+      var offsetPosition = elementPosition + window.scrollY - gap;
+      window.scrollTo({top: offsetPosition, behavior: 'smooth'})
+    }
+  }, [questionActive])
 
   function onOptionClick(optionIndex: number) {
     const option = question.options[optionIndex]
@@ -66,7 +75,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   }
 
   return (
-    <Card variant={questionActive ? 'soft' : 'outlined'}>
+    <Card variant={questionActive ? 'soft' : 'outlined'} ref={ref}>
       <Stack spacing={2}>
         <div className={styles.header}>
           <Typography
@@ -133,7 +142,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
                   </Button>
                 )
               }
-              if (!disabled && currentTeam != null) {
+              if (option.bonus != null && !disabled && currentTeam != null) {
                 buttons.push(
                   <IconButton
                     key='bonus-wrong'
