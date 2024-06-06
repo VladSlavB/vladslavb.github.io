@@ -31,6 +31,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const bonusChance = useGameSelector(game => game.bonusChance)
   const questionActive = gameActive && currentQuestion === index
   const optionsState = useGameSelector(game => game.options)
+  const drawFinished = useGameSelector(game => game.drawFinished)
   const dispatch = useDispatch()
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -49,7 +50,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
       score: option.score,
       best: question.options.every(other => other.score <= option.score),
       attachment: option.attachment,
-      bonus: option.bonus,
+      hasBonus: option.bonus != null,
     }))
     rightSound.play()
   }
@@ -59,7 +60,6 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
     if (option.bonus != null) {
       dispatch(correctBonus({
         index: optionIndex,
-        team: currentTeam,
         score: option.bonus.score,
         attachment: option.bonus.attachment,
       }))
@@ -124,9 +124,9 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
                   <span className={className}>{option.value}</span>
                 </Button>
               )]
-              const disabled = !questionActive || optionsState[i].bonus.opened || !optionsState[i].opened || bonusChance != null || (
-                currentTeam != null && !optionsState[i].bonus.vacantFor[currentTeam]
-              )
+              const disabled = !questionActive || optionsState[i].bonus?.opened || !optionsState[i].opened || bonusChance != null || (
+                currentTeam != null && !optionsState[i].bonus?.vacantFor[currentTeam]
+              ) || !drawFinished
               if (option.bonus != null) {
                 buttons.push(
                   <Button
@@ -154,9 +154,10 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
                   </IconButton>
                 )
               }
+              const buttonGroupClassName = gameActive ? styles.gameOption : undefined
               return (
                 <div key={i}>
-                  <ButtonGroup size={size}>
+                  <ButtonGroup size={size} className={buttonGroupClassName}>
                     {buttons}
                   </ButtonGroup>
                   {!gameActive && (

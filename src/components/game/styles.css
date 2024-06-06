@@ -97,7 +97,8 @@
 .starClosed.starClosed {
   color: black;
   font-size: 60px;
-  vertical-align: 14px;
+  position: absolute;
+  top: 2px;
 }
 .star.star {
   color: var(--bg-color);

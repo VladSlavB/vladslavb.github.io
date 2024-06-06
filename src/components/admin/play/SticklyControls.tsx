@@ -2,12 +2,13 @@ import styles from './styles.css'
 import React, { useEffect, useState } from 'react'
 import Button from '@mui/joy/Button/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup/ButtonGroup'
-import { finishGame, nextQuestion, startGame, useDispatch, useSelector, useGameSelector, deltaScore, plusHealth } from '../../../store'
+import { finishGame, nextQuestion, startGame, useDispatch, useSelector, useGameSelector, deltaScore, plusHealth, Team, selectNextQuestionBonuses } from '../../../store'
 import OpenInNew from '@mui/icons-material/OpenInNew'
 import UndoIcon from '@mui/icons-material/Undo'
 import RedoIcon from '@mui/icons-material/Redo';
 import { ActionCreators } from 'redux-undo'
 import Favorite from '@mui/icons-material/Favorite'
+import { rightSound, wrongSound } from '../../../sounds'
 
 export let gameWindow: Window | null = null
 
@@ -20,8 +21,11 @@ const StickyControls: React.FC = () => {
   const dispatch = useDispatch()
   const hasPast = useSelector(state => state.game.past.length > 1)
   const hasFuture = useSelector(state => state.game.future.length > 0)
-  const canHelpLeft = useGameSelector(game => game.leftTeam.health > 0)
-  const canHelpRight = useGameSelector(game => game.rightTeam.health > 0)
+  const leftAlive = useGameSelector(game => game.leftTeam.health > 0)
+  const rightAlive = useGameSelector(game => game.rightTeam.health > 0)
+  const noLeftScore = useGameSelector(game => game.leftTeam.score == 0)
+  const noRightScore = useGameSelector(game => game.rightTeam.score == 0)
+  const nextQuestionBonuses = useSelector(selectNextQuestionBonuses)
 
   function openGameWindow() {
     gameWindow = open('.', '_blank', 'popup,width=640,height=360')
@@ -39,31 +43,58 @@ const StickyControls: React.FC = () => {
   // on unmount
   useEffect(() => () => gameWindow?.close(), [])
 
+  function addScore(team: Team) {
+    dispatch(deltaScore({team, value: 1}))
+    rightSound.play()
+  }
+
+  function subtractScore(team: Team) {
+    dispatch(deltaScore({team, value: -1}))
+    wrongSound.play()
+  }
+
+  function addHealth(team: Team) {
+    dispatch(plusHealth(team))
+    rightSound.play()
+  }
+
   return (
     <div className={styles.panel}>
       {gameWindowOpen ? (
         currentQuestion < 0 ? (
-          <Button color='primary' onClick={() => dispatch(nextQuestion())}>
+          <Button color='primary' onClick={() => dispatch(nextQuestion(nextQuestionBonuses))}>
             Открыть первый вопрос
           </Button>
         ) : (
           <ButtonGroup className={styles.outlined}>
-            <Button color='primary' onClick={() => dispatch(deltaScore({team: 'leftTeam', value: -1}))}>
+            <Button title='Отнять балл у синей команды'
+              color='primary' onClick={() => subtractScore('leftTeam')} disabled={noLeftScore}
+            >
               &minus;1
             </Button>
-            <Button color='primary' onClick={() => dispatch(deltaScore({team: 'leftTeam', value: 1}))}>
+            <Button title='Добавить балл синей команде'
+              color='primary' onClick={() => addScore('leftTeam')}
+            >
               +1
             </Button>
-            <Button color='primary' onClick={() => dispatch(plusHealth('leftTeam'))} disabled={!canHelpLeft}>
+            <Button title='Добавить жизнь синей команде'
+              color='primary' onClick={() => addHealth('leftTeam')} disabled={!leftAlive}
+            >
               <Favorite />
             </Button>
-            <Button color='danger' onClick={() => dispatch(plusHealth('rightTeam'))} disabled={!canHelpRight}>
+            <Button title='Добавить жизнь красной команде'
+              color='danger' onClick={() => addHealth('rightTeam')} disabled={!rightAlive}
+            >
               <Favorite />
             </Button>
-            <Button color='danger' onClick={() => dispatch(deltaScore({team: 'rightTeam', value: 1}))}>
+            <Button title='Добавить балл синей команде'
+              color='danger' onClick={() => addScore('rightTeam')}
+            >
               +1
             </Button>
-            <Button color='danger' onClick={() => dispatch(deltaScore({team: 'rightTeam', value: -1}))}>
+            <Button title='Отнять балл у синей команды'
+              color='danger' onClick={() => subtractScore('rightTeam')} disabled={noRightScore}
+            >
               &minus;1
             </Button>
           </ButtonGroup>

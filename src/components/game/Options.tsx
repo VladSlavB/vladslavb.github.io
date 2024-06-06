@@ -24,7 +24,7 @@ const Options: React.FC = () => {
             {...options[index]}
             opened={optionsState[index].opened}
             key={index}
-            bonusOpened={optionsState[index].bonus.opened}
+            bonusOpened={optionsState[index].bonus?.opened ?? false}
             index={index}
           />
         )

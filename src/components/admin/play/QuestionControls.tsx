@@ -1,8 +1,8 @@
 import styles from './styles.css'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
-import React from 'react'
-import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance } from '../../../store'
+import React, { useEffect } from 'react'
+import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, selectNextQuestionBonuses } from '../../../store'
 import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
@@ -25,12 +25,10 @@ const QuestionControls: React.FC = () => {
   const currentQuestion = useGameSelector(game => game.currentQuestion)
   const drawFinished = useGameSelector(game => game.drawFinished)
   const bonusChance = useGameSelector(game => game.bonusChance)
-  const questionComplete = useSelector(state => {
-    const game = state.game.present
+  const questionComplete = useGameSelector(game => {
     if (game.currentQuestion >= 0) {
-      const currentOptions = state.questions[game.currentQuestion].options
-      return game.options.every((option, i) => (
-        option.opened && (currentOptions[i].bonus == null || option.bonus.opened)
+      return game.options.every(option => (
+        option.opened && (option.bonus == null || option.bonus.opened)
       ))
     }
     return false
@@ -45,12 +43,12 @@ const QuestionControls: React.FC = () => {
   const totalQuestions = useSelector(state => state.questions.length)
   const everyoneDead = currentTeam == null && drawFinished
   const lastQuestion = currentQuestion === totalQuestions - 1
-  const almostEveryoneDead = useGameSelector(game => game.leftTeam.health + game.rightTeam.health === 0)
 
   const currentAttachment = useGameSelector(game => game.currentAttachment)
 
   const attachmentShown = useSelector(state => state.attachmentVisible)
   const healthChance = useGameSelector(game => game.healthChance)
+  const nextQuestionBonuses = useSelector(selectNextQuestionBonuses)
 
   function onFail() {
     if (currentTeam != null) {
@@ -61,18 +59,17 @@ const QuestionControls: React.FC = () => {
   }
 
   function onBonusChanceClick(success: boolean) {
-    if (bonusChance == null || bonusInChance == null) return
+    if (bonusChance == null || bonusInChance == null || currentTeam == null) return
     if (success) {
       dispatch(correctBonus({
         index: bonusChance.optionIndex,
-        team: bonusChance.team,
         score: bonusInChance.score,
         attachment: bonusInChance.attachment,
       }))
       rightSound.play()
     } else {
       dispatch(discardBonusChance())
-      hitAnimation(bonusChance.team)
+      hitAnimation(currentTeam)
       wrongSound.play()
     }
   }
@@ -82,20 +79,22 @@ const QuestionControls: React.FC = () => {
       dispatch(utilizeHealthChance())
     } else {
       dispatch(discardHealthChance())
-      if (almostEveryoneDead) {
-        // now completely dead
-        finishSound.play()
-      }
     }
   }
+
+  useEffect(() => {
+    if (everyoneDead || questionComplete) {
+      setTimeout(() => finishSound.play(), 1000)
+    }
+  }, [everyoneDead || questionComplete])
 
   return (
     <>
       <Stack direction='row' spacing={2} className={styles.gameControl} flexWrap='wrap'>
-        {bonusChance != null ? <>
+        {bonusChance != null && currentTeam != null ? <>
           <Typography>
-            Команда <Typography color={teamColor(bonusChance.team)}>
-              {bonusChance.team === 'leftTeam' ? 'синих' : 'красных'}
+            Команда <Typography color={teamColor(currentTeam)}>
+              {currentTeam === 'leftTeam' ? 'синих' : 'красных'}
             </Typography> правильно ответила на допвопрос?
           </Typography>
           <Button color='success' onClick={() => onBonusChanceClick(true)}>Да</Button>
@@ -153,7 +152,7 @@ const QuestionControls: React.FC = () => {
             <Button
               style={{alignSelf: 'flex-start'}}
               color='primary'
-              onClick={() => dispatch(nextQuestion())}
+              onClick={() => dispatch(nextQuestion(nextQuestionBonuses))}
             >
               Следующий вопрос
             </Button>
