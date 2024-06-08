@@ -1,14 +1,14 @@
 import styles from './styles.css'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
-import React, { useEffect } from 'react'
-import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, selectNextQuestionBonuses } from '../../../store'
+import React from 'react'
+import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, selectNextQuestionBonuses, areAllOptionsOpened } from '../../../store'
 import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
 import Box from '@mui/joy/Box'
 import { hitAnimation } from '../../game/Teams'
-import { finishSound, rightSound, wrongSound } from '../../../sounds'
+import { rightSound, wrongSound } from '../../../sounds'
 import { AttachmentComponent } from '../edit/StaticQuestion'
 
 function teamColor(team: string) {
@@ -25,14 +25,7 @@ const QuestionControls: React.FC = () => {
   const currentQuestion = useGameSelector(game => game.currentQuestion)
   const drawFinished = useGameSelector(game => game.drawFinished)
   const bonusChance = useGameSelector(game => game.bonusChance)
-  const questionComplete = useGameSelector(game => {
-    if (game.currentQuestion >= 0) {
-      return game.options.every(option => (
-        option.opened && (option.bonus == null || option.bonus.opened)
-      ))
-    }
-    return false
-  })
+  const allOptionsOpened = useGameSelector(areAllOptionsOpened)
   const bonusInChance = useSelector(state => {
     const game = state.game.present
     if (game.bonusChance != null) {
@@ -82,12 +75,6 @@ const QuestionControls: React.FC = () => {
     }
   }
 
-  useEffect(() => {
-    if (everyoneDead || questionComplete) {
-      setTimeout(() => finishSound.play(), 1000)
-    }
-  }, [everyoneDead || questionComplete])
-
   return (
     <>
       <Stack direction='row' spacing={2} className={styles.gameControl} flexWrap='wrap'>
@@ -109,7 +96,7 @@ const QuestionControls: React.FC = () => {
           <Button color='danger' onClick={() => onHealthChanceClick(false)}>Нет</Button>
         </> : <>
           <Box flexGrow={1}>
-            {currentTeam != null && !questionComplete && (
+            {currentTeam != null && !allOptionsOpened && (
               <Button
                 size='lg'
                 className={styles.wrong}
@@ -141,14 +128,14 @@ const QuestionControls: React.FC = () => {
                 </ButtonGroup>
               )
             ) : (
-              !questionComplete && (
+              !allOptionsOpened && (
                 <Typography color={teamColor(currentTeam)}>
                   Отвечают {currentTeam === 'leftTeam' ? 'синие' : 'красные'}
                 </Typography>
               )
             )}
           </>}
-          {questionComplete && !lastQuestion && (
+          {allOptionsOpened && !lastQuestion && (
             <Button
               style={{alignSelf: 'flex-start'}}
               color='primary'

@@ -6,6 +6,7 @@ import {
 import { save, load } from 'redux-localstorage-simple'
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import undoable from 'redux-undo'
+import { finishSound } from './sounds'
 
 
 export type Attachment =
@@ -88,11 +89,16 @@ const GAME_INITIAL_STATE = {
     optionIndex: number
   },
   healthChance: null as null | Team,
+  roundFinished: false,
   leftTeam: {
+    cumulativeScore: 0,
+    wins: 0,
     score: 0,
     health: 3,
   },
   rightTeam: {
+    cumulativeScore: 0,
+    wins: 0,
     score: 0,
     health: 3,
   },
@@ -122,6 +128,7 @@ const gameSlice = createSlice({
     nextQuestion(state, action: PayloadAction<boolean[]>) {
       state.currentQuestion++
       state.leftTeam.health = state.rightTeam.health = 3
+      state.leftTeam.score = state.rightTeam.score = 0
       state.bidScore = null
       state.drawFinished = false
       state.currentTeam = null
@@ -132,6 +139,7 @@ const gameSlice = createSlice({
       } : null)
       state.options = options
       state.currentAttachment = null
+      state.roundFinished = false
     },
     chooseTeam(state, action: PayloadAction<Team>) {
       state.currentTeam = action.payload
@@ -169,6 +177,7 @@ const gameSlice = createSlice({
           decideOnDraw(state, action.payload)
         }
       }
+      decideIfRoundFinished(state)
     },
     correctBonus(state, action: PayloadAction<{
       index: number,
@@ -187,6 +196,7 @@ const gameSlice = createSlice({
         }
       }
       state.bonusChance = null
+      decideIfRoundFinished(state)
     },
     wrongAnswer(state) {
       if (state.currentTeam == null) return
@@ -214,6 +224,7 @@ const gameSlice = createSlice({
       const bonus = state.options[action.payload].bonus
       if (bonus != null) bonus.vacantFor[state.currentTeam] = false
       switchTeamIfPossible(state)
+      decideIfRoundFinished(state)
     },
     utilizeHealthChance(state) {
       if (state.healthChance == null) return
@@ -224,6 +235,7 @@ const gameSlice = createSlice({
     discardHealthChance(state) {
       state.healthChance = null
       switchTeamIfPossible(state)
+      decideIfRoundFinished(state)
     },
     discardBonusChance(state) {
       if (state.bonusChance == null || state.currentTeam == null) return
@@ -235,6 +247,7 @@ const gameSlice = createSlice({
         decideOnDraw(state, state.bonusChance.optionPayload)
       }
       state.bonusChance = null
+      decideIfRoundFinished(state)
     },
     deltaScore(state, action: PayloadAction<{team: Team, value: number}>) {
       state[action.payload.team].score += action.payload.value
@@ -271,9 +284,9 @@ function canPlay(state: GameState, team: Team): boolean {
     return false
   }
   if (state.options.every(option => option.opened)) {
-    const unresolvedBonuses = state.options.filter(({bonus}) => bonus?.opened)
+    const unresolvedBonuses = state.options.filter(({bonus}) => bonus != null && !bonus.opened)
     if (unresolvedBonuses.length > 0) {
-      return unresolvedBonuses.every(({bonus}) => !bonus?.vacantFor[team])
+      return !unresolvedBonuses.every(({bonus}) => !bonus?.vacantFor[team])
     }
   }
   return true
@@ -293,6 +306,33 @@ function decideOnDraw(state: GameState, payload: {best?: boolean, score: number}
       state.currentTeam = theOtherTeam(state.currentTeam)
     }
     state.drawFinished = true
+  }
+}
+
+export function areAllOptionsOpened(state: GameState) {
+  if (state.currentQuestion >= 0) {
+    return state.options.every(option => (
+      option.opened && (option.bonus == null || option.bonus.opened)
+    ))
+  }
+  return false
+}
+
+function decideIfRoundFinished(state: GameState) {
+  const prevRoundFinished = state.roundFinished
+  const everyOneDead = state.drawFinished && state.currentTeam == null
+  const allOptionsOpened = areAllOptionsOpened(state)
+  state.roundFinished = everyOneDead || allOptionsOpened
+  if (state.roundFinished && !prevRoundFinished) {
+    setTimeout(() => finishSound.play(), 1000)
+    state.leftTeam.cumulativeScore += state.leftTeam.score
+    state.rightTeam.cumulativeScore += state.rightTeam.score
+    if (state.leftTeam.score >= state.rightTeam.score) {
+      state.leftTeam.wins++
+    }
+    if (state.leftTeam.score <= state.rightTeam.score) {
+      state.rightTeam.wins++
+    }
   }
 }
 
@@ -324,7 +364,7 @@ const localStorageConfig = {namespace: 'vladslav'}
 const defaultState = load(localStorageConfig)
 
 // managing old versions
-const CURRENT_VERSION = 2
+const CURRENT_VERSION = 3
 ;(function() {
   const state = defaultState as any
   if (localStorage.vladslav_version != CURRENT_VERSION) {
