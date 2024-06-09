@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react'
 import Teams from '../components/game/Teams'
 import { useGameSelector, useSelector } from '../store'
 import { useStore } from 'react-redux'
+import Subtotal from '../components/game/Subtotal'
 
 const CANVAS_W = 1920, CANVAS_H = 1080
 
@@ -33,14 +34,20 @@ const GameScreen: React.FC = () => {
     const left = Math.max(0, windowW - CANVAS_W * windowH / CANVAS_H) / 2
     setTransform({scale, left, top})
   }
+  const subtotalShown = useSelector(state => state.visibility.subtotal)
   return (
     <div className={styles.game} style={{backgroundImage: `url(${background})`}}>
       <div className={styles.canvas} style={{
         transform: `scale(${scale})`, marginLeft: left, marginTop: top
       }}>
-        <Question />
-        <Options />
-        <Teams />
+        <div className={styles.wrapper + (subtotalShown ? ` ${styles.hidden}` : '')}>
+          <Question />
+          <Options />
+          <Teams />
+        </div>
+        <div className={styles.wrapper + (!subtotalShown ? ` ${styles.hidden}` : '')}>
+          <Subtotal />
+        </div>
       </div>
       <Demonstration />
     </div>
@@ -51,7 +58,7 @@ export default GameScreen
 
 const Demonstration: React.FC = () => {
   const currentAttachment = useGameSelector(game => game.currentAttachment)
-  const attachmentShown = useSelector(state => state.attachmentVisible)
+  const attachmentShown = useSelector(state => state.visibility.attachment)
   let className = styles.imgModal
   if (currentAttachment?.type === 'img' && attachmentShown) {
     className += ' ' + styles.shown

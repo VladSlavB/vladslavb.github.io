@@ -13,7 +13,7 @@ const Question: React.FC = () => {
       game.currentAttachment.text
     ) : null
   ))
-  const attachmentShown = useSelector(state => state.attachmentVisible)
+  const attachmentShown = useSelector(state => state.visibility.attachment)
   let className = styles.question
   if (textAttachment != null && attachmentShown) {
     className += ' ' + styles.attachmentShown

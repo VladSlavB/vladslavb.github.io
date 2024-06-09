@@ -345,22 +345,29 @@ export const {
   startGame, finishGame,
 } = gameSlice.actions
 
-const attachmentVisibilitySlice = createSlice({
-  name: 'attachmentVisible',
-  initialState: false,
+const visibilitySlice = createSlice({
+  name: 'visibility',
+  initialState: {
+    attachment: false,
+    subtotal: false,
+  },
   reducers: {
     toggleAttachmentVisibility(state) {
-      return !state
+      state.attachment = !state.attachment
+    },
+    toggleSubtotalVisibility(state) {
+      state.subtotal = !state.subtotal
     }
   }
 })
 
 export const {
   toggleAttachmentVisibility,
-} = attachmentVisibilitySlice.actions
+  toggleSubtotalVisibility,
+} = visibilitySlice.actions
 
 
-const localStorageConfig = {namespace: 'vladslav'}
+const localStorageConfig = {namespace: 'vladslav', ignoreStates: ['visibility', 'editor']}
 const defaultState = load(localStorageConfig)
 
 // managing old versions
@@ -379,7 +386,7 @@ const store = configureStore({
     [questionsSlice.name]: questionsSlice.reducer,
     [gameSlice.name]: undoable(gameSlice.reducer),
     [editorSlice.name]: editorSlice.reducer,
-    [attachmentVisibilitySlice.name]: attachmentVisibilitySlice.reducer,
+    [visibilitySlice.name]: visibilitySlice.reducer,
   },
   middleware: [save(localStorageConfig)],
   preloadedState: defaultState,

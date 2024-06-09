@@ -20,6 +20,13 @@
     transform-origin: 0 0;
     font-family: 'Dela Gothic One';
 }
+.wrapper {
+    opacity: 1;
+    transition: 0.5s;
+    &.hidden {
+        opacity: 0;
+    }
+}
 .img {
     width: 80%;
     height: 80%;

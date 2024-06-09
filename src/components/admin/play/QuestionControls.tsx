@@ -2,7 +2,7 @@ import styles from './styles.css'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import React from 'react'
-import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, selectNextQuestionBonuses, areAllOptionsOpened } from '../../../store'
+import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, selectNextQuestionBonuses, areAllOptionsOpened, toggleSubtotalVisibility } from '../../../store'
 import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
@@ -39,9 +39,11 @@ const QuestionControls: React.FC = () => {
 
   const currentAttachment = useGameSelector(game => game.currentAttachment)
 
-  const attachmentShown = useSelector(state => state.attachmentVisible)
+  const attachmentShown = useSelector(state => state.visibility.attachment)
   const healthChance = useGameSelector(game => game.healthChance)
   const nextQuestionBonuses = useSelector(selectNextQuestionBonuses)
+
+  const subtotalShown = useSelector(state => state.visibility.subtotal)
 
   function onFail() {
     if (currentTeam != null) {
@@ -135,7 +137,14 @@ const QuestionControls: React.FC = () => {
               )
             )}
           </>}
-          {allOptionsOpened && !lastQuestion && (
+          {allOptionsOpened && !lastQuestion && <>
+            <VisibilityButton
+              variant='soft'
+              visible={subtotalShown}
+              hideText='Скрыть счёт'
+              showText='Показать счёт'
+              onClick = {() => dispatch(toggleSubtotalVisibility())}
+            />
             <Button
               style={{alignSelf: 'flex-start'}}
               color='primary'
@@ -143,20 +152,19 @@ const QuestionControls: React.FC = () => {
             >
               Следующий вопрос
             </Button>
-          )}
+          </>}
         </>}
       </Stack>
       {currentAttachment && (
         <Stack direction='row' gap={2} alignItems='center'>
-          {attachmentShown && <div className={styles.overlay} />}
           <AttachmentComponent {...currentAttachment} />
-          <Button
+          <VisibilityButton
             variant='soft' size='lg'
             onClick={() => dispatch(toggleAttachmentVisibility())}
-            className={attachmentShown ? styles.hideButton : undefined}
-          >
-            {attachmentShown ? 'Скрыть' : 'Показать'}
-          </Button>
+            hideText='Скрыть'
+            showText='Показать'
+            visible={attachmentShown}
+          />
         </Stack>
       )}
     </>
@@ -164,3 +172,18 @@ const QuestionControls: React.FC = () => {
 }
 
 export default QuestionControls
+
+const VisibilityButton: React.FC<{
+  visible: boolean
+  showText: string
+  hideText: string
+} & React.ComponentProps<typeof Button>> = props => {
+  let { visible, hideText, showText, className, ...restProps } = props
+  if (visible) className += ' ' + styles.hideButton
+  return <>
+    {visible && <div className={styles.overlay} />}
+    <Button className={className} {...restProps}>
+      {visible ? hideText : showText}
+    </Button>
+  </>
+}

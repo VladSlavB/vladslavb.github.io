@@ -116,6 +116,10 @@
     animation-fill-mode: forwards;
     animation-iteration-count: 7;
   }
+
+  &.invisible {
+    opacity: 0;
+  }
 }
 .optionScore {
   flex: 1;
@@ -152,8 +156,15 @@
   border-radius: 24px;
   background: #C6F1FF;
 
+  &.subtotal {
+    top: 360px;
+  }
+
   &.leftTeam {
     left: 61px;
+    &.subtotal {
+      left: 400px;
+    }
 
     & .score {
       background: var(--blue);
@@ -167,6 +178,10 @@
   }
   &.rightTeam {
     right: 61px;
+    &.subtotal {
+      right: 400px;
+    }
+
     & .score {
       background: red;
     }
@@ -194,7 +209,11 @@
   display: flex;
   justify-content: space-between;
   transition: 1s;
-
+}
+.subtotal .health {
+  justify-content: center;
+  font: 107px Notable;
+  line-height: 110px;
 }
 .wrapper {
   padding: 3px;

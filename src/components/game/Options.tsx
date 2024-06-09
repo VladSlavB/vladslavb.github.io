@@ -1,5 +1,5 @@
 import styles from './styles.css'
-import React from 'react'
+import React, { useRef } from 'react'
 import { Option, useGameSelector, useSelector } from '../../store'
 import Star from '@mui/icons-material/Star'
 
@@ -40,9 +40,11 @@ function Option(props: Option & {index: number, opened: boolean, bonusOpened: bo
   if (props.opened) className += ' ' + styles.opened
 
   let starClassName = styles.star
+  const prevBonusOpened = useRef(true)
   if (props.bonusOpened) {
-    starClassName += ' ' + styles.opened
+    starClassName += ' ' + (prevBonusOpened.current ? styles.invisible : styles.opened)
   }
+  prevBonusOpened.current = props.bonusOpened
   return (
     <div className={className}>
       <div className={styles.faceDown}>

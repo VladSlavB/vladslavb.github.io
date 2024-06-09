@@ -1,7 +1,7 @@
 import styles from './styles.css'
 import heart from '../../../assets/heart.svg'
 import React from 'react'
-import { useGameSelector } from '../../store'
+import { Team, useGameSelector } from '../../store'
 import { gameWindow } from '../admin/play/SticklyControls'
 
 
@@ -10,14 +10,14 @@ const Teams: React.FC = () => {
   const rightTeam = useGameSelector(game => game.rightTeam)
   const display = useGameSelector(game => game.currentQuestion >= 0)
   return display ? <>
-    <Team {...leftTeam} team='leftTeam' />
-    <Team {...rightTeam} team='rightTeam' />
+    <TeamScoreAndHealth {...leftTeam} team='leftTeam' />
+    <TeamScoreAndHealth {...rightTeam} team='rightTeam' />
   </> : null
 }
 
 export default Teams
 
-function Team(props: {health: number, score: number, team: 'leftTeam' | 'rightTeam'}) {
+function TeamScoreAndHealth(props: {health: number, score: number, team: Team}) {
   return (
     <div className={styles.team + ' ' + styles[props.team]} id={props.team}>
       <div className={styles.score}>{props.score}</div>
