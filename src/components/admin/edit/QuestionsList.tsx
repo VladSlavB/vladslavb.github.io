@@ -1,16 +1,18 @@
 import styles from './styles.css'
 import React, { useEffect } from 'react'
-import { finishEditing, startAdding, startEditing, useDispatch, useGameSelector, useSelector } from '../../../store'
+import { finishEditing, startAdding, startAddingFinale, startEditing, useDispatch, useGameSelector, useSelector } from '../../../store'
 import Button from '@mui/joy/Button'
 import StaticQuestion from './StaticQuestion'
 import QuestionEdit from './QuestionEdit'
 import Stack from '@mui/joy/Stack'
 import Add from '@mui/icons-material/Add'
+import FinaleEdit from './FinaleEdit'
 
 const QuestionsList: React.FC = () => {
   const numQuestions = useSelector(state => state.questions.length)
   const editor = useSelector(state => state.editor)
   const gameActive = useGameSelector(game => game.active)
+  const noFinale = useSelector(state => state.finale == null)
   useEffect(() => {
     if (editor.mode === 'add') {
       window.scrollTo(0, document.body.clientHeight)
@@ -37,14 +39,30 @@ const QuestionsList: React.FC = () => {
       {editor.mode === 'add' && (
         <QuestionEdit onDone={() => dispatch(finishEditing())} />
       )}
-      {editor.mode === 'view' && !gameActive && (
-        <Button
-          className={styles.add} size='lg' variant='soft' startDecorator={<Add />}
-          onClick={() => dispatch(startAdding())}
-        >
-          Добавить вопрос
-        </Button>
+      {editor.mode === 'addFinale' && (
+        <FinaleEdit onDone={() => dispatch(finishEditing())} />
       )}
+      {editor.mode === 'editFinale' && (
+        <FinaleEdit onDone={() => dispatch(finishEditing())} edit />
+      )}
+      <div className={styles.bottomButtons}>
+        {editor.mode === 'view' && !gameActive && <>
+          <Button
+            className={styles.add} size='lg' variant='soft' startDecorator={<Add />}
+            onClick={() => dispatch(startAdding())}
+          >
+            Добавить вопрос
+          </Button>
+          {noFinale && (
+            <Button
+              startDecorator={<Add />} size='lg' variant='soft'
+              onClick={() => dispatch(startAddingFinale())}
+            >
+              Добавить финальный раунд
+            </Button>
+          )}
+        </>}
+      </div>
     </Stack>
   )
 }

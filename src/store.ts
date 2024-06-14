@@ -51,10 +51,31 @@ export const {
   addQuestion, removeQuestion, editQuestion,
 } = questionsSlice.actions
 
+type FinaleQuestion = {
+  value: string
+}
+
+const finaleSlice = createSlice({
+  name: 'finale',
+  initialState: null as null | FinaleQuestion[],
+  reducers: {
+    setFinale(_, action: PayloadAction<FinaleQuestion[]>) {
+      return action.payload
+    },
+    deleteFinale(_) {
+      return null
+    }
+  }
+})
+
+export const { setFinale, deleteFinale } = finaleSlice.actions
+
 type EditorMode =
 | {mode: 'view'}
 | {mode: 'edit', index: number}
 | {mode: 'add'}
+| {mode: 'addFinale'}
+| {mode: 'editFinale'}
 
 const editorSlice = createSlice({
   name: 'editor',
@@ -68,11 +89,20 @@ const editorSlice = createSlice({
     },
     startAdding(_) {
       return {mode: 'add'}
-    }
+    },
+    startAddingFinale(_) {
+      return {mode: 'addFinale'}
+    },
+    startEditingFinale(_) {
+      return {mode: 'editFinale'}
+    },
   }
 })
 
-export const { startEditing, finishEditing, startAdding } = editorSlice.actions
+export const {
+  startEditing, finishEditing, startAdding,
+  startAddingFinale, startEditingFinale
+} = editorSlice.actions
 
 export type Team = 'leftTeam' | 'rightTeam'
 
@@ -384,6 +414,7 @@ const CURRENT_VERSION = 3
 const store = configureStore({
   reducer: {
     [questionsSlice.name]: questionsSlice.reducer,
+    [finaleSlice.name]: finaleSlice.reducer,
     [gameSlice.name]: undoable(gameSlice.reducer),
     [editorSlice.name]: editorSlice.reducer,
     [visibilitySlice.name]: visibilitySlice.reducer,

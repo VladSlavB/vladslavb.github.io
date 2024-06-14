@@ -91,7 +91,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
   }, [question])
 
   return (
-    <Card variant='soft' size='sm'> 
+    <Card variant='soft' size='sm'>
       <form onSubmit={onSubmit} onReset={onDone}>
         <Grid container columnSpacing={4} rowSpacing={2}>
           <Grid xs={12}>

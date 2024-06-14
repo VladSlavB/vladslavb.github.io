@@ -75,6 +75,11 @@ table.options {
         max-width: 1000px;
     }
 }
+.bottomButtons {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
 .optionText {
     flex: 1;
     &.black {
