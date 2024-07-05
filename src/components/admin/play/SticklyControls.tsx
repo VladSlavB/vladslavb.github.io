@@ -25,8 +25,6 @@ const StickyControls: React.FC = () => {
   const hasFuture = useSelector(state => state.game.future.length > 0)
   const leftAlive = useGameSelector(game => game.leftTeam.health > 0)
   const rightAlive = useGameSelector(game => game.rightTeam.health > 0)
-  const noLeftScore = useGameSelector(game => game.leftTeam.score == 0)
-  const noRightScore = useGameSelector(game => game.rightTeam.score == 0)
   const nextQuestionBonuses = useSelector(selectNextQuestionBonuses)
 
   function openGameWindow() {
@@ -70,7 +68,7 @@ const StickyControls: React.FC = () => {
         ) : <>
           <ButtonGroup className={styles.outlined}>
             <Button title='Отнять балл у синей команды'
-              color='primary' onClick={() => subtractScore('leftTeam')} disabled={noLeftScore}
+              color='primary' onClick={() => subtractScore('leftTeam')}
             >
               &minus;1
             </Button>
@@ -89,13 +87,13 @@ const StickyControls: React.FC = () => {
             >
               <Favorite />
             </Button>
-            <Button title='Добавить балл синей команде'
+            <Button title='Добавить балл красной команде'
               color='danger' onClick={() => addScore('rightTeam')}
             >
               +1
             </Button>
-            <Button title='Отнять балл у синей команды'
-              color='danger' onClick={() => subtractScore('rightTeam')} disabled={noRightScore}
+            <Button title='Отнять балл у красной команды'
+              color='danger' onClick={() => subtractScore('rightTeam')}
             >
               &minus;1
             </Button>

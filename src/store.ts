@@ -251,6 +251,7 @@ const gameSlice = createSlice({
       state[state.healthChance].health++
       state.healthChance = null
       switchTeamIfPossible(state)
+      playCorrect()
     },
     discardHealthChance(state) {
       state.healthChance = null

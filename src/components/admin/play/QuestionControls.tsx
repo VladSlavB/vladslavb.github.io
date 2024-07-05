@@ -140,7 +140,7 @@ const QuestionControls: React.FC = () => {
               )
             )}
           </>}
-          {allOptionsOpened && (!lastQuestion || hasFinale) && <>
+          {(allOptionsOpened || everyoneDead) && (!lastQuestion || hasFinale) && <>
             <VisibilityButton
               variant='soft'
               visible={subtotalShown}
@@ -149,9 +149,14 @@ const QuestionControls: React.FC = () => {
               onClick = {() => dispatch(toggleSubtotalVisibility())}
             />
             <Button
-              style={{alignSelf: 'flex-start'}}
+              style={{alignSelf: 'flex-start', zIndex: subtotalShown ? 101 : 0}}
               color='primary'
-              onClick={() => dispatch(lastQuestion ? openFinale() : nextQuestion(nextQuestionBonuses))}
+              onClick={() => {
+                if (subtotalShown) {
+                  dispatch(toggleSubtotalVisibility())
+                }
+                dispatch(lastQuestion ? openFinale() : nextQuestion(nextQuestionBonuses))
+              }}
             >
               Следующий вопрос
             </Button>
