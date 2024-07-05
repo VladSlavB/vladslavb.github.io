@@ -29,7 +29,7 @@ const QuestionControls: React.FC = () => {
   const bonusInChance = useSelector(state => {
     const game = state.game.present
     if (game.bonusChance != null) {
-      return state.questions[game.currentQuestion]?.options[game.bonusChance?.optionIndex].bonus
+      return state.questions.at(game.currentQuestion)?.options?.[game.bonusChance?.optionIndex].bonus
     }
     return null
   })
@@ -46,6 +46,7 @@ const QuestionControls: React.FC = () => {
   const subtotalShown = useSelector(state => state.visibility.subtotal)
 
   const hasFinale = useSelector(state => state.finale != null)
+  const dynamic = useSelector(state => state.questions[state.game.present.currentQuestion].options == null)
 
   function onFail() {
     if (currentTeam != null) {
@@ -113,22 +114,26 @@ const QuestionControls: React.FC = () => {
             )}
           </Box>
           {currentQuestion >= 0 && <>
-            {!drawFinished && <Chip color='warning' variant='soft'>Розыгрыш хода...</Chip>}
+            {!drawFinished && (
+              <Chip color='warning' variant='soft'>
+                {dynamic ? 'Кто будет ходить первым?' : 'Розыгрыш хода...'}
+              </Chip>
+            )}
             {currentTeam == null ? (
               !everyoneDead && (
                 <ButtonGroup>
                   <Button
-                    onClick={() => dispatch(chooseTeam('leftTeam'))}
+                    onClick={() => dispatch(chooseTeam({team: 'leftTeam', finishDraw: dynamic}))}
                     variant='outlined'
                     color='primary'
                     size='lg'
-                  >Синие быстрее</Button>
+                  >Синие{!dynamic && ' быстрее'}</Button>
                   <Button
-                    onClick={() => dispatch(chooseTeam('rightTeam'))}
+                    onClick={() => dispatch(chooseTeam({team: 'rightTeam', finishDraw: dynamic}))}
                     variant='outlined'
                     color='danger'
                     size='lg'
-                  >Красные быстрее</Button>
+                  >Красные{!dynamic && ' быстрее'}</Button>
                 </ButtonGroup>
               )
             ) : (

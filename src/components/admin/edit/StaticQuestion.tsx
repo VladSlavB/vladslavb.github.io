@@ -1,6 +1,6 @@
 import styles from './styles.css'
-import React from 'react'
-import { Attachment, correctAnswer, correctBonus, removeQuestion, useDispatch, useSelector, useGameSelector, wrongBonus } from '../../../store'
+import React, { useState } from 'react'
+import { Attachment, correctAnswer, correctBonus, removeQuestion, useDispatch, useSelector, useGameSelector, wrongBonus, Option, addOptionDynamically } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -15,6 +15,8 @@ import IconButton from '@mui/joy/IconButton'
 import { hitAnimation } from '../../game/Teams'
 import HeaderWithActions from './HeaderWithActions'
 import { useAutoScroll } from '../scroll'
+import { transformInputScore } from './OptionEdit'
+import Input from '@mui/joy/Input'
 
 type Props = {
   index: number
@@ -34,8 +36,10 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const drawFinished = useGameSelector(game => game.drawFinished)
   const dispatch = useDispatch()
   const ref = useAutoScroll(questionActive)
+  const dynamicOptions = useGameSelector(game => game.dynamicOptions[game.currentQuestion]) as Option[]
 
   function onOptionClick(optionIndex: number) {
+    if (question.options == null) return
     const option = question.options[optionIndex]
     dispatch(correctAnswer({
       index: optionIndex,
@@ -48,6 +52,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   }
 
   function onBonusClick(optionIndex: number) {
+    if (question.options == null) return
     const option = question.options[optionIndex]
     if (option.bonus != null) {
       dispatch(correctBonus({
@@ -76,9 +81,12 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
           onDelete={() => dispatch(removeQuestion(index))}
           showActions={canEdit}
         />
+        {question.options == null && !gameActive && (
+          <Typography color='neutral'>Варианты ответа определятся во время игры</Typography>
+        )}
         <table className={styles.options}>
           <TwoColumns>
-            {question.options.map((option, i) => {
+            {(question.options ?? dynamicOptions ?? []).map((option, i) => {
               const canClick = (currentTeam != null || everyoneDead) && questionActive && !optionsState[i].opened && bonusChance == null
               let className = styles.optionText
               if (!gameActive) className += ' ' + styles.black
@@ -149,6 +157,9 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
                 </div>
               )
             })}
+            {question.options == null && gameActive && currentQuestion === index && drawFinished && (
+              <NewOption />
+            )}
           </TwoColumns>
         </table>
         {gameActive && currentQuestion === index && (
@@ -161,14 +172,18 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
 
 export default StaticQuestion
 
-function TwoColumns({children}: {children: JSX.Element[]}) {
+function TwoColumns({children}: {children: React.ReactNode[]}) {
+  children = children.filter(child => !!child)
+  children = children.flat()
   const total = children.length
-  const half = Math.ceil(total / 2)
-  const rows: JSX.Element[][] = []
-  for (let i = 0; i < half; i ++) {
+  const half = 5 // Math.ceil(total / 2)
+  const rows: React.ReactNode[][] = []
+  for (let i = 0; i < Math.min(half, total); i ++) {
     const row = [children[i]]
     if (i + half < total) {
       row.push(children[i + half])
+    } else {
+      row.push(null)
     }
     rows.push(row)
   }
@@ -176,7 +191,7 @@ function TwoColumns({children}: {children: JSX.Element[]}) {
     <tbody>
       {rows.map((row, i) => (
         <tr key={i}>{row.map((cell, j) => (
-          <td key={j}>{cell}</td>
+          <td key={j} width='50%'>{cell}</td>
         ))}</tr>
       ))}
     </tbody>
@@ -205,4 +220,35 @@ function attachmentIcon(attachment?: Attachment | null) {
       <TextFields fontSize='small' />
     )
   ) : undefined
+}
+
+const NewOption: React.FC = () => {
+  const [ value, setValue ] = useState('')
+  const [ score, setScore ] = useState('5')
+  const dispatch = useDispatch()
+
+  return (
+    <Stack className={styles.dynamicForm} direction='row' component='form' gap={1} onSubmit={e => {
+      e.preventDefault()
+      if (value != '' && score != '') {
+        dispatch(addOptionDynamically({value, score: parseInt(score)}))
+        rightSound.play()
+      }
+    }}>
+      <Input
+        style={{flex: 1}}
+        autoFocus
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        placeholder='Ответ...'
+      />
+      {/* <Input
+        value={score}
+        placeholder='00'
+        onChange={e => setScore(transformInputScore(e.target.value))}
+        className={styles.scoreEdit}
+      /> */}
+      <button type='submit' style={{display: 'none'}} />
+    </Stack>
+  )
 }

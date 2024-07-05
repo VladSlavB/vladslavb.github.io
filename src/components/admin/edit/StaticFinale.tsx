@@ -23,8 +23,8 @@ const StaticFinale: React.FC<Props> = ({onEdit, canEdit}) => {
         showActions={canEdit}
       />
       <ol>
-        {finale.questions.map(question => (
-          <li>{question.value}</li>
+        {finale.questions.map((question, i) => (
+          <li key={i}>{question.value}</li>
         ))}
       </ol>
       <Typography>

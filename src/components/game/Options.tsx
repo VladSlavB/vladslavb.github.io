@@ -9,7 +9,18 @@ function transposeIndex(index: number) {
 }
 
 const Options: React.FC = () => {
-  const options = useSelector(state => state.questions[state.game.present.currentQuestion]?.options)
+  const options = useSelector(state => {
+    const qIndex = state.game.present.currentQuestion
+    if (qIndex >= state.questions.length || qIndex < 0) return null
+    const staticOptions = state.questions[qIndex].options
+    if (staticOptions != null) return staticOptions
+    let dynamicOptions = state.game.present.dynamicOptions[qIndex] ?? []
+    dynamicOptions = [...dynamicOptions]
+    for (let i = dynamicOptions.length; i < 10; i++) {
+      dynamicOptions.push({value: '', score: 0})
+    }
+    return dynamicOptions
+  })
   const optionsState = useGameSelector(game => game.options)
   return options != null ? (
     <div className={styles.options}>

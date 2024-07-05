@@ -161,7 +161,7 @@ function useAttachments(
   return {buttons, modal, attachment}
 }
 
-function transformInputScore(value: string) {
+export function transformInputScore(value: string) {
   return value.replace(/\D/g, '').substring(0, 2)
 }
 

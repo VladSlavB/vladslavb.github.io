@@ -15,6 +15,7 @@ import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import IconButton from '@mui/joy/IconButton'
+import { transformInputScore } from '../edit/OptionEdit'
 
 
 const getTeamParams = (team: Team) => ({
@@ -170,8 +171,4 @@ const AnswerWithScore: React.FC<AnswerProps> = ({index}) => {
       <button type='submit' style={{display: 'none'}} />
     </Stack>
   )
-}
-
-function transformInputScore(value: string) {
-  return value.replace(/\D/g, '').substring(0, 2)
 }

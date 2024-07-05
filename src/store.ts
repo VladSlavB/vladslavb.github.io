@@ -27,7 +27,7 @@ export type Option = {
 
 export type Question = {
   value: string
-  options: Option[]
+  options?: Option[]
 }
 
 
@@ -128,6 +128,7 @@ const GAME_INITIAL_STATE = {
   },
   healthChance: null as null | Team,
   roundFinished: false,
+  dynamicOptions: {} as Record<number, {value: string, score: number}[]>,
   finale: {
     active: false,
     teamsOrder: ['leftTeam', 'rightTeam'] as Team[],
@@ -186,43 +187,14 @@ const gameSlice = createSlice({
       state.currentAttachment = null
       state.roundFinished = false
     },
-    chooseTeam(state, action: PayloadAction<Team>) {
-      state.currentTeam = action.payload
+    chooseTeam(state, action: PayloadAction<{team: Team, finishDraw?: boolean}>) {
+      state.currentTeam = action.payload.team
+      if (action.payload.finishDraw) {
+        state.drawFinished = true
+      }
     },
-    correctAnswer(
-      state,
-      action: PayloadAction<{
-        index: number,
-        score: number,
-        best?: boolean,
-        attachment?: Attachment,
-        hasBonus: boolean,
-      }>
-    ) {
-      const option = state.options[action.payload.index]
-      option.opened = true
-      state.currentAttachment = action.payload.attachment
-      if (state.currentTeam == null) return
-      state[state.currentTeam].score += action.payload.score
-      if (action.payload.hasBonus) {
-        state.bonusChance = {
-          optionIndex: action.payload.index,
-          optionPayload: {
-            best: action.payload.best ?? false,
-            score: action.payload.score
-          },
-        }
-      }
-      if (state.drawFinished) {
-        if (!action.payload.hasBonus) { 
-          switchTeamIfPossible(state)
-        }
-      } else {
-        if (state.bonusChance == null) {
-          decideOnDraw(state, action.payload)
-        }
-      }
-      decideIfRoundFinished(state)
+    correctAnswer(state, action: PayloadAction<CorrectAnswerPayload>) {
+      applyCorrectAnswer(state, action.payload)
     },
     correctBonus(state, action: PayloadAction<{
       index: number,
@@ -302,6 +274,18 @@ const gameSlice = createSlice({
         state[action.payload].health += 1
       }
     },
+    addOptionDynamically(state, action: PayloadAction<{value: string, score: number}>) {
+      const idx = state.currentQuestion
+      if (state.dynamicOptions[idx] == null) {
+        state.dynamicOptions[idx] = []
+      }
+      state.dynamicOptions[idx].push(action.payload)
+      applyCorrectAnswer(state, {
+        index: state.dynamicOptions[idx].length - 1,
+        score: action.payload.score,
+        hasBonus: false
+      })
+    },
     startGame(state) {
       state.active = true
     },
@@ -350,6 +334,42 @@ const gameSlice = createSlice({
     }
   },
 })
+type CorrectAnswerPayload = {
+  index: number,
+  score: number,
+  best?: boolean,
+  attachment?: Attachment,
+  hasBonus: boolean,
+}
+function applyCorrectAnswer(
+  state: GameState,
+  payload: CorrectAnswerPayload
+) {
+  const option = state.options[payload.index]
+  option.opened = true
+  state.currentAttachment = payload.attachment
+  if (state.currentTeam == null) return
+  state[state.currentTeam].score += payload.score
+  if (payload.hasBonus) {
+    state.bonusChance = {
+      optionIndex: payload.index,
+      optionPayload: {
+        best: payload.best ?? false,
+        score: payload.score
+      },
+    }
+  }
+  if (state.drawFinished) {
+    if (!payload.hasBonus) { 
+      switchTeamIfPossible(state)
+    }
+  } else {
+    if (state.bonusChance == null) {
+      decideOnDraw(state, payload)
+    }
+  }
+  decideIfRoundFinished(state)
+}
 
 function switchTeamIfPossible(state: GameState) {
   if (state.currentTeam == null) return
@@ -427,6 +447,7 @@ export const {
   correctBonus, discardBonusChance, wrongBonus,
   utilizeHealthChance, discardHealthChance,
   deltaScore, plusHealth,
+  addOptionDynamically,
   startGame, finishGame,
   openFinale, addFinaleAnswer,
   openFinaleAnswer, openFinaleScore,
@@ -456,18 +477,19 @@ export const {
 } = visibilitySlice.actions
 
 
-const localStorageConfig = {namespace: 'vladslav', ignoreStates: ['visibility', 'editor']}
-const defaultState = load(localStorageConfig)
-
 // managing old versions
-const CURRENT_VERSION = 5
+const CURRENT_VERSION = 6
 ;(function() {
-  const state = defaultState as any
   if (localStorage.vladslav_version != CURRENT_VERSION) {
-    state.game = GAME_INITIAL_STATE
+    const storage = JSON.parse(localStorage.vladslav)
+    storage.game = GAME_INITIAL_STATE
+    localStorage.vladslav = JSON.stringify(storage)
     localStorage.vladslav_version = CURRENT_VERSION
   }
 })()
+
+const localStorageConfig = {namespace: 'vladslav', ignoreStates: ['visibility', 'editor']}
+const defaultState = load(localStorageConfig)
 
 
 const store = configureStore({
@@ -491,5 +513,7 @@ export function useGameSelector<T>(selector: (_: typeof GAME_INITIAL_STATE) => T
   return useSelector(state => selector(state.game.present))
 }
 export function selectNextQuestionBonuses(state: RootState) {
-  return state.questions[state.game.present.currentQuestion + 1]?.options?.map(option => option.bonus != null)
+  return state.questions.at(state.game.present.currentQuestion + 1)?.options?.map(
+    option => option.bonus != null
+  ) ?? Array<boolean>(NUM_OPTIONS).fill(false)
 }
