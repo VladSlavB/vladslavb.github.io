@@ -6,7 +6,7 @@ import {
 import { save, load } from 'redux-localstorage-simple'
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import undoable from 'redux-undo'
-import { finishSound, rightSound } from './sounds'
+import { playCorrect, playFinish, playWrong } from './Audio'
 
 
 export type Attachment =
@@ -214,6 +214,7 @@ const gameSlice = createSlice({
       }
       state.bonusChance = null
       decideIfRoundFinished(state)
+      playCorrect()
     },
     wrongAnswer(state) {
       if (state.currentTeam == null) return
@@ -235,6 +236,7 @@ const gameSlice = createSlice({
           switchTeamIfPossible(state)
         }
       }
+      playWrong()
     },
     wrongBonus(state, action: PayloadAction<number>) {
       if (state.currentTeam == null) return
@@ -242,6 +244,7 @@ const gameSlice = createSlice({
       if (bonus != null) bonus.vacantFor[state.currentTeam] = false
       switchTeamIfPossible(state)
       decideIfRoundFinished(state)
+      playWrong()
     },
     utilizeHealthChance(state) {
       if (state.healthChance == null) return
@@ -265,6 +268,7 @@ const gameSlice = createSlice({
       }
       state.bonusChance = null
       decideIfRoundFinished(state)
+      playWrong()
     },
     deltaScore(state, action: PayloadAction<{team: Team, value: number}>) {
       state[action.payload.team].score += action.payload.value
@@ -318,7 +322,7 @@ const gameSlice = createSlice({
       state.finale.scores[idx].opened = true
       const teamIdx = ~~(idx / 15)
       state[state.finale.teamsOrder[teamIdx]].score += state.finale.scores[idx].value
-      rightSound.play()
+      playCorrect()
     },
     toggleFinaleAnswerVisibility(state, action: PayloadAction<number>) {
       const i = action.payload
@@ -345,6 +349,7 @@ function applyCorrectAnswer(
   state: GameState,
   payload: CorrectAnswerPayload
 ) {
+  playCorrect()
   const option = state.options[payload.index]
   option.opened = true
   state.currentAttachment = payload.attachment
@@ -429,7 +434,7 @@ function decideIfRoundFinished(state: GameState) {
   const allOptionsOpened = areAllOptionsOpened(state)
   state.roundFinished = everyOneDead || allOptionsOpened
   if (state.roundFinished && !prevRoundFinished) {
-    setTimeout(() => finishSound.play(), 1000)
+    setTimeout(() => playFinish(), 1000)
     state.leftTeam.cumulativeScore += state.leftTeam.score
     state.rightTeam.cumulativeScore += state.rightTeam.score
     if (state.leftTeam.score >= state.rightTeam.score) {
@@ -480,7 +485,7 @@ export const {
 // managing old versions
 const CURRENT_VERSION = 6
 ;(function() {
-  if (localStorage.vladslav_version != CURRENT_VERSION) {
+  if (localStorage.vladslav_version != CURRENT_VERSION && localStorage.vladslav) {
     const storage = JSON.parse(localStorage.vladslav)
     storage.game = GAME_INITIAL_STATE
     localStorage.vladslav = JSON.stringify(storage)

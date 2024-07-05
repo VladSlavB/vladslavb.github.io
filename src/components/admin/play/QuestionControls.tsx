@@ -8,7 +8,6 @@ import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
 import Box from '@mui/joy/Box'
 import { hitAnimation } from '../../game/Teams'
-import { rightSound, wrongSound } from '../../../sounds'
 import { AttachmentComponent } from '../edit/StaticQuestion'
 
 function teamColor(team: string) {
@@ -53,7 +52,6 @@ const QuestionControls: React.FC = () => {
       hitAnimation(currentTeam)
     }
     dispatch(wrongAnswer())
-    wrongSound.play()
   }
 
   function onBonusChanceClick(success: boolean) {
@@ -64,11 +62,9 @@ const QuestionControls: React.FC = () => {
         score: bonusInChance.score,
         attachment: bonusInChance.attachment,
       }))
-      rightSound.play()
     } else {
       dispatch(discardBonusChance())
       hitAnimation(currentTeam)
-      wrongSound.play()
     }
   }
 

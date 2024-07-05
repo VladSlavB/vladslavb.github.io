@@ -5,10 +5,8 @@ import Button from '@mui/joy/Button/Button'
 import { useSelector } from '../store'
 import Typography from '@mui/joy/Typography'
 import AudiotrackIcon from '@mui/icons-material/PlayArrow'
-import { introSound } from '../sounds'
 import StickyControls from '../components/admin/play/SticklyControls'
-
-import background from '../../assets/background.mp3'
+import { playIntro } from '../Audio'
 
 
 const AdminScreen: React.FC = () => {
@@ -28,11 +26,10 @@ const AdminScreen: React.FC = () => {
             startDecorator={<AudiotrackIcon />}
             variant='soft'
             size='lg'
-            onClick={() => introSound.play()}
+            onClick={playIntro}
           >
             Заставка
           </Button>
-          <audio src={background} controls />
         </div>
       )}
       <QuestionsList />

@@ -8,7 +8,8 @@ import UndoIcon from '@mui/icons-material/Undo'
 import RedoIcon from '@mui/icons-material/Redo';
 import { ActionCreators } from 'redux-undo'
 import Favorite from '@mui/icons-material/Favorite'
-import { rightSound, wrongSound } from '../../../sounds'
+import { playCorrect, playWrong } from '../../../Audio'
+import MusicControl from './MusicControl'
 
 export let gameWindow: Window | null = null
 
@@ -45,17 +46,17 @@ const StickyControls: React.FC = () => {
 
   function addScore(team: Team) {
     dispatch(deltaScore({team, value: 1}))
-    rightSound.play()
+    playCorrect()
   }
 
   function subtractScore(team: Team) {
     dispatch(deltaScore({team, value: -1}))
-    wrongSound.play()
+    playWrong()
   }
 
   function addHealth(team: Team) {
     dispatch(plusHealth(team))
-    rightSound.play()
+    playCorrect()
   }
 
   return (
@@ -65,7 +66,7 @@ const StickyControls: React.FC = () => {
           <Button color='primary' onClick={() => dispatch(nextQuestion(nextQuestionBonuses))}>
             Открыть первый вопрос
           </Button>
-        ) : (
+        ) : <>
           <ButtonGroup className={styles.outlined}>
             <Button title='Отнять балл у синей команды'
               color='primary' onClick={() => subtractScore('leftTeam')} disabled={noLeftScore}
@@ -98,7 +99,8 @@ const StickyControls: React.FC = () => {
               &minus;1
             </Button>
           </ButtonGroup>
-        )
+          <MusicControl />
+        </>
       ) : (
         <Button
           disabled={editorActive}

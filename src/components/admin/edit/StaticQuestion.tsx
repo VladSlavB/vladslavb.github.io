@@ -8,7 +8,6 @@ import Stack from '@mui/joy/Stack'
 import ImageOutlined from '@mui/icons-material/ImageOutlined'
 import TextFields from '@mui/icons-material/TextFields'
 import QuestionControls from '../play/QuestionControls'
-import { rightSound, wrongSound } from '../../../sounds'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import Close from '@mui/icons-material/Close'
 import IconButton from '@mui/joy/IconButton'
@@ -48,7 +47,6 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
       attachment: option.attachment,
       hasBonus: option.bonus != null,
     }))
-    rightSound.play()
   }
 
   function onBonusClick(optionIndex: number) {
@@ -60,7 +58,6 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
         score: option.bonus.score,
         attachment: option.bonus.attachment,
       }))
-      rightSound.play()
     }
   }
 
@@ -68,7 +65,6 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
     if (currentTeam == null) return
     dispatch(wrongBonus(optionIndex))
     hitAnimation(currentTeam)
-    wrongSound.play()
   }
 
   return (
@@ -232,7 +228,6 @@ const NewOption: React.FC = () => {
       e.preventDefault()
       if (value != '' && score != '') {
         dispatch(addOptionDynamically({value, score: parseInt(score)}))
-        rightSound.play()
       }
     }}>
       <Input
