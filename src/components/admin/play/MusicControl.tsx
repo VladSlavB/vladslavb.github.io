@@ -7,11 +7,12 @@ import Done from '@mui/icons-material/Done'
 import Tooltip from '@mui/joy/Tooltip'
 import Stack from '@mui/joy/Stack'
 import HeartBroken from '@mui/icons-material/HeartBroken'
+import styles from './styles.css'
 
 
 const MusicControl: React.FC = () => {
   return (
-    <ButtonGroup>
+    <ButtonGroup className={styles.outlined}>
       <Tooltip keepMounted variant='outlined' disableFocusListener placement='top-start' title={
         <Stack gap={2}>
           {backgroundMusic.map(src => (

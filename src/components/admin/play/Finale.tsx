@@ -83,8 +83,8 @@ const Finale: React.FC = () => {
             <Tab key={title} color={color} disabled={!active}>{title}</Tab>
           ))}
         </TabList>
-        <TabPanel value={0}>{answersBlock('leftTeam')}</TabPanel>
-        <TabPanel value={1}>{answersBlock('rightTeam')}</TabPanel>
+        <TabPanel value={0}>{answersBlock(teams[0])}</TabPanel>
+        <TabPanel value={1}>{answersBlock(teams[1])}</TabPanel>
       </Tabs>
       <Stack direction='row'>
         <Button
@@ -160,6 +160,7 @@ const AnswerWithScore: React.FC<AnswerProps> = ({index}) => {
         fullWidth
         disabled={disabled}
         onChange={e => setAnswer(e.target.value)}
+        placeholder='Ответ...'
       />
       <Input
         value={score}

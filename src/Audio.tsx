@@ -41,6 +41,12 @@ export const playCorrect = () => play(correct)
 export const playWrong = () => play(wrong)
 export const playIntro = () => play(intro)
 export const playFinish = () => {
-  [...backgroundMusic, intro].forEach(url => audioByUrl[url]?.current?.pause())
+  [...backgroundMusic, intro].forEach(url => {
+    const audio = audioByUrl[url]?.current
+    if (audio != null) {
+      audio.pause()
+      audio.currentTime = 0
+    }
+  })
   play(finish)
 }

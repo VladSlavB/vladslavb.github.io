@@ -321,8 +321,13 @@ const gameSlice = createSlice({
       const idx = action.payload
       state.finale.scores[idx].opened = true
       const teamIdx = ~~(idx / 15)
-      state[state.finale.teamsOrder[teamIdx]].score += state.finale.scores[idx].value
-      playCorrect()
+      const score = state.finale.scores[idx].value
+      state[state.finale.teamsOrder[teamIdx]].score += score
+      if (score > 0) {
+        playCorrect()
+      } else {
+        playWrong()
+      }
     },
     toggleFinaleAnswerVisibility(state, action: PayloadAction<number>) {
       const i = action.payload

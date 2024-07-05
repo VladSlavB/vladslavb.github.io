@@ -53,9 +53,12 @@ type QuestionProps = {
 }
 const Question: React.FC<QuestionProps> = ({opened, text, index}) => {
   let className = styles.finaleQuestion
-  if (!opened) className += ' ' + styles.closed
+  if (opened) className += ' ' + styles.opened
   return (
-    <div className={className}><span>{opened ? text : (index + 1)}</span></div>
+    <div className={className}>
+      <div className={styles.closed}><span>{index + 1}</span></div>
+      <div>{text}</div>
+    </div>
   )
 }
 
@@ -68,11 +71,24 @@ const AnswerWithScore: React.FC<AnswerWithScoreProps> = ({index}) => {
 
   const displayAnswer = answer?.opened && !answer?.hidden
   const displayScore = score?.opened && !score?.hidden
+  let className = styles.finaleCell
+  if (displayAnswer || displayScore) {
+    className += ' ' + styles.opened
+  }
+  let scoreClassName = styles.cellScore
+  if (displayScore) {
+    scoreClassName += ' ' + styles.opened
+  }
 
   return (
-    <div className={styles.finaleCell + ' ' + (displayAnswer || displayScore ? styles.opened : undefined)}>
-      {displayAnswer && <div className={styles.cellValue}>{answer.value}</div>}
-      {displayScore && <div className={styles.cellScore}>{score.value}</div>}
+    <div className={className}>
+      <div className={styles.empty} />
+      <div className={styles.content}>
+        {displayAnswer && <div className={styles.cellValue}>{answer.value}</div>}
+        {score != null && (
+          <div className={scoreClassName}>{score.value}</div>
+        )}
+      </div>
     </div>
   )
 }
