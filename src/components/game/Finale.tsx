@@ -19,7 +19,7 @@ const Finale: React.FC = () => {
   return gameFinale.active ? <>
     <div className={styles.finaleQuestions}>
       {staticFinale?.questions.map((question, i) => (
-        <Question text={question.value} opened />
+        <Question text={question.value} opened={gameFinale.openedQuestions[i]} index={i} />
       ))}
     </div>
     <div className={styles.finaleScore + ' ' + teamStyle(team1)}>{team1Score}</div>
@@ -49,12 +49,13 @@ export default Finale
 type QuestionProps = {
   opened: boolean
   text: string
+  index: number
 }
-const Question: React.FC<QuestionProps> = ({opened, text}) => {
+const Question: React.FC<QuestionProps> = ({opened, text, index}) => {
   let className = styles.finaleQuestion
-  if (opened) className += ' ' + styles.opened
+  if (!opened) className += ' ' + styles.closed
   return (
-    <div className={className}>{text}</div>
+    <div className={className}><span>{opened ? text : (index + 1)}</span></div>
   )
 }
 
@@ -70,8 +71,8 @@ const AnswerWithScore: React.FC<AnswerWithScoreProps> = ({index}) => {
 
   return (
     <div className={styles.finaleCell + ' ' + (displayAnswer || displayScore ? styles.opened : undefined)}>
-      {displayAnswer && answer.value}
-      {displayScore && score.value}
+      {displayAnswer && <div className={styles.cellValue}>{answer.value}</div>}
+      {displayScore && <div className={styles.cellScore}>{score.value}</div>}
     </div>
   )
 }

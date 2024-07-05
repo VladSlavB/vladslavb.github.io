@@ -6,7 +6,7 @@ import {
 import { save, load } from 'redux-localstorage-simple'
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import undoable from 'redux-undo'
-import { finishSound } from './sounds'
+import { finishSound, rightSound } from './sounds'
 
 
 export type Attachment =
@@ -133,6 +133,7 @@ const GAME_INITIAL_STATE = {
     teamsOrder: ['leftTeam', 'rightTeam'] as Team[],
     answers: [] as {value: string, opened: boolean, hidden: boolean}[],
     scores: [] as {value: number, opened: boolean, hidden: boolean}[],
+    openedQuestions: [false, false, false, false, false],
   },
   leftTeam: {
     cumulativeScore: 0,
@@ -312,6 +313,14 @@ const gameSlice = createSlice({
       state.finale.active = true
       state.finale.teamsOrder = ['leftTeam', 'rightTeam']
       state.finale.teamsOrder.sort((a, b) => (state[b].wins - state[a].wins) * 100500 + state[b].score - state[a].score)
+      const scale = 5
+      const lw = state.leftTeam.wins
+      const rw = state.rightTeam.wins
+      state.leftTeam.score = (lw - Math.min(lw, rw)) * scale
+      state.rightTeam.score = (rw - Math.min(lw, rw)) * scale
+    },
+    toggleFinaleQuestion(state, action: PayloadAction<number>) {
+      state.finale.openedQuestions[action.payload] = !state.finale.openedQuestions[action.payload]
     },
     addFinaleAnswer(state, action: PayloadAction<{answer: string, score: number}>) {
       state.finale.answers.push({value: action.payload.answer, opened: false, hidden: false})
@@ -321,7 +330,11 @@ const gameSlice = createSlice({
       state.finale.answers[action.payload].opened = true
     },
     openFinaleScore(state, action: PayloadAction<number>) {
-      state.finale.scores[action.payload].opened = true
+      const idx = action.payload
+      state.finale.scores[idx].opened = true
+      const teamIdx = ~~(idx / 15)
+      state[state.finale.teamsOrder[teamIdx]].score += state.finale.scores[idx].value
+      rightSound.play()
     },
     toggleFinaleAnswerVisibility(state, action: PayloadAction<number>) {
       const i = action.payload
@@ -330,6 +343,10 @@ const gameSlice = createSlice({
     toggleFinaleScoreVisibility(state, action: PayloadAction<number>) {
       const i = action.payload
       state.finale.scores[i].hidden = !state.finale.scores[i].hidden
+    },
+    closeAllAnswers(state) {
+      state.finale.openedQuestions = [false, false, false, false, false]
+      state.finale.answers.forEach(answer => answer.hidden = true)
     }
   },
 })
@@ -414,6 +431,7 @@ export const {
   openFinale, addFinaleAnswer,
   openFinaleAnswer, openFinaleScore,
   toggleFinaleAnswerVisibility, toggleFinaleScoreVisibility,
+  closeAllAnswers, toggleFinaleQuestion,
 } = gameSlice.actions
 
 const visibilitySlice = createSlice({
@@ -442,7 +460,7 @@ const localStorageConfig = {namespace: 'vladslav', ignoreStates: ['visibility', 
 const defaultState = load(localStorageConfig)
 
 // managing old versions
-const CURRENT_VERSION = 3
+const CURRENT_VERSION = 5
 ;(function() {
   const state = defaultState as any
   if (localStorage.vladslav_version != CURRENT_VERSION) {

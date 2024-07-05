@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Team, addFinaleAnswer, openFinaleAnswer, openFinaleScore, toggleFinaleAnswerVisibility, toggleFinaleScoreVisibility, useDispatch, useGameSelector, useSelector } from '../../../store'
+import { Team, addFinaleAnswer, closeAllAnswers, openFinaleAnswer, openFinaleScore, toggleFinaleAnswerVisibility, toggleFinaleQuestion, toggleFinaleScoreVisibility, useDispatch, useGameSelector, useSelector } from '../../../store'
 import HeaderWithActions from '../edit/HeaderWithActions'
 import Card from '@mui/joy/Card'
 import Grid from '@mui/joy/Grid'
@@ -26,8 +26,10 @@ const getTeamParams = (team: Team) => ({
 const Finale: React.FC = () => {
   const active = useGameSelector(game => game.finale.active)
   const finale = useSelector(state => state.finale)
+  const openedQuestions = useGameSelector(game => game.finale.openedQuestions)
   const ref = useAutoScroll(active)
   const teams = useGameSelector(game => game.finale.teamsOrder)
+  const dispatch = useDispatch()
 
   function calcIndex(team: Team, question: number, player: number) {
     if (finale === null) return -1
@@ -53,7 +55,12 @@ const Finale: React.FC = () => {
         {finale.questions.map((question, i) => (
           <React.Fragment key={i}>
             <Grid xs={3}>
-              <Typography color={active ? undefined : 'neutral'}>{question.value}</Typography>
+              <Button
+                disabled={!active}
+                color='primary'
+                variant={openedQuestions[i] ? 'outlined': 'solid'}
+                onClick={() => dispatch(toggleFinaleQuestion(i))}
+              >{question.value}</Button>
             </Grid>
             {names.map((_, j) => (
               <Grid xs={3} key={j}>
@@ -78,6 +85,13 @@ const Finale: React.FC = () => {
         <TabPanel value={0}>{answersBlock('leftTeam')}</TabPanel>
         <TabPanel value={1}>{answersBlock('rightTeam')}</TabPanel>
       </Tabs>
+      <Stack direction='row'>
+        <Button
+          onClick={() => dispatch(closeAllAnswers())}
+          variant='outlined' color='neutral' size='sm'
+          disabled={!active}
+        >Скрыть все вопросы и ответы, оставив очки</Button>
+      </Stack>
     </Card>
   ) : null
 }
@@ -117,7 +131,7 @@ const AnswerWithScore: React.FC<AnswerProps> = ({index}) => {
             !fixedAnswer.opened ? openFinaleAnswer(index) : toggleFinaleAnswerVisibility(index)
           )}
           color={fixedAnswer.opened ? 'neutral' : 'primary'}
-          variant={fixedAnswer.hidden ? 'outlined' : 'solid'}
+          variant={fixedAnswer.opened && !fixedAnswer.hidden ? 'outlined' : 'solid'}
         >
           {fixedAnswer.value}
         </Button>
@@ -126,7 +140,7 @@ const AnswerWithScore: React.FC<AnswerProps> = ({index}) => {
             !fixedScore.opened ? openFinaleScore(index) : toggleFinaleScoreVisibility(index)
           )}
           color={fixedScore.opened ? 'neutral' : 'primary'}
-          variant={fixedScore.hidden ? 'outlined' : 'solid'}
+          variant={fixedScore.opened && !fixedScore.hidden ? 'outlined' : 'solid'}
         >
           {fixedScore.value}
         </IconButton>

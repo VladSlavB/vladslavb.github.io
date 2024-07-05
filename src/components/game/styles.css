@@ -269,6 +269,15 @@
   &:last-child {
     border-radius: 0 0 18px 18px;
   }
+
+  &.closed {
+    justify-content: center;
+    font: 96px 'Notable';
+    
+    & span {
+      margin-top: -20px;
+    }
+  }
 }
 .finaleTeam {
   position: absolute;
@@ -321,6 +330,7 @@
   border: 1px solid black;
   width: 201px;
   height: 129px;
+  position: relative;
 
   &:nth-child(5) {
     border-radius: 0 0 0 18px;
@@ -329,6 +339,26 @@
   &:last-child {
     border-radius: 0 0 18px 0;
   }
+
+  &.opened {
+    background: black;
+    color: var(--bg-color);
+    border: 1px solid var(--bg-color)
+  }
+}
+.cellScore {
+  position: absolute;
+  top: 17px;
+  right: 13px;
+  font-size: 37px;
+  line-height: 20px;
+}
+.cellValue {
+  position: absolute;
+  bottom: 17px;
+  left: 13px;
+  font-size: 17px;
+  text-transform: uppercase;
 }
 .finaleScore {
   width: 378px;
