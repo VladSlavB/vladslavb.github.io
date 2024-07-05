@@ -470,6 +470,7 @@ const visibilitySlice = createSlice({
   initialState: {
     attachment: false,
     subtotal: false,
+    instantAttachment: null as null | Attachment
   },
   reducers: {
     toggleAttachmentVisibility(state) {
@@ -477,6 +478,16 @@ const visibilitySlice = createSlice({
     },
     toggleSubtotalVisibility(state) {
       state.subtotal = !state.subtotal
+    },
+    toggleInstantAttachment(state, action: PayloadAction<Attachment>) {
+      if (state.instantAttachment == null) {
+        state.instantAttachment = action.payload
+      } else {
+        state.instantAttachment = null
+      }
+    },
+    deleteInstantAttachment(state) {
+      state.instantAttachment = null
     }
   }
 })
@@ -484,6 +495,8 @@ const visibilitySlice = createSlice({
 export const {
   toggleAttachmentVisibility,
   toggleSubtotalVisibility,
+  toggleInstantAttachment,
+  deleteInstantAttachment,
 } = visibilitySlice.actions
 
 

@@ -17,23 +17,28 @@ type Props = {
   open: boolean
   onDone: (result: Attachment) => void
   onClose: () => void
+  showMode?: boolean
   initial?: Attachment
 }
 
-const Modal: React.FC<Props> = ({open, onClose, type, onDone, initial}) => {
+const Modal: React.FC<Props> = ({open, onClose, type, showMode, onDone, initial}) => {
   return (
     <ModalJoy open={open} onClose={onClose}>
       <ModalDialog>
         {type === 'img' ? (
           <ImageForm initial={initial?.type === type ? initial.url : ''} onDone={url => {
             onDone({type: 'img', url})
-            onClose()
+            if (!showMode) {
+              onClose()
+            }
           }} />
         ) : (
           type === 'text' ? (
             <TextForm initial={initial?.type === type ? initial.text : ''} onDone={text => {
               onDone({type: 'text', text})
-              onClose()
+              if (!showMode) {
+                onClose()
+              }
             }} />
           ) : null
         )}

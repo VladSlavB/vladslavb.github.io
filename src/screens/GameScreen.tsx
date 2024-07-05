@@ -4,7 +4,7 @@ import styles from './styles.css'
 import background from '../../assets/background.svg'
 import React, { useEffect, useState } from 'react'
 import Teams from '../components/game/Teams'
-import { useGameSelector, useSelector } from '../store'
+import { useSelector } from '../store'
 import { useStore } from 'react-redux'
 import Subtotal from '../components/game/Subtotal'
 import Finale from '../components/game/Finale'
@@ -60,8 +60,9 @@ const GameScreen: React.FC = () => {
 export default GameScreen
 
 const Demonstration: React.FC = () => {
-  const currentAttachment = useGameSelector(game => game.currentAttachment)
-  const attachmentShown = useSelector(state => state.visibility.attachment)
+  const currentAttachment = useSelector(state => state.visibility.instantAttachment ?? state.game.present.currentAttachment)
+  const attachmentShown = useSelector(state => state.visibility.attachment || state.visibility.instantAttachment != null)
+  console.log(currentAttachment)
   let className = styles.imgModal
   if (currentAttachment?.type === 'img' && attachmentShown) {
     className += ' ' + styles.shown

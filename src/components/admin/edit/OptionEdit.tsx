@@ -93,7 +93,7 @@ export const BonusEdit: React.FC<{
   const { buttons, modal, attachment } = useAttachments(bonus, onEdit)
 
   return <>
-    <Tooltip arrow variant='outlined' placement='right' title={
+    <Tooltip arrow variant='outlined' placement='right' disableFocusListener title={
       <ButtonGroup variant='plain'>
         {...buttons}
         <IconButton size='sm' onClick={onDelete}>

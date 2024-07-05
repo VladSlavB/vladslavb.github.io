@@ -26,7 +26,7 @@ function TeamScoreAndHealth(props: {health: number, score: number, team: Team}) 
           let className = styles.heartholder
           if (i < props.health) className += ' ' + styles.holds
           return (
-            <div className={styles.wrapper}>
+            <div className={styles.wrapper} key={i}>
               <div className={className}>
                 <img src={heart} />
               </div>

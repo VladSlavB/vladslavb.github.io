@@ -10,6 +10,7 @@ import { ActionCreators } from 'redux-undo'
 import Favorite from '@mui/icons-material/Favorite'
 import { playCorrect, playWrong } from '../../../Audio'
 import MusicControl from './MusicControl'
+import InstantAttachment from './InstantAttachment'
 
 export let gameWindow: Window | null = null
 
@@ -100,6 +101,7 @@ const StickyControls: React.FC = () => {
             </Button>
           </ButtonGroup>
           <MusicControl />
+          <InstantAttachment />
         </>
       ) : (
         <Button
