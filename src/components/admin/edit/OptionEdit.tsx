@@ -51,16 +51,16 @@ const OptionEdit: React.FC<{
             error={option.checkValue && !validateOptionValue(option.value)}
             type='text' placeholder={placeholder} className={styles.optionText}
           />
-            <Input
-              className={styles.scoreEdit}
-              value={option.score}
-              onChange={e => onEdit(draft => {
-                draft.score = transformInputScore(e.target.value)
-              })}
-              onBlur={() => onEdit(draft => {draft.checkScore = true})}
-              error={option.checkScore && !validateScore(option.score)}
-              placeholder='00'
-            />
+          <Input
+            className={styles.scoreEdit}
+            value={option.score}
+            onChange={e => onEdit(draft => {
+              draft.score = transformInputScore(e.target.value)
+            })}
+            onBlur={() => onEdit(draft => {draft.checkScore = true})}
+            error={option.checkScore && !validateScore(option.score)}
+            placeholder='00'
+          />
         </Stack>
       </Tooltip>
       <div className={styles.optionExtra} style={{gap : 8}}>

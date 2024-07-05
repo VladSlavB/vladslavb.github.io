@@ -55,11 +55,19 @@ type FinaleQuestion = {
   value: string
 }
 
+type Finale = {
+  questions: FinaleQuestion[]
+  names: {
+    leftTeam: string[]
+    rightTeam: string[]
+  }
+}
+
 const finaleSlice = createSlice({
   name: 'finale',
-  initialState: null as null | FinaleQuestion[],
+  initialState: null as null | Finale,
   reducers: {
-    setFinale(_, action: PayloadAction<FinaleQuestion[]>) {
+    setFinale(_, action: PayloadAction<Finale>) {
       return action.payload
     },
     deleteFinale(_) {
@@ -120,6 +128,7 @@ const GAME_INITIAL_STATE = {
   },
   healthChance: null as null | Team,
   roundFinished: false,
+  finaleActive: false,
   leftTeam: {
     cumulativeScore: 0,
     wins: 0,
@@ -293,6 +302,10 @@ const gameSlice = createSlice({
     finishGame(_) {
       return GAME_INITIAL_STATE
     },
+    openFinale(state) {
+      state.currentQuestion++
+      state.finaleActive = true
+    },
   },
 })
 
@@ -373,6 +386,7 @@ export const {
   utilizeHealthChance, discardHealthChance,
   deltaScore, plusHealth,
   startGame, finishGame,
+  openFinale,
 } = gameSlice.actions
 
 const visibilitySlice = createSlice({

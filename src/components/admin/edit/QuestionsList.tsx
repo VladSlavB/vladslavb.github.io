@@ -1,12 +1,14 @@
 import styles from './styles.css'
 import React, { useEffect } from 'react'
-import { finishEditing, startAdding, startAddingFinale, startEditing, useDispatch, useGameSelector, useSelector } from '../../../store'
+import { finishEditing, startAdding, startAddingFinale, startEditing, startEditingFinale, useDispatch, useGameSelector, useSelector } from '../../../store'
 import Button from '@mui/joy/Button'
 import StaticQuestion from './StaticQuestion'
 import QuestionEdit from './QuestionEdit'
 import Stack from '@mui/joy/Stack'
 import Add from '@mui/icons-material/Add'
 import FinaleEdit from './FinaleEdit'
+import StaticFinale from './StaticFinale'
+import Finale from '../play/Finale'
 
 const QuestionsList: React.FC = () => {
   const numQuestions = useSelector(state => state.questions.length)
@@ -39,12 +41,6 @@ const QuestionsList: React.FC = () => {
       {editor.mode === 'add' && (
         <QuestionEdit onDone={() => dispatch(finishEditing())} />
       )}
-      {editor.mode === 'addFinale' && (
-        <FinaleEdit onDone={() => dispatch(finishEditing())} />
-      )}
-      {editor.mode === 'editFinale' && (
-        <FinaleEdit onDone={() => dispatch(finishEditing())} edit />
-      )}
       <div className={styles.bottomButtons}>
         {editor.mode === 'view' && !gameActive && <>
           <Button
@@ -63,6 +59,19 @@ const QuestionsList: React.FC = () => {
           )}
         </>}
       </div>
+      {editor.mode !== 'editFinale' && (
+        gameActive ? (
+          <Finale />
+        ) : (
+          <StaticFinale onEdit={() => dispatch(startEditingFinale())} canEdit={editor.mode === 'view'} />
+        )
+      )}
+      {editor.mode === 'addFinale' && (
+        <FinaleEdit onDone={() => dispatch(finishEditing())} />
+      )}
+      {editor.mode === 'editFinale' && (
+        <FinaleEdit onDone={() => dispatch(finishEditing())} edit />
+      )}
     </Stack>
   )
 }

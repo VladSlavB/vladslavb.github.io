@@ -1,7 +1,7 @@
 .optionText {
     flex: 1;
 }
-.scoreEdit, .bonusEdit {    
+.scoreEdit, .bonusEdit {
     & input {
         font-family: monospace;
     }
@@ -140,4 +140,10 @@ table.options {
 }
 :global .MuiModal-root.MuiModal-root {
     z-index: 100500;
+}
+.finaleButtons {
+    display: flex;
+    justify-content: space-between;
+    flex: 1;
+    padding-top: 16px !important;
 }

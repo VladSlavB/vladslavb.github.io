@@ -2,7 +2,7 @@ import styles from './styles.css'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import React from 'react'
-import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, selectNextQuestionBonuses, areAllOptionsOpened, toggleSubtotalVisibility } from '../../../store'
+import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, selectNextQuestionBonuses, areAllOptionsOpened, toggleSubtotalVisibility, openFinale } from '../../../store'
 import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
@@ -44,6 +44,8 @@ const QuestionControls: React.FC = () => {
   const nextQuestionBonuses = useSelector(selectNextQuestionBonuses)
 
   const subtotalShown = useSelector(state => state.visibility.subtotal)
+
+  const hasFinale = useSelector(state => state.finale != null)
 
   function onFail() {
     if (currentTeam != null) {
@@ -137,7 +139,7 @@ const QuestionControls: React.FC = () => {
               )
             )}
           </>}
-          {allOptionsOpened && !lastQuestion && <>
+          {allOptionsOpened && (!lastQuestion || hasFinale) && <>
             <VisibilityButton
               variant='soft'
               visible={subtotalShown}
@@ -148,7 +150,7 @@ const QuestionControls: React.FC = () => {
             <Button
               style={{alignSelf: 'flex-start'}}
               color='primary'
-              onClick={() => dispatch(nextQuestion(nextQuestionBonuses))}
+              onClick={() => dispatch(lastQuestion ? openFinale() : nextQuestion(nextQuestionBonuses))}
             >
               Следующий вопрос
             </Button>

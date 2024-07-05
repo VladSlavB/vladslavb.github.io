@@ -42,3 +42,12 @@
 .outlined {
     background: white;
 }
+
+.finaleScoreEdit {
+    /* margin-left: 8px; */
+    width: 50px;
+
+    & input {
+        font-family: monospace;
+    }
+}

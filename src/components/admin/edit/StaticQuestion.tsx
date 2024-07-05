@@ -1,5 +1,5 @@
 import styles from './styles.css'
-import React, { useEffect, useRef } from 'react'
+import React from 'react'
 import { Attachment, correctAnswer, correctBonus, removeQuestion, useDispatch, useSelector, useGameSelector, wrongBonus } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
@@ -7,14 +7,14 @@ import Button from '@mui/joy/Button'
 import Stack from '@mui/joy/Stack'
 import ImageOutlined from '@mui/icons-material/ImageOutlined'
 import TextFields from '@mui/icons-material/TextFields'
-import Edit from '@mui/icons-material/Edit'
-import Delete from '@mui/icons-material/Delete'
 import QuestionControls from '../play/QuestionControls'
 import { rightSound, wrongSound } from '../../../sounds'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import Close from '@mui/icons-material/Close'
 import IconButton from '@mui/joy/IconButton'
 import { hitAnimation } from '../../game/Teams'
+import HeaderWithActions from './HeaderWithActions'
+import { useAutoScroll } from '../scroll'
 
 type Props = {
   index: number
@@ -33,15 +33,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const optionsState = useGameSelector(game => game.options)
   const drawFinished = useGameSelector(game => game.drawFinished)
   const dispatch = useDispatch()
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (questionActive && ref.current != null) {
-      const gap = 40
-      var elementPosition = ref.current.getBoundingClientRect().top;
-      var offsetPosition = elementPosition + window.scrollY - gap;
-      window.scrollTo({top: offsetPosition, behavior: 'smooth'})
-    }
-  }, [questionActive])
+  const ref = useAutoScroll(questionActive)
 
   function onOptionClick(optionIndex: number) {
     const option = question.options[optionIndex]
@@ -77,29 +69,13 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   return (
     <Card variant={questionActive ? 'soft' : 'outlined'} ref={ref}>
       <Stack spacing={2}>
-        <div className={styles.header}>
-          <Typography
-            level='title-lg'
-            flexGrow={1}
-            whiteSpace='pre-wrap'
-            color={gameActive && !questionActive ? 'neutral' : undefined}
-          >{question.value}</Typography>
-          {canEdit && (
-            <div className={styles.actions}>
-              <Button onClick={onEdit} variant='plain' size='sm'><Edit /></Button>
-              <Button
-                onClick={() => {
-                  if (confirm(`Удалить вопрос "${question.value}"?`)) {
-                    dispatch(removeQuestion(index))
-                  }
-                }}
-                variant='plain' color='danger' size='sm'
-              >
-                <Delete />
-              </Button>
-            </div>
-          )}
-        </div>
+        <HeaderWithActions
+          header={question.value}
+          dim={gameActive && !questionActive}
+          onEdit={onEdit}
+          onDelete={() => dispatch(removeQuestion(index))}
+          showActions={canEdit}
+        />
         <table className={styles.options}>
           <TwoColumns>
             {question.options.map((option, i) => {
