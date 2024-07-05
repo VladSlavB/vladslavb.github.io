@@ -44,10 +44,16 @@
 }
 
 .finaleScoreEdit {
-    /* margin-left: 8px; */
-    width: 50px;
+    width: 55px;
 
     & input {
         font-family: monospace;
     }
+}
+
+.tabsContainer {
+    background: none !important;
+}
+.finaleButtonGroup {
+    width: 100%;
 }

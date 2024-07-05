@@ -128,7 +128,12 @@ const GAME_INITIAL_STATE = {
   },
   healthChance: null as null | Team,
   roundFinished: false,
-  finaleActive: false,
+  finale: {
+    active: false,
+    teamsOrder: ['leftTeam', 'rightTeam'] as Team[],
+    answers: [] as {value: string, opened: boolean, hidden: boolean}[],
+    scores: [] as {value: number, opened: boolean, hidden: boolean}[],
+  },
   leftTeam: {
     cumulativeScore: 0,
     wins: 0,
@@ -304,8 +309,28 @@ const gameSlice = createSlice({
     },
     openFinale(state) {
       state.currentQuestion++
-      state.finaleActive = true
+      state.finale.active = true
+      state.finale.teamsOrder = ['leftTeam', 'rightTeam']
+      state.finale.teamsOrder.sort((a, b) => (state[b].wins - state[a].wins) * 100500 + state[b].score - state[a].score)
     },
+    addFinaleAnswer(state, action: PayloadAction<{answer: string, score: number}>) {
+      state.finale.answers.push({value: action.payload.answer, opened: false, hidden: false})
+      state.finale.scores.push({value: action.payload.score, opened: false, hidden: false})
+    },
+    openFinaleAnswer(state, action: PayloadAction<number>) {
+      state.finale.answers[action.payload].opened = true
+    },
+    openFinaleScore(state, action: PayloadAction<number>) {
+      state.finale.scores[action.payload].opened = true
+    },
+    toggleFinaleAnswerVisibility(state, action: PayloadAction<number>) {
+      const i = action.payload
+      state.finale.answers[i].hidden = !state.finale.answers[i].hidden
+    },
+    toggleFinaleScoreVisibility(state, action: PayloadAction<number>) {
+      const i = action.payload
+      state.finale.scores[i].hidden = !state.finale.scores[i].hidden
+    }
   },
 })
 
@@ -386,7 +411,9 @@ export const {
   utilizeHealthChance, discardHealthChance,
   deltaScore, plusHealth,
   startGame, finishGame,
-  openFinale,
+  openFinale, addFinaleAnswer,
+  openFinaleAnswer, openFinaleScore,
+  toggleFinaleAnswerVisibility, toggleFinaleScoreVisibility,
 } = gameSlice.actions
 
 const visibilitySlice = createSlice({

@@ -8,7 +8,7 @@ import { gameWindow } from '../admin/play/SticklyControls'
 const Teams: React.FC = () => {
   const leftTeam = useGameSelector(game => game.leftTeam)
   const rightTeam = useGameSelector(game => game.rightTeam)
-  const display = useGameSelector(game => game.currentQuestion >= 0)
+  const display = useGameSelector(game => game.currentQuestion >= 0 && !game.finale.active)
   return display ? <>
     <TeamScoreAndHealth {...leftTeam} team='leftTeam' />
     <TeamScoreAndHealth {...rightTeam} team='rightTeam' />

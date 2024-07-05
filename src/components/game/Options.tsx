@@ -9,11 +9,7 @@ function transposeIndex(index: number) {
 }
 
 const Options: React.FC = () => {
-  const options = useSelector(state => (
-    state.game.present.currentQuestion >= 0 ? (
-      state.questions[state.game.present.currentQuestion].options
-    ) : null
-  ))
+  const options = useSelector(state => state.questions[state.game.present.currentQuestion]?.options)
   const optionsState = useGameSelector(game => game.options)
   return options != null ? (
     <div className={styles.options}>

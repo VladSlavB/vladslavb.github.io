@@ -3,11 +3,7 @@ import styles from './styles.css'
 import React from 'react'
 
 const Question: React.FC = () => {
-  const question = useSelector(state => (
-    state.game.present.currentQuestion >= 0 ? (
-      state.questions[state.game.present.currentQuestion].value
-    ) : null
-  ))
+  const question = useSelector(state => state.questions[state.game.present.currentQuestion]?.value) as string | null
   const textAttachment = useGameSelector(game => (
     game.currentAttachment?.type === 'text' ? (
       game.currentAttachment.text

@@ -1,5 +1,5 @@
-import React from 'react'
-import { Team, useGameSelector, useSelector } from '../../../store'
+import React, { useEffect, useRef, useState } from 'react'
+import { Team, addFinaleAnswer, openFinaleAnswer, openFinaleScore, toggleFinaleAnswerVisibility, toggleFinaleScoreVisibility, useDispatch, useGameSelector, useSelector } from '../../../store'
 import HeaderWithActions from '../edit/HeaderWithActions'
 import Card from '@mui/joy/Card'
 import Grid from '@mui/joy/Grid'
@@ -11,6 +11,10 @@ import Tabs from '@mui/joy/Tabs'
 import TabList from '@mui/joy/TabList'
 import Tab from '@mui/joy/Tab'
 import TabPanel from '@mui/joy/TabPanel'
+import Typography from '@mui/joy/Typography'
+import Button from '@mui/joy/Button'
+import ButtonGroup from '@mui/joy/ButtonGroup'
+import IconButton from '@mui/joy/IconButton'
 
 
 const getTeamParams = (team: Team) => ({
@@ -20,24 +24,59 @@ const getTeamParams = (team: Team) => ({
 
 
 const Finale: React.FC = () => {
-  const active = useGameSelector(game => game.finaleActive)
+  const active = useGameSelector(game => game.finale.active)
   const finale = useSelector(state => state.finale)
   const ref = useAutoScroll(active)
-  const teams = ['leftTeam', 'rightTeam'] as Team[]
+  const teams = useGameSelector(game => game.finale.teamsOrder)
+
+  function calcIndex(team: Team, question: number, player: number) {
+    if (finale === null) return -1
+    let idx = teams.indexOf(team)
+    idx *= finale.names[team].length
+    idx += player
+    idx *= finale.questions.length
+    idx += question
+    return idx
+  }
+
+  function answersBlock(team: Team) {
+    if (finale == null) return null
+    const names = finale.names[team]
+    return (
+      <Grid container spacing={2}>
+        <Grid xs={3} />
+        {names.map((name, i) => (
+          <Grid xs={3} textAlign='center' key={i}>
+            <Typography color={active ? undefined : 'neutral'}>{name}</Typography>
+          </Grid>
+        ))}
+        {finale.questions.map((question, i) => (
+          <React.Fragment key={i}>
+            <Grid xs={3}>
+              <Typography color={active ? undefined : 'neutral'}>{question.value}</Typography>
+            </Grid>
+            {names.map((_, j) => (
+              <Grid xs={3} key={j}>
+                <AnswerWithScore index={calcIndex(team, i, j)} />
+              </Grid>
+            ))}
+          </React.Fragment>
+        ))}
+      </Grid>
+    )
+  }
 
   return finale != null ? (
     <Card variant={active ? 'soft' : 'outlined'} ref={ref}>
       <HeaderWithActions header='Финальный раунд' dim={!active} />
-      <Tabs defaultValue={0}>
+      <Tabs defaultValue={0} className={styles.tabsContainer}>
         <TabList>
-          {teams.map(getTeamParams).map(({color, title}) => <Tab color={color}>{title}</Tab>)}
+          {teams.map(getTeamParams).map(({color, title}) => (
+            <Tab key={title} color={color} disabled={!active}>{title}</Tab>
+          ))}
         </TabList>
-        <TabPanel value={0}>
-          {answersBlock(finale.questions.map(question => question.value), finale.names.leftTeam, 'leftTeam')}
-        </TabPanel>
-        <TabPanel value={1}>
-          {answersBlock(finale.questions.map(question => question.value), finale.names.rightTeam, 'rightTeam')}
-        </TabPanel>
+        <TabPanel value={0}>{answersBlock('leftTeam')}</TabPanel>
+        <TabPanel value={1}>{answersBlock('rightTeam')}</TabPanel>
       </Tabs>
     </Card>
   ) : null
@@ -45,22 +84,80 @@ const Finale: React.FC = () => {
 
 export default Finale
 
-function answersBlock(questions: string[], names: string[], team: Team) {
-  return (
-    <Grid container spacing={2}>
-      <Grid xs={3} />
-      {names.map(name => <Grid xs={3} textAlign='center'>{name}</Grid>)}
-      {questions.map(question => <>
-        <Grid xs={3}>{question}</Grid>
-        {Array(3).fill(0).map((_, i) => (
-          <Grid xs={3} key={i}>
-            <Stack direction='row' spacing={1}>
-              <Input fullWidth />
-              <Input className={styles.finaleScoreEdit} placeholder='00' />
-            </Stack>
-          </Grid>
-        ))}
-      </>)}
-    </Grid>
+
+type AnswerProps = {
+  index: number
+}
+
+const AnswerWithScore: React.FC<AnswerProps> = ({index}) => {
+  const [ answer, setAnswer ] = useState('')
+  const [ score, setScore ] = useState('')
+  const fixedAnswer = useGameSelector(game => game.finale.answers.at(index))
+  const fixedScore = useGameSelector(game => game.finale.scores.at(index))
+  const disabled = useGameSelector(game => game.finale.answers.length < index || !game.finale.active)
+  const dispatch = useDispatch()
+  function validate() {
+    return answer !== '' && score !== ''
+  }
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!disabled) {
+      ref.current?.querySelector('input')?.focus()
+    }
+  }, [disabled])
+
+  return fixedScore != null && fixedAnswer != null ? (
+    <Stack direction='row' spacing={1}>
+      <ButtonGroup
+        className={styles.finaleButtonGroup}
+        buttonFlex={1}
+      >
+        <Button
+          onClick={() => dispatch(
+            !fixedAnswer.opened ? openFinaleAnswer(index) : toggleFinaleAnswerVisibility(index)
+          )}
+          color={fixedAnswer.opened ? 'neutral' : 'primary'}
+          variant={fixedAnswer.hidden ? 'outlined' : 'solid'}
+        >
+          {fixedAnswer.value}
+        </Button>
+        <IconButton
+          onClick={() => dispatch(
+            !fixedScore.opened ? openFinaleScore(index) : toggleFinaleScoreVisibility(index)
+          )}
+          color={fixedScore.opened ? 'neutral' : 'primary'}
+          variant={fixedScore.hidden ? 'outlined' : 'solid'}
+        >
+          {fixedScore.value}
+        </IconButton>
+      </ButtonGroup>
+    </Stack>
+  ) : (
+    <Stack direction='row' spacing={1} component='form' onSubmit={e => {
+      e.preventDefault()
+      if (validate()) {
+        dispatch(addFinaleAnswer({answer, score: parseInt(score)}))
+      }
+    }}>
+      <Input
+        ref={ref}
+        value={answer}
+        fullWidth
+        disabled={disabled}
+        onChange={e => setAnswer(e.target.value)}
+      />
+      <Input
+        value={score}
+        disabled={disabled}
+        className={styles.finaleScoreEdit}
+        placeholder='00'
+        onChange={e => setScore(transformInputScore(e.target.value))}
+      />
+      <button type='submit' style={{display: 'none'}} />
+    </Stack>
   )
+}
+
+function transformInputScore(value: string) {
+  return value.replace(/\D/g, '').substring(0, 2)
 }
