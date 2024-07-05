@@ -60,8 +60,8 @@ const StickyControls: React.FC = () => {
 
   return (
     <div className={styles.panel}>
-      {gameWindowOpen ? (
-        currentQuestion < 0 ? (
+      {gameWindowOpen ? <>
+        {currentQuestion < 0 ? (
           <Button color='primary' onClick={() => dispatch(nextQuestion(nextQuestionBonuses))}>
             Открыть первый вопрос
           </Button>
@@ -98,10 +98,10 @@ const StickyControls: React.FC = () => {
               &minus;1
             </Button>
           </ButtonGroup>
-          <MusicControl />
           <InstantAttachment />
-        </>
-      ) : (
+        </>}
+        <MusicControl />
+      </> : (
         <Button
           disabled={editorActive}
           onClick={() => {
@@ -116,20 +116,20 @@ const StickyControls: React.FC = () => {
       <div className={styles.spacer} />
       {gameActive && <>
         <ButtonGroup className={styles.outlined}>
-            <Button
-              startDecorator={<UndoIcon />}
-              onClick={() => dispatch(ActionCreators.undo())}
-              disabled={!hasPast}
-            >
-              Отменить
-            </Button>
-            <Button
-              onClick={() => dispatch(ActionCreators.redo())}
-              disabled={!hasFuture}
-            >
-              <RedoIcon />
-            </Button>
-          </ButtonGroup>
+          <Button
+            startDecorator={<UndoIcon />}
+            onClick={() => dispatch(ActionCreators.undo())}
+            disabled={!hasPast}
+          >
+            Отменить
+          </Button>
+          <Button
+            onClick={() => dispatch(ActionCreators.redo())}
+            disabled={!hasFuture}
+          >
+            <RedoIcon />
+          </Button>
+        </ButtonGroup>
         <Button color='danger' onClick={() => {
           if (confirm('Точно завершить игру? Все набранные командами очки сбросятся')) {
             closeGameWindow()

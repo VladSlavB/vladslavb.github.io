@@ -141,13 +141,10 @@ const QuestionControls: React.FC = () => {
             )}
           </>}
           {(allOptionsOpened || everyoneDead) && (!lastQuestion || hasFinale) && <>
-            <VisibilityButton
+            <Button
               variant='soft'
-              visible={subtotalShown}
-              hideText='Скрыть счёт'
-              showText='Показать счёт'
               onClick = {() => dispatch(toggleSubtotalVisibility())}
-            />
+            >{subtotalShown ? 'Скрыть счёт' : 'Показать счёт'}</Button>
             <Button
               style={{alignSelf: 'flex-start', zIndex: subtotalShown ? 101 : 0}}
               color='primary'
