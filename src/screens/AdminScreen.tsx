@@ -6,7 +6,7 @@ import { useSelector } from '../store'
 import Typography from '@mui/joy/Typography'
 import AudiotrackIcon from '@mui/icons-material/PlayArrow'
 import StickyControls from '../components/admin/play/SticklyControls'
-import { playIntro } from '../Audio'
+import Audio, { allAudioUrls, playIntro } from '../Audio'
 
 
 const AdminScreen: React.FC = () => {
@@ -36,6 +36,7 @@ const AdminScreen: React.FC = () => {
       {hasQuestions && (
         <StickyControls />
       )}
+      {allAudioUrls.map(url => <Audio src={url} key={url} controls style={{overflow: 'hidden', height: 0}} />)}
     </div>
   )
 }

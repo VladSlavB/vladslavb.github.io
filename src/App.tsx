@@ -3,7 +3,6 @@ import GameScreen from './screens/GameScreen'
 import store from './store'
 import { Provider } from 'react-redux'
 import AdminScreen from './screens/AdminScreen'
-import Audio, { allAudioUrls } from './Audio'
 
 
 const App: React.FC = () => {
@@ -18,7 +17,6 @@ const App: React.FC = () => {
       ) : (
         <AdminScreen />
       )}
-      {allAudioUrls.map(url => <Audio src={url} key={url} controls style={{overflow: 'hidden', height: 0}} />)}
     </Provider>
   )
 }

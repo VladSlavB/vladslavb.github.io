@@ -135,6 +135,7 @@ const GAME_INITIAL_STATE = {
     answers: [] as {value: string, opened: boolean, hidden: boolean}[],
     scores: [] as {value: number, opened: boolean, hidden: boolean}[],
     openedQuestions: [false, false, false, false, false],
+    teamsFinished: [false, false],
   },
   leftTeam: {
     cumulativeScore: 0,
@@ -310,6 +311,7 @@ const gameSlice = createSlice({
     },
     toggleFinaleQuestion(state, action: PayloadAction<number>) {
       state.finale.openedQuestions[action.payload] = !state.finale.openedQuestions[action.payload]
+      maybePlayFinaleFinishSound(state)
     },
     addFinaleAnswer(state, action: PayloadAction<{answer: string, score: number}>) {
       state.finale.answers.push({value: action.payload.answer, opened: false, hidden: false})
@@ -317,6 +319,7 @@ const gameSlice = createSlice({
     },
     openFinaleAnswer(state, action: PayloadAction<number>) {
       state.finale.answers[action.payload].opened = true
+      maybePlayFinaleFinishSound(state)
     },
     openFinaleScore(state, action: PayloadAction<number>) {
       const idx = action.payload
@@ -329,14 +332,17 @@ const gameSlice = createSlice({
       } else {
         playWrong()
       }
+      maybePlayFinaleFinishSound(state)
     },
     toggleFinaleAnswerVisibility(state, action: PayloadAction<number>) {
       const i = action.payload
       state.finale.answers[i].hidden = !state.finale.answers[i].hidden
+      maybePlayFinaleFinishSound(state)
     },
     toggleFinaleScoreVisibility(state, action: PayloadAction<number>) {
       const i = action.payload
       state.finale.scores[i].hidden = !state.finale.scores[i].hidden
+      maybePlayFinaleFinishSound(state)
     },
     closeAllAnswers(state) {
       state.finale.openedQuestions = [false, false, false, false, false]
@@ -452,6 +458,25 @@ function decideIfRoundFinished(state: GameState) {
   }
 }
 
+function maybePlayFinaleFinishSound(state: GameState) {
+  function checkSlice(l: number, r: number) {
+    return (
+      state.finale.answers.slice(l, r).length == 15 &&
+      state.finale.answers.slice(l, r).every(answer => answer.opened && !answer.hidden) &&
+      state.finale.scores.slice(l, r).every(score => score.opened && !score.hidden) &&
+      state.finale.openedQuestions.every(_ => _)
+    )
+  }
+  if (checkSlice(0, 15) && !state.finale.teamsFinished[0]) {
+    playFinish()
+    state.finale.teamsFinished[0] = true
+  }
+  if (checkSlice(15, 30) && !state.finale.teamsFinished[1]) {
+    playFinish()
+    state.finale.teamsFinished[1] = true
+  }
+}
+
 export const {
   nextQuestion, chooseTeam,
   correctAnswer, wrongAnswer,
@@ -502,7 +527,7 @@ export const {
 
 
 // managing old versions
-const CURRENT_VERSION = 6
+const CURRENT_VERSION = 7
 ;(function() {
   if (localStorage.vladslav_version != CURRENT_VERSION && localStorage.vladslav) {
     const storage = JSON.parse(localStorage.vladslav)
