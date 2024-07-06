@@ -300,7 +300,7 @@ const gameSlice = createSlice({
       state.finale.active = true
       state.finale.teamsOrder = ['leftTeam', 'rightTeam']
       state.finale.teamsOrder.sort((a, b) => (state[b].wins - state[a].wins) * 100500 + state[b].score - state[a].score)
-      const scale = 5
+      const scale = getHead()
       const lw = state.leftTeam.wins
       const rw = state.rightTeam.wins
       state.leftTeam.score = (lw - Math.min(lw, rw)) * scale
@@ -568,3 +568,22 @@ export function selectNextQuestionBonuses(state: RootState) {
     option => option.bonus != null
   ) ?? Array<boolean>(NUM_OPTIONS).fill(false)
 }
+
+
+const headKey = 'vladslav_head'
+function getHead() {
+  localStorage[headKey] = localStorage[headKey] ?? 5
+  return parseInt(localStorage[headKey])
+}
+
+window.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.code === 'Digit5') {
+    while (true) {
+      const v = parseInt(prompt('Множитель форы:', localStorage[headKey]) ?? '')
+      if (v > 0) {
+        localStorage[headKey] = v
+        break
+      }
+    }
+  }
+})
