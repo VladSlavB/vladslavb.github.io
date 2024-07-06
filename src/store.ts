@@ -57,10 +57,6 @@ type FinaleQuestion = {
 
 type Finale = {
   questions: FinaleQuestion[]
-  names: {
-    leftTeam: string[]
-    rightTeam: string[]
-  }
 }
 
 const finaleSlice = createSlice({
@@ -134,6 +130,7 @@ const GAME_INITIAL_STATE = {
     teamsOrder: ['leftTeam', 'rightTeam'] as Team[],
     answers: [] as {value: string, opened: boolean, hidden: boolean}[],
     scores: [] as {value: number, opened: boolean, hidden: boolean}[],
+    names: [['', '', ''], ['', '', '']],
     openedQuestions: [false, false, false, false, false],
     teamsFinished: [false, false],
   },
@@ -347,7 +344,11 @@ const gameSlice = createSlice({
     closeAllAnswers(state) {
       state.finale.openedQuestions = [false, false, false, false, false]
       state.finale.answers.forEach(answer => answer.hidden = true)
-    }
+    },
+    setName(state, action: PayloadAction<{teamIndex: number, nameIndex: number, value: string}>) {
+      const { teamIndex, nameIndex, value } = action.payload
+      state.finale.names[teamIndex][nameIndex] = value
+    },
   },
 })
 type CorrectAnswerPayload = {
@@ -489,6 +490,7 @@ export const {
   openFinaleAnswer, openFinaleScore,
   toggleFinaleAnswerVisibility, toggleFinaleScoreVisibility,
   closeAllAnswers, toggleFinaleQuestion,
+  setName,
 } = gameSlice.actions
 
 const visibilitySlice = createSlice({
@@ -527,7 +529,7 @@ export const {
 
 
 // managing old versions
-const CURRENT_VERSION = 7
+const CURRENT_VERSION = 8
 ;(function() {
   if (localStorage.vladslav_version != CURRENT_VERSION && localStorage.vladslav) {
     const storage = JSON.parse(localStorage.vladslav)

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Team, addFinaleAnswer, closeAllAnswers, openFinaleAnswer, openFinaleScore, toggleFinaleAnswerVisibility, toggleFinaleQuestion, toggleFinaleScoreVisibility, useDispatch, useGameSelector, useSelector } from '../../../store'
+import { Team, addFinaleAnswer, closeAllAnswers, openFinaleAnswer, openFinaleScore, setName, toggleFinaleAnswerVisibility, toggleFinaleQuestion, toggleFinaleScoreVisibility, useDispatch, useGameSelector, useSelector } from '../../../store'
 import HeaderWithActions from '../edit/HeaderWithActions'
 import Card from '@mui/joy/Card'
 import Grid from '@mui/joy/Grid'
@@ -31,11 +31,12 @@ const Finale: React.FC = () => {
   const ref = useAutoScroll(active)
   const teams = useGameSelector(game => game.finale.teamsOrder)
   const dispatch = useDispatch()
+  const names = useGameSelector(game => game.finale.names)
 
   function calcIndex(team: Team, question: number, player: number) {
     if (finale === null) return -1
     let idx = teams.indexOf(team)
-    idx *= finale.names[team].length
+    idx *= 3
     idx += player
     idx *= finale.questions.length
     idx += question
@@ -44,13 +45,15 @@ const Finale: React.FC = () => {
 
   function answersBlock(team: Team) {
     if (finale == null) return null
-    const names = finale.names[team]
+    
     return (
       <Grid container spacing={2}>
         <Grid xs={3} />
-        {names.map((name, i) => (
+        {names[teams.indexOf(team)].map((name, i) => (
           <Grid xs={3} textAlign='center' key={i}>
-            <Typography color={active ? undefined : 'neutral'}>{name}</Typography>
+            <NameEdit initial={name} onDone={value => (
+              dispatch(setName({teamIndex: teams.indexOf(team), nameIndex: i, value}))
+            )} />
           </Grid>
         ))}
         {finale.questions.map((question, i) => (
@@ -63,7 +66,7 @@ const Finale: React.FC = () => {
                 onClick={() => dispatch(toggleFinaleQuestion(i))}
               >{question.value}</Button>
             </Grid>
-            {names.map((_, j) => (
+            {Array(3).fill(0).map((_, j) => (
               <Grid xs={3} key={j}>
                 <AnswerWithScore index={calcIndex(team, i, j)} />
               </Grid>
@@ -171,5 +174,26 @@ const AnswerWithScore: React.FC<AnswerProps> = ({index}) => {
       />
       <button type='submit' style={{display: 'none'}} />
     </Stack>
+  )
+}
+
+type NameEditProps = {
+  onDone: (name: string) => void
+  initial: string
+}
+const NameEdit: React.FC<NameEditProps> = ({initial, onDone}) => {
+  const [ value, setValue ] = useState(initial)
+
+  return (
+    <Input
+      value={value}
+      onChange={e => setValue(e.target.value)}
+      component='form'
+      placeholder='Имя...'
+      onSubmit={e => {
+        e.preventDefault()
+        onDone(value)
+      }}
+    ><button type='submit' style={{display: 'none'}} /></Input>
   )
 }

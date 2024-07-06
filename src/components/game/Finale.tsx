@@ -25,7 +25,7 @@ const Finale: React.FC = () => {
     <div className={styles.finaleScore + ' ' + teamStyle(team1)}>{team1Score}</div>
     <div className={styles.finaleScore + ' ' + styles.second + ' ' + teamStyle(team2)}>{team2Score}</div>
     <div className={styles.finaleTeam}>
-      {staticFinale?.names[team1].map(name => (
+      {gameFinale.names[0].map(name => (
         <div className={styles.name + ' ' + teamStyle(team1)}>{name}</div>
       ))}
       <div className={styles.cells}>
@@ -33,7 +33,7 @@ const Finale: React.FC = () => {
       </div>
     </div>
     <div className={styles.finaleTeam + ' ' + styles.second}>
-      {staticFinale?.names[team2].map(name => (
+      {gameFinale.names[1].map(name => (
         <div className={styles.name + ' ' + teamStyle(team2)}>{name}</div>
       ))}
       <div className={styles.cells}>

@@ -27,14 +27,6 @@ const StaticFinale: React.FC<Props> = ({onEdit, canEdit}) => {
           <li key={i}>{question.value}</li>
         ))}
       </ol>
-      <Typography>
-        <Typography color='primary'>Синяя команда: </Typography>
-        {finale.names.leftTeam.join(', ')}
-      </Typography>
-      <Typography>
-        <Typography color='danger'>Красная команда: </Typography>
-        {finale.names.rightTeam.join(', ')}
-      </Typography>
     </Card>
   ) : null
 }
