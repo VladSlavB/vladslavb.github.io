@@ -2,7 +2,7 @@ import styles from './styles.css'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import React from 'react'
-import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, selectNextQuestionBonuses, areAllOptionsOpened, toggleSubtotalVisibility, openFinale } from '../../../store'
+import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, selectNextQuestionBonuses, areAllOptionsOpened, openFinale, makeSubtotal } from '../../../store'
 import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
@@ -42,7 +42,8 @@ const QuestionControls: React.FC = () => {
   const healthChance = useGameSelector(game => game.healthChance)
   const nextQuestionBonuses = useSelector(selectNextQuestionBonuses)
 
-  const subtotalShown = useSelector(state => state.visibility.subtotal)
+  const subtotalShown = useGameSelector(game => game.subtotalShown)
+  const roundFinished = useGameSelector(game => game.roundFinished)
 
   const hasFinale = useSelector(state => state.finale != null)
   const dynamic = useSelector(state => state.questions[state.game.present.currentQuestion].options == null)
@@ -140,24 +141,21 @@ const QuestionControls: React.FC = () => {
               )
             )}
           </>}
-          {(allOptionsOpened || everyoneDead) && (!lastQuestion || hasFinale) && <>
-            <Button
-              variant='soft'
-              onClick = {() => dispatch(toggleSubtotalVisibility())}
-            >{subtotalShown ? 'Скрыть счёт' : 'Показать счёт'}</Button>
-            <Button
-              style={{alignSelf: 'flex-start', zIndex: subtotalShown ? 101 : 0}}
-              color='primary'
-              onClick={() => {
-                if (subtotalShown) {
-                  dispatch(toggleSubtotalVisibility())
-                }
-                dispatch(lastQuestion ? openFinale() : nextQuestion(nextQuestionBonuses))
-              }}
-            >
-              Следующий вопрос
-            </Button>
-          </>}
+          {roundFinished && (subtotalShown ? (
+            (!lastQuestion || hasFinale) && (
+              <Button
+                style={{alignSelf: 'flex-start'}}
+                color='primary'
+                onClick={() => {
+                  dispatch(lastQuestion ? openFinale() : nextQuestion(nextQuestionBonuses))
+                }}
+              >
+                Следующий вопрос
+              </Button>
+            )
+          ) : (
+            <Button color='primary' onClick = {() => dispatch(makeSubtotal())}>Показать счёт</Button>
+          ))}
         </>}
       </Stack>
       {currentAttachment && (

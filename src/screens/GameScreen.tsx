@@ -4,7 +4,7 @@ import styles from './styles.css'
 import background from '../../assets/background.svg'
 import React, { useEffect, useState } from 'react'
 import Teams from '../components/game/Teams'
-import { useSelector } from '../store'
+import { useGameSelector, useSelector } from '../store'
 import { useStore } from 'react-redux'
 import Subtotal from '../components/game/Subtotal'
 import Finale from '../components/game/Finale'
@@ -35,7 +35,7 @@ const GameScreen: React.FC = () => {
     const left = Math.max(0, windowW - CANVAS_W * windowH / CANVAS_H) / 2
     setTransform({scale, left, top})
   }
-  const subtotalShown = useSelector(state => state.visibility.subtotal)
+  const subtotalShown = useGameSelector(game => game.subtotalShown)
   return (
     <div className={styles.game} style={{backgroundImage: `url(${background})`}}>
       <div className={styles.canvas} style={{

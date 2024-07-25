@@ -113,6 +113,7 @@ export type Team = 'leftTeam' | 'rightTeam'
 const GAME_INITIAL_STATE = {
   active: false,
   currentQuestion: -1,
+  subtotalShown: false,
   drawFinished: false,
   currentTeam: null as null | Team,
   bidScore: null as null | number,
@@ -171,6 +172,7 @@ const gameSlice = createSlice({
   reducers: {
     nextQuestion(state, action: PayloadAction<boolean[]>) {
       state.currentQuestion++
+      state.subtotalShown = false
       state.leftTeam.health = state.rightTeam.health = 3
       state.leftTeam.score = state.rightTeam.score = 0
       state.bidScore = null
@@ -297,6 +299,7 @@ const gameSlice = createSlice({
     },
     openFinale(state) {
       state.currentQuestion++
+      state.subtotalShown = false
       state.finale.active = true
       state.finale.teamsOrder = ['leftTeam', 'rightTeam']
       state.finale.teamsOrder.sort((a, b) => (state[b].wins - state[a].wins) * 100500 + state[b].score - state[a].score)
@@ -349,6 +352,17 @@ const gameSlice = createSlice({
       const { teamIndex, nameIndex, value } = action.payload
       state.finale.names[teamIndex][nameIndex] = value
     },
+    makeSubtotal(state) {
+      state.subtotalShown = true
+      state.leftTeam.cumulativeScore += state.leftTeam.score
+      state.rightTeam.cumulativeScore += state.rightTeam.score
+      if (state.leftTeam.score >= state.rightTeam.score) {
+        state.leftTeam.wins++
+      }
+      if (state.leftTeam.score <= state.rightTeam.score) {
+        state.rightTeam.wins++
+      }
+    }
   },
 })
 type CorrectAnswerPayload = {
@@ -447,15 +461,7 @@ function decideIfRoundFinished(state: GameState) {
   const allOptionsOpened = areAllOptionsOpened(state)
   state.roundFinished = everyOneDead || allOptionsOpened
   if (state.roundFinished && !prevRoundFinished) {
-    setTimeout(() => playFinish(), 1000)
-    state.leftTeam.cumulativeScore += state.leftTeam.score
-    state.rightTeam.cumulativeScore += state.rightTeam.score
-    if (state.leftTeam.score >= state.rightTeam.score) {
-      state.leftTeam.wins++
-    }
-    if (state.leftTeam.score <= state.rightTeam.score) {
-      state.rightTeam.wins++
-    }
+    setTimeout(playFinish, 1000)
   }
 }
 
@@ -479,7 +485,7 @@ function maybePlayFinaleFinishSound(state: GameState) {
 }
 
 export const {
-  nextQuestion, chooseTeam,
+  nextQuestion, chooseTeam, makeSubtotal,
   correctAnswer, wrongAnswer,
   correctBonus, discardBonusChance, wrongBonus,
   utilizeHealthChance, discardHealthChance,
@@ -497,15 +503,11 @@ const visibilitySlice = createSlice({
   name: 'visibility',
   initialState: {
     attachment: false,
-    subtotal: false,
     instantAttachment: null as null | Attachment
   },
   reducers: {
     toggleAttachmentVisibility(state) {
       state.attachment = !state.attachment
-    },
-    toggleSubtotalVisibility(state) {
-      state.subtotal = !state.subtotal
     },
     toggleInstantAttachment(state, action: PayloadAction<Attachment>) {
       if (state.instantAttachment == null) {
@@ -522,7 +524,6 @@ const visibilitySlice = createSlice({
 
 export const {
   toggleAttachmentVisibility,
-  toggleSubtotalVisibility,
   toggleInstantAttachment,
   deleteInstantAttachment,
 } = visibilitySlice.actions

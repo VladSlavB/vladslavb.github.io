@@ -15,11 +15,6 @@ const QuestionsList: React.FC = () => {
   const editor = useSelector(state => state.editor)
   const gameActive = useGameSelector(game => game.active)
   const noFinale = useSelector(state => state.finale == null)
-  useEffect(() => {
-    if (editor.mode === 'add') {
-      window.scrollTo(0, document.body.clientHeight)
-    }
-  }, [editor.mode])
   const dispatch = useDispatch()
   let className = styles.list
   if (gameActive) {
