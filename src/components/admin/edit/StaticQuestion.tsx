@@ -81,7 +81,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
           <Typography color='neutral'>Варианты ответа определятся во время игры</Typography>
         )}
         <table className={styles.options}>
-          <TwoColumns>
+          <TwoColumns nRows={question.options != null ? 5 : 6}>
             {(question.options ?? dynamicOptions ?? []).map((option, i) => {
               const canClick = (currentTeam != null || everyoneDead) && questionActive && !optionsState[i].opened && bonusChance == null
               let className = styles.optionText
@@ -168,11 +168,11 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
 
 export default StaticQuestion
 
-function TwoColumns({children}: {children: React.ReactNode[]}) {
+function TwoColumns({children, nRows}: {children: React.ReactNode[], nRows: number}) {
   children = children.filter(child => !!child)
   children = children.flat()
   const total = children.length
-  const half = 5 // Math.ceil(total / 2)
+  const half = nRows // Math.ceil(total / 2)
   const rows: React.ReactNode[][] = []
   for (let i = 0; i < Math.min(half, total); i ++) {
     const row = [children[i]]

@@ -4,8 +4,8 @@ import { Option, useGameSelector, useSelector } from '../../store'
 import Star from '@mui/icons-material/Star'
 
 
-function transposeIndex(index: number) {
-  return Math.floor(index / 2) + (index % 2) * 5
+function transposeIndex(index: number, rows = 5) {
+  return Math.floor(index / 2) + (index % 2) * rows
 }
 
 const Options: React.FC = () => {
@@ -16,33 +16,39 @@ const Options: React.FC = () => {
     if (staticOptions != null) return staticOptions
     let dynamicOptions = state.game.present.dynamicOptions[qIndex] ?? []
     dynamicOptions = [...dynamicOptions]
-    for (let i = dynamicOptions.length; i < 10; i++) {
+    for (let i = dynamicOptions.length; i < 12; i++) {
       dynamicOptions.push({value: '', score: 0})
     }
     return dynamicOptions
   })
   const optionsState = useGameSelector(game => game.options)
-  return options != null ? (
-    <div className={styles.options}>
-      {options.map((_, i) => {
-        const index = transposeIndex(i)
-        return (
-          <Option
-            {...options[index]}
-            opened={optionsState[index].opened}
-            key={index}
-            bonusOpened={optionsState[index].bonus?.opened ?? false}
-            index={index}
-          />
-        )
-      })}
-    </div>
-  ) : null
+  if (options != null) {
+    const rows = options.length / 2
+    const sortedIndices = options.map((_, i) => transposeIndex(i, rows)).sort((a, b) => options[b].score - options[a].score)
+    return (
+      <div className={styles.options}>
+        {options.map((_, i) => {
+          const index = transposeIndex(i, rows)
+          const numberLabel = sortedIndices.findIndex(v => v === index) + 1
+          return (
+            <Option
+              {...options[index]}
+              opened={optionsState[index].opened}
+              key={index}
+              bonusOpened={optionsState[index].bonus?.opened ?? false}
+              label={rows === 5 ? `${numberLabel}` : '?'}
+            />
+          )
+        })}
+      </div>
+    )
+  }
+  return null
 }
 
 export default Options
 
-function Option(props: Option & {index: number, opened: boolean, bonusOpened: boolean}) {
+function Option(props: Option & {label: string, opened: boolean, bonusOpened: boolean}) {
   let className = styles.optionContainer
   if (props.opened) className += ' ' + styles.opened
 
@@ -55,7 +61,7 @@ function Option(props: Option & {index: number, opened: boolean, bonusOpened: bo
   return (
     <div className={className}>
       <div className={styles.faceDown}>
-        <span>{props.index + 1}{props.bonus != null && <Star className={styles.starClosed} />}</span>
+        <span>{props.label}{props.bonus != null && <Star className={styles.starClosed} />}</span>
       </div>
       <div className={styles.option}>
         {props.opened && <>

@@ -118,7 +118,7 @@ const GAME_INITIAL_STATE = {
   currentTeam: null as null | Team,
   bidScore: null as null | number,
   currentAttachment: null as null | undefined | Attachment,
-  options: makeDefaultOptions(),
+  options: makeDefaultOptions(10),
   bonusChance: null as null | {
     optionPayload: {best?: boolean, score: number},
     optionIndex: number
@@ -154,9 +154,8 @@ type BonusState = {
   opened: boolean
   vacantFor: Record<Team, boolean>
 }
-const NUM_OPTIONS = 10
-function makeDefaultOptions() {
-  return Array(NUM_OPTIONS).fill(null).map(_ => ({
+function makeDefaultOptions(numOptions: number) {
+  return Array(numOptions).fill(null).map(_ => ({
     opened: false,
     bonus: null as BonusState | null | undefined
   }))
@@ -178,7 +177,7 @@ const gameSlice = createSlice({
       state.bidScore = null
       state.drawFinished = false
       state.currentTeam = null
-      const options = makeDefaultOptions()
+      const options = makeDefaultOptions(action.payload.length)
       action.payload.forEach((hasBonus, i) => options[i].bonus = hasBonus ? {
         opened: false,
         vacantFor: {leftTeam: true, rightTeam: true}
@@ -565,9 +564,10 @@ export function useGameSelector<T>(selector: (_: typeof GAME_INITIAL_STATE) => T
   return useSelector(state => selector(state.game.present))
 }
 export function selectNextQuestionBonuses(state: RootState) {
-  return state.questions.at(state.game.present.currentQuestion + 1)?.options?.map(
+  const options = state.questions.at(state.game.present.currentQuestion + 1)?.options
+  return options?.map(
     option => option.bonus != null
-  ) ?? Array<boolean>(NUM_OPTIONS).fill(false)
+  ) ?? Array<boolean>(options != null ? 10 : 12).fill(false)
 }
 
 
