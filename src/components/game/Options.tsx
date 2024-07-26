@@ -28,9 +28,6 @@ const Options: React.FC = () => {
   const optionsState = useGameSelector(game => game.options)
   if (options != null) {
     const rows = options.length / 2
-    const sortedIndices = options.
-      map((_, i) => transposeIndex(i, rows)).
-      sort((a, b) => (options[b]?.score ?? 0) - (options[a]?.score ?? 0))
     return (
       <div className={className}>
         {options.map((_, i) => {
@@ -42,7 +39,8 @@ const Options: React.FC = () => {
               if (index % 2 === 0) index++; else index--
             }
           }
-          const numberLabel = sortedIndices.findIndex(v => v === index) + 1
+          const numberLabel = index + 1
+          const isMax = !dynamic && options[index]?.score == Math.max(...options.map(o => o?.score ?? 0))
           return (
             <Option
               {...(options[index] ?? {score: 0, value: ''})}
@@ -50,6 +48,7 @@ const Options: React.FC = () => {
               key={i}
               bonusOpened={optionsState[index].bonus?.opened ?? false}
               label={rows === 5 ? `${numberLabel}` : '?'}
+              highlight={isMax}
             />
           )
         })}
@@ -61,9 +60,10 @@ const Options: React.FC = () => {
 
 export default Options
 
-function Option(props: Option & {label: string, opened: boolean, bonusOpened: boolean}) {
+function Option(props: Option & {label: string, opened: boolean, bonusOpened: boolean, highlight: boolean}) {
   let className = styles.optionContainer
   if (props.opened) className += ' ' + styles.opened
+  if (props.highlight) className += ' ' + styles.highlighted
 
   let starClassName = styles.star
   const prevBonusOpened = useRef(true)
