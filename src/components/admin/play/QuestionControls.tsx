@@ -2,7 +2,7 @@ import styles from './styles.css'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import React from 'react'
-import { chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, areAllOptionsOpened, makeSubtotal } from '../../../store'
+import { chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, areAllOptionsOpened, makeSubtotal, showQuestion } from '../../../store'
 import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
@@ -47,6 +47,7 @@ const QuestionControls: React.FC = () => {
 
   const hasFinale = useSelector(state => state.finale != null)
   const dynamic = useSelector(state => state.questions[state.game.present.currentQuestion].options == null)
+  const shown = useGameSelector(game => game.questionShown)
 
   function onFail() {
     if (currentTeam != null) {
@@ -110,7 +111,7 @@ const QuestionControls: React.FC = () => {
               </Button>
             )}
           </Box>
-          {currentQuestion >= 0 && <>
+          {currentQuestion >= 0 && (shown ? <>
             {!drawFinished && (
               <Chip color='warning' variant='soft'>
                 {dynamic ? 'Кто будет ходить первым?' : 'Розыгрыш хода...'}
@@ -140,7 +141,9 @@ const QuestionControls: React.FC = () => {
                 </Typography>
               )
             )}
-          </>}
+          </> : (
+            <Button color='primary' onClick={() => dispatch(showQuestion())}>Показать вопрос</Button>
+          ))}
           {roundFinished && (subtotalShown ? (
             (!lastQuestion || hasFinale) && (
               <NextQuestionButton style={{alignSelf: 'flex-start'}}>Следующий вопрос</NextQuestionButton>

@@ -16,6 +16,7 @@ export type InputOption = {
 }
 
 export type InputQuestion = {
+  name: string
   value: string
   options: InputOption[]
   check?: boolean

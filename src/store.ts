@@ -26,6 +26,7 @@ export type Option = {
 }
 
 export type Question = {
+  name: string
   value: string
   options?: Option[]
 }
@@ -113,6 +114,7 @@ export type Team = 'leftTeam' | 'rightTeam'
 const GAME_INITIAL_STATE = {
   active: false,
   currentQuestion: -1,
+  questionShown: false,
   subtotalShown: false,
   drawFinished: false,
   currentTeam: null as null | Team,
@@ -171,6 +173,7 @@ const gameSlice = createSlice({
   reducers: {
     nextQuestion(state, action: PayloadAction<{bonusesMap: boolean[], dynamic: boolean}>) {
       state.currentQuestion++
+      state.questionShown = false
       if (action.payload.dynamic) {
         state.dynamicOptions[state.currentQuestion] = []
       }
@@ -365,6 +368,9 @@ const gameSlice = createSlice({
       if (state.leftTeam.score <= state.rightTeam.score) {
         state.rightTeam.wins++
       }
+    },
+    showQuestion(state) {
+      state.questionShown = true
     }
   },
 })
@@ -504,6 +510,7 @@ export const {
   toggleFinaleAnswerVisibility, toggleFinaleScoreVisibility,
   closeAllAnswers, toggleFinaleQuestion,
   setName,
+  showQuestion,
 } = gameSlice.actions
 
 const visibilitySlice = createSlice({

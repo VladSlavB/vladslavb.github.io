@@ -23,6 +23,8 @@ const Options: React.FC = () => {
     }
     return dynamicOptions
   })
+  let className = styles.options
+  if (dynamic) className += ' ' + styles.dense
   const optionsState = useGameSelector(game => game.options)
   if (options != null) {
     const rows = options.length / 2
@@ -30,8 +32,9 @@ const Options: React.FC = () => {
       map((_, i) => transposeIndex(i, rows)).
       sort((a, b) => (options[b]?.score ?? 0) - (options[a]?.score ?? 0))
     return (
-      <div className={styles.options}>
-        {options.map((_, index) => {
+      <div className={className}>
+        {options.map((_, i) => {
+          let index = i
           if (!dynamic) {
             index = transposeIndex(index, rows)
           } else {
@@ -44,7 +47,7 @@ const Options: React.FC = () => {
             <Option
               {...(options[index] ?? {score: 0, value: ''})}
               opened={optionsState[index].opened}
-              key={index}
+              key={i}
               bonusOpened={optionsState[index].bonus?.opened ?? false}
               label={rows === 5 ? `${numberLabel}` : '?'}
             />

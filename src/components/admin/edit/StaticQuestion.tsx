@@ -16,6 +16,7 @@ import HeaderWithActions from './HeaderWithActions'
 import { useAutoScroll } from '../scroll'
 import { transformInputScore } from './OptionEdit'
 import Input from '@mui/joy/Input'
+import Chip from '@mui/joy/Chip'
 
 type Props = {
   index: number
@@ -37,6 +38,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const ref = useAutoScroll(questionActive)
   const dynamicOptions = useGameSelector(game => game.dynamicOptions[game.currentQuestion]) as (Option | null)[] | null
   const reversed = useSelector(_selectDynamicReversedOrder)
+  const shown = useGameSelector(game => game.questionShown)
 
   function onOptionClick(optionIndex: number) {
     if (question.options == null) return
@@ -78,8 +80,10 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
           onDelete={() => dispatch(removeQuestion(index))}
           showActions={canEdit}
         />
-        {question.options == null && !gameActive && (
-          <Typography color='neutral'>Варианты ответа определятся во время игры</Typography>
+        {question.options == null ? (
+          <Chip variant='outlined' color='primary'>Один за всех</Chip>
+        ) : (
+          <Chip variant='outlined' color='primary'>{question.name ?? 'Народный раунд'}</Chip>
         )}
         <table className={styles.options}>
           <TwoColumns
@@ -91,7 +95,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
               if (option == null) {
                 return <Button disabled variant='plain' key={i} size='lg'></Button>
               }
-              const canClick = (currentTeam != null || everyoneDead) && questionActive && !optionsState[i].opened && bonusChance == null
+              const canClick = (currentTeam != null || everyoneDead) && questionActive && shown && !optionsState[i].opened && bonusChance == null
               let className = styles.optionText
               if (!gameActive) className += ' ' + styles.black
               if (questionActive && optionsState[i].opened) className += ' ' + styles.tiny

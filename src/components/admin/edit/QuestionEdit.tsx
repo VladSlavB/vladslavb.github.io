@@ -11,6 +11,8 @@ import OptionEdit from './OptionEdit'
 import FormControl from '@mui/joy/FormControl'
 import FormLabel from '@mui/joy/FormLabel'
 import Switch from '@mui/joy/Switch'
+import Select from '@mui/joy/Select'
+import Option from '@mui/joy/Option'
 // import Typography from '@mui/joy/Typography'
 
 
@@ -37,6 +39,7 @@ const DEFAULT_OPTIONS = Array<InputOption>(NUM_OPTIONS).fill({
   score: '',
 })
 const DEFAULT_QUESTION: InputQuestion = {
+  name: 'Народный раунд',
   value: '',
   options: DEFAULT_OPTIONS,
 }
@@ -78,6 +81,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
   const onSubmit = useCallback((e: FormEvent) => {
     e.preventDefault()
     const newQuestion: Question = {
+      name: noOptions ? 'Один за всех' : question.name,
       value: question.value,
       options: noOptions ? undefined : question.options.map(option => ({
         value: option.value,
@@ -101,6 +105,21 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
     <Card variant='soft' size='sm'>
       <form onSubmit={onSubmit} onReset={onDone}>
         <Grid container columnSpacing={4} rowSpacing={2}>
+          {!noOptions && (
+            <Grid xs={12}>
+              <Select
+                defaultValue='Народный раунд'
+                value={question.name} onChange={(_, value) => {
+                  setQuestion(draft => {
+                    draft.name = value ?? ''
+                  })
+                }}
+              >
+                <Option value='Народный раунд'>Народный раунд</Option>
+                <Option value='Раунд по фактам'>Раунд по фактам</Option>
+              </Select>
+            </Grid>
+          )}
           <Grid xs={12}>
             <Textarea
               value={question.value} onChange={e => {

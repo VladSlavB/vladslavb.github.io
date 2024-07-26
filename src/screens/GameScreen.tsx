@@ -8,6 +8,7 @@ import { useGameSelector, useSelector } from '../store'
 import { useStore } from 'react-redux'
 import Subtotal from '../components/game/Subtotal'
 import Finale from '../components/game/Finale'
+import Name from '../components/game/Name'
 
 const CANVAS_W = 1920, CANVAS_H = 1080
 
@@ -42,6 +43,7 @@ const GameScreen: React.FC = () => {
         transform: `scale(${scale})`, marginLeft: left, marginTop: top
       }}>
         <div className={styles.wrapper + (subtotalShown ? ` ${styles.hidden}` : '')}>
+          <Name />
           <Question />
           <Options />
           <Teams />
