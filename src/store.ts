@@ -125,7 +125,7 @@ const GAME_INITIAL_STATE = {
   },
   healthChance: null as null | Team,
   roundFinished: false,
-  dynamicOptions: {} as Record<number, {value: string, score: number}[]>,
+  dynamicOptions: {} as Record<number, ({value: string, score: number} | null)[]>,
   finale: {
     active: false,
     teamsOrder: ['leftTeam', 'rightTeam'] as Team[],
@@ -169,16 +169,19 @@ const gameSlice = createSlice({
   name: 'game',
   initialState: GAME_INITIAL_STATE,
   reducers: {
-    nextQuestion(state, action: PayloadAction<boolean[]>) {
+    nextQuestion(state, action: PayloadAction<{bonusesMap: boolean[], dynamic: boolean}>) {
       state.currentQuestion++
+      if (action.payload.dynamic) {
+        state.dynamicOptions[state.currentQuestion] = []
+      }
       state.subtotalShown = false
       state.leftTeam.health = state.rightTeam.health = 3
       state.leftTeam.score = state.rightTeam.score = 0
       state.bidScore = null
       state.drawFinished = false
       state.currentTeam = null
-      const options = makeDefaultOptions(action.payload.length)
-      action.payload.forEach((hasBonus, i) => options[i].bonus = hasBonus ? {
+      const options = makeDefaultOptions(action.payload.bonusesMap.length)
+      action.payload.bonusesMap.forEach((hasBonus, i) => options[i].bonus = hasBonus ? {
         opened: false,
         vacantFor: {leftTeam: true, rightTeam: true}
       } : null)
@@ -228,7 +231,11 @@ const gameSlice = createSlice({
           state.bidScore = null
         }
       } else {
-        state[state.currentTeam].health--
+        if (state.dynamicOptions[state.currentQuestion] == null) {
+          state[state.currentTeam].health--
+        } else {
+          state.dynamicOptions[state.currentQuestion].push(null)
+        }
         if (state[state.currentTeam].health === 0) {
           state.healthChance = state.currentTeam
         } else {
@@ -280,9 +287,6 @@ const gameSlice = createSlice({
     },
     addOptionDynamically(state, action: PayloadAction<{value: string, score: number}>) {
       const idx = state.currentQuestion
-      if (state.dynamicOptions[idx] == null) {
-        state.dynamicOptions[idx] = []
-      }
       state.dynamicOptions[idx].push(action.payload)
       applyCorrectAnswer(state, {
         index: state.dynamicOptions[idx].length - 1,
@@ -458,7 +462,11 @@ function decideIfRoundFinished(state: GameState) {
   const prevRoundFinished = state.roundFinished
   const everyOneDead = state.drawFinished && state.currentTeam == null
   const allOptionsOpened = areAllOptionsOpened(state)
-  state.roundFinished = everyOneDead || allOptionsOpened
+  if (state.dynamicOptions[state.currentQuestion] == null) {
+    state.roundFinished = everyOneDead || allOptionsOpened
+  } else {
+    state.roundFinished = state.dynamicOptions[state.currentQuestion].length === 12
+  }
   if (state.roundFinished && !prevRoundFinished) {
     setTimeout(playFinish, 1000)
   }
@@ -563,11 +571,9 @@ export const useSelector: TypedUseSelectorHook<RootState> = useOriginalSelector
 export function useGameSelector<T>(selector: (_: typeof GAME_INITIAL_STATE) => T) {
   return useSelector(state => selector(state.game.present))
 }
-export function selectNextQuestionBonuses(state: RootState) {
-  const options = state.questions.at(state.game.present.currentQuestion + 1)?.options
-  return options?.map(
-    option => option.bonus != null
-  ) ?? Array<boolean>(options != null ? 10 : 12).fill(false)
+export function _selectDynamicReversedOrder(state: RootState) {
+  const game = state.game.present
+  return (game.currentTeam === 'rightTeam') === ((game.dynamicOptions[game.currentQuestion]?.length ?? 0) % 2 === 0)
 }
 
 

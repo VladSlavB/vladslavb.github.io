@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React, { useState } from 'react'
-import { Attachment, correctAnswer, correctBonus, removeQuestion, useDispatch, useSelector, useGameSelector, wrongBonus, Option, addOptionDynamically } from '../../../store'
+import { Attachment, correctAnswer, correctBonus, removeQuestion, useDispatch, useSelector, useGameSelector, wrongBonus, Option, addOptionDynamically, _selectDynamicReversedOrder } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -35,7 +35,8 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const drawFinished = useGameSelector(game => game.drawFinished)
   const dispatch = useDispatch()
   const ref = useAutoScroll(questionActive)
-  const dynamicOptions = useGameSelector(game => game.dynamicOptions[game.currentQuestion]) as Option[]
+  const dynamicOptions = useGameSelector(game => game.dynamicOptions[game.currentQuestion]) as (Option | null)[] | null
+  const reversed = useSelector(_selectDynamicReversedOrder)
 
   function onOptionClick(optionIndex: number) {
     if (question.options == null) return
@@ -81,8 +82,15 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
           <Typography color='neutral'>Варианты ответа определятся во время игры</Typography>
         )}
         <table className={styles.options}>
-          <TwoColumns nRows={question.options != null ? 5 : 6}>
+          <TwoColumns
+            nRows={question.options != null ? 5 : 6}
+            transpose={dynamicOptions != null}
+            reverse={reversed}
+          >
             {(question.options ?? dynamicOptions ?? []).map((option, i) => {
+              if (option == null) {
+                return <Button disabled variant='plain' key={i} size='lg'></Button>
+              }
               const canClick = (currentTeam != null || everyoneDead) && questionActive && !optionsState[i].opened && bonusChance == null
               let className = styles.optionText
               if (!gameActive) className += ' ' + styles.black
@@ -168,20 +176,35 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
 
 export default StaticQuestion
 
-function TwoColumns({children, nRows}: {children: React.ReactNode[], nRows: number}) {
+type TwoColumnsProps = {
+  children: React.ReactNode[]
+  nRows: number
+  transpose: boolean
+  reverse: boolean
+}
+const TwoColumns: React.FC<TwoColumnsProps> = ({children, nRows, transpose, reverse}) => {
   children = children.filter(child => !!child)
   children = children.flat()
   const total = children.length
-  const half = nRows // Math.ceil(total / 2)
   const rows: React.ReactNode[][] = []
-  for (let i = 0; i < Math.min(half, total); i ++) {
-    const row = [children[i]]
-    if (i + half < total) {
-      row.push(children[i + half])
-    } else {
-      row.push(null)
+  if (transpose) {
+    for (let i = 0; i < Math.min(nRows, Math.ceil(total / 2)); i++) {
+      const row = [children[i * 2], children[i * 2 + 1]]
+      if (reverse) {
+        row.reverse()
+      }
+      rows.push(row)
     }
-    rows.push(row)
+  } else {
+    for (let i = 0; i < Math.min(nRows, total); i++) {
+      const row = [children[i]]
+      if (i + nRows < total) {
+        row.push(children[i + nRows])
+      } else {
+        row.push(null)
+      }
+      rows.push(row)
+    }
   }
   return (
     <tbody>

@@ -2,7 +2,7 @@ import styles from './styles.css'
 import React, { useEffect, useState } from 'react'
 import Button from '@mui/joy/Button/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup/ButtonGroup'
-import { finishGame, nextQuestion, startGame, useDispatch, useSelector, useGameSelector, deltaScore, plusHealth, Team, selectNextQuestionBonuses } from '../../../store'
+import { finishGame, startGame, useDispatch, useSelector, useGameSelector, deltaScore, plusHealth, Team } from '../../../store'
 import OpenInNew from '@mui/icons-material/OpenInNew'
 import UndoIcon from '@mui/icons-material/Undo'
 import RedoIcon from '@mui/icons-material/Redo';
@@ -11,6 +11,7 @@ import Favorite from '@mui/icons-material/Favorite'
 import { playCorrect, playWrong } from '../../../Audio'
 import MusicControl from './MusicControl'
 import InstantAttachment from './InstantAttachment'
+import NextQuestionButton from './NextQuestionButton'
 
 export let gameWindow: Window | null = null
 
@@ -25,7 +26,6 @@ const StickyControls: React.FC = () => {
   const hasFuture = useSelector(state => state.game.future.length > 0)
   const leftAlive = useGameSelector(game => game.leftTeam.health > 0)
   const rightAlive = useGameSelector(game => game.rightTeam.health > 0)
-  const nextQuestionBonuses = useSelector(selectNextQuestionBonuses)
 
   function openGameWindow() {
     gameWindow = open('.', '_blank', 'popup,width=640,height=360')
@@ -62,9 +62,7 @@ const StickyControls: React.FC = () => {
     <div className={styles.panel}>
       {gameWindowOpen ? <>
         {currentQuestion < 0 ? (
-          <Button color='primary' onClick={() => dispatch(nextQuestion(nextQuestionBonuses))}>
-            Открыть первый вопрос
-          </Button>
+          <NextQuestionButton>Открыть первый вопрос</NextQuestionButton>
         ) : <>
           <ButtonGroup className={styles.outlined}>
             <Button title='Отнять балл у синей команды'

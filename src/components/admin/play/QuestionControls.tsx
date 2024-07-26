@@ -2,13 +2,14 @@ import styles from './styles.css'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import React from 'react'
-import { nextQuestion, chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, selectNextQuestionBonuses, areAllOptionsOpened, openFinale, makeSubtotal } from '../../../store'
+import { chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, areAllOptionsOpened, makeSubtotal } from '../../../store'
 import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
 import Box from '@mui/joy/Box'
 import { hitAnimation } from '../../game/Teams'
 import { AttachmentComponent } from '../edit/StaticQuestion'
+import NextQuestionButton from './NextQuestionButton'
 
 function teamColor(team: string) {
   if (team === 'leftTeam') {
@@ -40,7 +41,6 @@ const QuestionControls: React.FC = () => {
 
   const attachmentShown = useSelector(state => state.visibility.attachment)
   const healthChance = useGameSelector(game => game.healthChance)
-  const nextQuestionBonuses = useSelector(selectNextQuestionBonuses)
 
   const subtotalShown = useGameSelector(game => game.subtotalShown)
   const roundFinished = useGameSelector(game => game.roundFinished)
@@ -143,15 +143,7 @@ const QuestionControls: React.FC = () => {
           </>}
           {roundFinished && (subtotalShown ? (
             (!lastQuestion || hasFinale) && (
-              <Button
-                style={{alignSelf: 'flex-start'}}
-                color='primary'
-                onClick={() => {
-                  dispatch(lastQuestion ? openFinale() : nextQuestion(nextQuestionBonuses))
-                }}
-              >
-                Следующий вопрос
-              </Button>
+              <NextQuestionButton style={{alignSelf: 'flex-start'}}>Следующий вопрос</NextQuestionButton>
             )
           ) : (
             <Button color='primary' onClick = {() => dispatch(makeSubtotal())}>Показать счёт</Button>
