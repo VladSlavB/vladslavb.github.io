@@ -81,7 +81,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
           showActions={canEdit}
         />
         {question.options == null ? (
-          <Chip variant='outlined' color='primary'>Один за всех</Chip>
+          <Chip variant='outlined' color='primary'>Вспомнить всё</Chip>
         ) : (
           <Chip variant='outlined' color='primary'>{question.name ?? 'Народный раунд'}</Chip>
         )}
