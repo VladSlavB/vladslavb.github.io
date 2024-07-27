@@ -50,7 +50,7 @@ const QuestionControls: React.FC = () => {
   const shown = useGameSelector(game => game.questionShown)
   const canShowSecondQuestion = useSelector(state => (
     state.questions[state.game.present.currentQuestion]?.value2 != null && !state.game.present.secondQuestion
-  )) && shown
+  )) && shown && !roundFinished
 
   function onFail() {
     if (currentTeam != null) {

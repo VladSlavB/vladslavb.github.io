@@ -239,12 +239,17 @@ const gameSlice = createSlice({
       } else {
         if (state.dynamicOptions[state.currentQuestion] == null) {
           state[state.currentTeam].health--
+          if (state[state.currentTeam].health === 0) {
+            state.healthChance = state.currentTeam
+          } else {
+            switchTeamIfPossible(state)
+          }
         } else {
           state.dynamicOptions[state.currentQuestion].push(null)
-        }
-        if (state[state.currentTeam].health === 0) {
-          state.healthChance = state.currentTeam
-        } else {
+          decideIfRoundFinished(state)
+          if (state.roundFinished) {
+            state.currentTeam = null
+          }
           switchTeamIfPossible(state)
         }
       }
