@@ -2,7 +2,7 @@ import styles from './styles.css'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import React from 'react'
-import { chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, areAllOptionsOpened, makeSubtotal, showQuestion } from '../../../store'
+import { chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, areAllOptionsOpened, makeSubtotal, showQuestion, showSecondQuestion } from '../../../store'
 import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
@@ -48,6 +48,9 @@ const QuestionControls: React.FC = () => {
   const hasFinale = useSelector(state => state.finale != null)
   const dynamic = useSelector(state => state.questions[state.game.present.currentQuestion].options == null)
   const shown = useGameSelector(game => game.questionShown)
+  const canShowSecondQuestion = useSelector(state => (
+    state.questions[state.game.present.currentQuestion]?.value2 != null && !state.game.present.secondQuestion
+  )) && shown
 
   function onFail() {
     if (currentTeam != null) {
@@ -112,6 +115,9 @@ const QuestionControls: React.FC = () => {
             )}
           </Box>
           {currentQuestion >= 0 && (shown ? <>
+            {canShowSecondQuestion && (
+              <Button color='primary' onClick={() => dispatch(showSecondQuestion())}>Показать второй вопрос</Button>
+            )}
             {!drawFinished && (
               <Chip color='warning' variant='soft'>
                 {dynamic ? 'Кто будет ходить первым?' : 'Розыгрыш хода...'}
@@ -149,7 +155,7 @@ const QuestionControls: React.FC = () => {
               <NextQuestionButton style={{alignSelf: 'flex-start'}}>Следующий вопрос</NextQuestionButton>
             )
           ) : (
-            <Button color='primary' onClick = {() => dispatch(makeSubtotal())}>Показать счёт</Button>
+            <Button color='primary' onClick={() => dispatch(makeSubtotal())}>Показать счёт</Button>
           ))}
         </>}
       </Stack>

@@ -19,6 +19,7 @@ import Option from '@mui/joy/Option'
 function makeInputQuestion(question: Question): InputQuestion {
   return {
     ...question,
+    value2: question.value2 ?? '',
     options: question.options?.map(option => ({
       ...option,
       score: `${option.score}`,
@@ -41,6 +42,7 @@ const DEFAULT_OPTIONS = Array<InputOption>(NUM_OPTIONS).fill({
 const DEFAULT_QUESTION: InputQuestion = {
   name: 'Народный раунд',
   value: '',
+  value2: '',
   options: DEFAULT_OPTIONS,
 }
 
@@ -83,6 +85,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
     const newQuestion: Question = {
       name: noOptions ? 'Вспомнить всё' : question.name,
       value: question.value,
+      value2: noOptions ? (question.value2 !== '' ? question.value2 : undefined) : undefined,
       options: noOptions ? undefined : question.options.map(option => ({
         value: option.value,
         attachment: option.attachment,
@@ -139,7 +142,18 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
               <FormLabel>Вписать варианты ответа потом, во время игры</FormLabel>
             </FormControl>
           </Grid>
-          {!noOptions && <>
+          {noOptions ? (
+            <Grid xs={12}>
+              <Textarea
+                value={question.value2} onChange={e => {
+                  setQuestion(draft => {
+                    draft.value2 = e.target.value
+                  })
+                }}
+                placeholder='Второй вопрос (необязательно)'
+              />
+            </Grid>
+          ) : <>
             <TwoColumns>
               {question.options.map((option, i) => (
                 <OptionEdit

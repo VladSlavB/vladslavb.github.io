@@ -28,6 +28,7 @@ export type Option = {
 export type Question = {
   name: string
   value: string
+  value2?: string
   options?: Option[]
 }
 
@@ -115,6 +116,7 @@ const GAME_INITIAL_STATE = {
   active: false,
   currentQuestion: -1,
   questionShown: false,
+  secondQuestion: false,
   subtotalShown: false,
   drawFinished: false,
   currentTeam: null as null | Team,
@@ -174,6 +176,7 @@ const gameSlice = createSlice({
     nextQuestion(state, action: PayloadAction<{bonusesMap: boolean[], dynamic: boolean}>) {
       state.currentQuestion++
       state.questionShown = false
+      state.secondQuestion = false
       if (action.payload.dynamic) {
         state.dynamicOptions[state.currentQuestion] = []
       }
@@ -371,6 +374,9 @@ const gameSlice = createSlice({
     },
     showQuestion(state) {
       state.questionShown = true
+    },
+    showSecondQuestion(state) {
+      state.secondQuestion = true
     }
   },
 })
@@ -510,7 +516,7 @@ export const {
   toggleFinaleAnswerVisibility, toggleFinaleScoreVisibility,
   closeAllAnswers, toggleFinaleQuestion,
   setName,
-  showQuestion,
+  showQuestion, showSecondQuestion,
 } = gameSlice.actions
 
 const visibilitySlice = createSlice({
@@ -544,7 +550,7 @@ export const {
 
 
 // managing old versions
-const CURRENT_VERSION = 8
+const CURRENT_VERSION = 9
 ;(function() {
   if (localStorage.vladslav_version != CURRENT_VERSION && localStorage.vladslav) {
     const storage = JSON.parse(localStorage.vladslav)

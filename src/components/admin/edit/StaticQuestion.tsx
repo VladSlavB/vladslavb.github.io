@@ -39,6 +39,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
   const dynamicOptions = useGameSelector(game => game.dynamicOptions[game.currentQuestion]) as (Option | null)[] | null
   const reversed = useSelector(_selectDynamicReversedOrder)
   const shown = useGameSelector(game => game.questionShown)
+  const secondQuestion = useGameSelector(game => game.secondQuestion)
 
   function onOptionClick(optionIndex: number) {
     if (question.options == null) return
@@ -80,6 +81,9 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
           onDelete={() => dispatch(removeQuestion(index))}
           showActions={canEdit}
         />
+        {question.value2 != null && (
+          <HeaderWithActions header={question.value2} dim={gameActive && (!questionActive || !secondQuestion)} />
+        )}
         {question.options == null ? (
           <Chip variant='outlined' color='primary'>Вспомнить всё</Chip>
         ) : (
