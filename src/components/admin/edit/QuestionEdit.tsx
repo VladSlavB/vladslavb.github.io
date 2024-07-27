@@ -83,7 +83,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
   const onSubmit = useCallback((e: FormEvent) => {
     e.preventDefault()
     const newQuestion: Question = {
-      name: noOptions ? 'Вспомнить всё' : question.name,
+      name: noOptions ? 'Вспомни всё' : question.name,
       value: question.value,
       value2: noOptions ? (question.value2 !== '' ? question.value2 : undefined) : undefined,
       options: noOptions ? undefined : question.options.map(option => ({

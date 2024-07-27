@@ -8,7 +8,7 @@ const Name: React.FC = () => {
   const dynamic = useGameSelector(game => game.dynamicOptions[game.currentQuestion] != null)
   return question != null ? (
     <div className={styles.roundName}>
-      {dynamic ? 'Вспомнить всё' : question.name ?? 'Народный раунд'}
+      {dynamic ? 'Вспомни всё' : question.name ?? 'Народный раунд'}
     </div>
   ) : null
 }

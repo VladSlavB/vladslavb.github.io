@@ -85,7 +85,7 @@ const StaticQuestion: React.FC<Props> = ({index, onEdit, canEdit}) => {
           <HeaderWithActions header={question.value2} dim={gameActive && (!questionActive || !secondQuestion)} />
         )}
         {question.options == null ? (
-          <Chip variant='outlined' color='primary'>Вспомнить всё</Chip>
+          <Chip variant='outlined' color='primary'>Вспомни всё</Chip>
         ) : (
           <Chip variant='outlined' color='primary'>{question.name ?? 'Народный раунд'}</Chip>
         )}

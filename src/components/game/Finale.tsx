@@ -17,7 +17,7 @@ const Finale: React.FC = () => {
   }
   
   return gameFinale.active ? <>
-    <div className={styles.finaleName}>Финальный раунд</div>
+    <div className={styles.finaleName}>{'Вспомни всё\nФинал'}</div>
     <div className={styles.finaleQuestions}>
       {staticFinale?.questions.map((question, i) => (
         <Question text={question.value} opened={gameFinale.openedQuestions[i]} index={i} />
