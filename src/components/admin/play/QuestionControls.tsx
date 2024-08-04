@@ -2,14 +2,14 @@ import styles from './styles.css'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import React from 'react'
-import { chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, toggleAttachmentVisibility, utilizeHealthChance, discardHealthChance, areAllOptionsOpened, makeSubtotal, showQuestion, showSecondQuestion } from '../../../store'
+import { chooseTeam, useDispatch, useSelector, wrongAnswer, correctBonus, discardBonusChance, useGameSelector, utilizeHealthChance, discardHealthChance, areAllOptionsOpened, makeSubtotal, showQuestion, showSecondQuestion } from '../../../store'
 import Stack from '@mui/joy/Stack'
 import Typography from '@mui/joy/Typography'
 import Chip from '@mui/joy/Chip'
 import Box from '@mui/joy/Box'
 import { hitAnimation } from '../../game/Teams'
-import { AttachmentComponent } from '../edit/StaticQuestion'
 import NextQuestionButton from './NextQuestionButton'
+import CurrentAttachment from './CurrentAttachment'
 
 function teamColor(team: string) {
   if (team === 'leftTeam') {
@@ -37,9 +37,6 @@ const QuestionControls: React.FC = () => {
   const everyoneDead = currentTeam == null && drawFinished
   const lastQuestion = currentQuestion === totalQuestions - 1
 
-  const currentAttachment = useGameSelector(game => game.currentAttachment)
-
-  const attachmentShown = useSelector(state => state.visibility.attachment)
   const healthChance = useGameSelector(game => game.healthChance)
 
   const subtotalShown = useGameSelector(game => game.subtotalShown)
@@ -159,35 +156,9 @@ const QuestionControls: React.FC = () => {
           ))}
         </>}
       </Stack>
-      {currentAttachment && (
-        <Stack direction='row' gap={2} alignItems='center'>
-          <AttachmentComponent {...currentAttachment} />
-          <VisibilityButton
-            variant='soft' size='lg'
-            onClick={() => dispatch(toggleAttachmentVisibility())}
-            hideText='Скрыть'
-            showText='Показать'
-            visible={attachmentShown}
-          />
-        </Stack>
-      )}
+      <CurrentAttachment />
     </>
   )
 }
 
 export default QuestionControls
-
-const VisibilityButton: React.FC<{
-  visible: boolean
-  showText: string
-  hideText: string
-} & React.ComponentProps<typeof Button>> = props => {
-  let { visible, hideText, showText, className, ...restProps } = props
-  if (visible) className += ' ' + styles.hideButton
-  return <>
-    {visible && <div className={styles.overlay} />}
-    <Button className={className} {...restProps}>
-      {visible ? hideText : showText}
-    </Button>
-  </>
-}

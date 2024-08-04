@@ -120,7 +120,7 @@ export const BonusEdit: React.FC<{
   </>
 }
 
-function useAttachments(
+export function useAttachments(
   option: {attachment?: Attachment},
   onEdit: (draftFunction: (draft: {attachment?: Attachment}) => void) => void
 ) {

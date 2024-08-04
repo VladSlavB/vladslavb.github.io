@@ -133,7 +133,7 @@ const GAME_INITIAL_STATE = {
   finale: {
     active: false,
     teamsOrder: ['leftTeam', 'rightTeam'] as Team[],
-    answers: [] as {value: string, opened: boolean, hidden: boolean}[],
+    answers: [] as {value: string, attachment?: Attachment, opened: boolean, hidden: boolean}[],
     scores: [] as {value: number, opened: boolean, hidden: boolean}[],
     names: [['', '', ''], ['', '', '']],
     openedQuestions: [false, false, false, false, false],
@@ -327,12 +327,19 @@ const gameSlice = createSlice({
       state.finale.openedQuestions[action.payload] = !state.finale.openedQuestions[action.payload]
       maybePlayFinaleFinishSound(state)
     },
-    addFinaleAnswer(state, action: PayloadAction<{answer: string, score: number}>) {
-      state.finale.answers.push({value: action.payload.answer, opened: false, hidden: false})
+    addFinaleAnswer(state, action: PayloadAction<{answer: string, score: number, attachment?: Attachment}>) {
+      state.finale.answers.push({
+        value: action.payload.answer,
+        attachment: action.payload.attachment,
+        opened: false, hidden: false
+      })
       state.finale.scores.push({value: action.payload.score, opened: false, hidden: false})
     },
     openFinaleAnswer(state, action: PayloadAction<number>) {
-      state.finale.answers[action.payload].opened = true
+      const answer = state.finale.answers[action.payload]
+      console.log(answer)
+      answer.opened = true
+      state.currentAttachment = answer.attachment
       maybePlayFinaleFinishSound(state)
     },
     openFinaleScore(state, action: PayloadAction<number>) {

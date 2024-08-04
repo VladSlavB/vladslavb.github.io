@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Team, addFinaleAnswer, closeAllAnswers, openFinaleAnswer, openFinaleScore, setName, toggleFinaleAnswerVisibility, toggleFinaleQuestion, toggleFinaleScoreVisibility, useDispatch, useGameSelector, useSelector } from '../../../store'
+import { Attachment, Team, addFinaleAnswer, closeAllAnswers, openFinaleAnswer, openFinaleScore, setName, toggleFinaleAnswerVisibility, toggleFinaleQuestion, toggleFinaleScoreVisibility, useDispatch, useGameSelector, useSelector } from '../../../store'
 import HeaderWithActions from '../edit/HeaderWithActions'
 import Card from '@mui/joy/Card'
 import Grid from '@mui/joy/Grid'
@@ -15,7 +15,10 @@ import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import IconButton from '@mui/joy/IconButton'
-import { transformInputScore } from '../edit/OptionEdit'
+import { transformInputScore, useAttachments } from '../edit/OptionEdit'
+import { useImmer } from 'use-immer'
+import Tooltip from '@mui/joy/Tooltip'
+import CurrentAttachment from './CurrentAttachment'
 
 
 const getTeamParams = (team: Team) => ({
@@ -96,6 +99,7 @@ const Finale: React.FC = () => {
           disabled={!active}
         >Скрыть все вопросы и ответы, оставив очки</Button>
       </Stack>
+      <CurrentAttachment />
     </Card>
   ) : null
 }
@@ -110,6 +114,8 @@ type AnswerProps = {
 const AnswerWithScore: React.FC<AnswerProps> = ({index}) => {
   const [ answer, setAnswer ] = useState('')
   const [ score, setScore ] = useState('')
+  const [ attachmentWrapper, setAttachmentWrapper ] = useImmer<{attachment?: Attachment}>({})
+  const { buttons, modal, attachment } = useAttachments(attachmentWrapper, setAttachmentWrapper)
   const fixedAnswer = useGameSelector(game => game.finale.answers.at(index))
   const fixedScore = useGameSelector(game => game.finale.scores.at(index))
   const disabled = useGameSelector(game => game.finale.answers.length < index || !game.finale.active)
@@ -151,28 +157,38 @@ const AnswerWithScore: React.FC<AnswerProps> = ({index}) => {
       </ButtonGroup>
     </Stack>
   ) : (
-    <Stack direction='row' spacing={1} component='form' onSubmit={e => {
-      e.preventDefault()
-      if (validate()) {
-        dispatch(addFinaleAnswer({answer, score: parseInt(score)}))
-      }
-    }}>
-      <Input
-        ref={ref}
-        value={answer}
-        fullWidth
-        disabled={disabled}
-        onChange={e => setAnswer(e.target.value)}
-        placeholder='Ответ...'
-      />
-      <Input
-        value={score}
-        disabled={disabled}
-        className={styles.finaleScoreEdit}
-        placeholder='00'
-        onChange={e => setScore(transformInputScore(e.target.value))}
-      />
-      <button type='submit' style={{display: 'none'}} />
+    <Stack>
+      <Tooltip arrow variant='outlined' placement='right' disableFocusListener title={
+        <ButtonGroup variant='plain'>
+          {...buttons}
+        </ButtonGroup>
+      }>
+        <Stack direction='row' spacing={1} component='form' onSubmit={e => {
+          e.preventDefault()
+          if (validate()) {
+            dispatch(addFinaleAnswer({answer, score: parseInt(score), ...attachmentWrapper}))
+          }
+        }}>
+          <Input
+            ref={ref}
+            value={answer}
+            fullWidth
+            disabled={disabled}
+            onChange={e => setAnswer(e.target.value)}
+            placeholder='Ответ...'
+          />
+          <Input
+            value={score}
+            disabled={disabled}
+            className={styles.finaleScoreEdit}
+            placeholder='00'
+            onChange={e => setScore(transformInputScore(e.target.value))}
+          />
+          <button type='submit' style={{display: 'none'}} />
+        </Stack>
+      </Tooltip>
+      {attachment}
+      {modal}
     </Stack>
   )
 }
