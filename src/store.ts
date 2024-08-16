@@ -15,21 +15,30 @@ export type Attachment =
 
 export type BonusOption = {
   score: number
-  attachment?: Attachment
+  attachments: Attachment[]
 }
 
 export type Option = {
   value: string
   score: number
-  attachment?: Attachment
+  attachments: Attachment[]
   bonus?: BonusOption
 }
 
 export type Question = {
-  name: string
+  name: QuestionName.social | QuestionName.objective
   value: string
-  value2?: string
-  options?: Option[]
+  options: Option[]
+} | {
+  name: QuestionName.dynamic
+  value: string
+  value2: string
+}
+
+export enum QuestionName {
+  social = 'Народный раунд',
+  objective = 'Раунд по фактам',
+  dynamic = 'Вспомни всё',
 }
 
 
@@ -562,7 +571,12 @@ export const {
 
 
 // managing old versions
-const CURRENT_VERSION = 9
+const CURRENT_VERSION = 11
+
+if (localStorage.vladslav_version < 11) {
+  localStorage.clear()
+}
+
 ;(function() {
   if (localStorage.vladslav_version != CURRENT_VERSION && localStorage.vladslav) {
     const storage = JSON.parse(localStorage.vladslav)

@@ -1,6 +1,6 @@
 import React, { FormEvent, useCallback, useState } from 'react'
 import { useImmer } from 'use-immer'
-import { Question, addQuestion, editQuestion, useDispatch, useSelector } from '../../../store'
+import { Question, QuestionName, addQuestion, editQuestion, useDispatch, useSelector } from '../../../store'
 import Button from '@mui/joy/Button'
 import Grid from '@mui/joy/Grid'
 import Stack from '@mui/joy/Stack'
@@ -8,43 +8,42 @@ import Card from '@mui/joy/Card'
 import Textarea from '@mui/joy/Textarea'
 import { InputOption, InputQuestion } from './types'
 import OptionEdit from './OptionEdit'
-import FormControl from '@mui/joy/FormControl'
-import FormLabel from '@mui/joy/FormLabel'
-import Switch from '@mui/joy/Switch'
 import Select from '@mui/joy/Select'
 import Option from '@mui/joy/Option'
-// import Typography from '@mui/joy/Typography'
+import { NUM_OPTIONS } from '../../../defaults'
+import Typography from '@mui/joy/Typography'
 
 
 function makeInputQuestion(question: Question): InputQuestion {
   return {
     ...question,
-    value2: question.value2 ?? '',
-    options: question.options?.map(option => ({
+    value2: question.name === QuestionName.dynamic ? question.value2 : '',
+    options: question.name !== QuestionName.dynamic ? question.options?.map(option => ({
       ...option,
       score: `${option.score}`,
       bonus: option.bonus != null ? {
         ...option.bonus,
         score: `${option.bonus.score}`,
       } : undefined,
-    })) ?? DEFAULT_OPTIONS
+    })) : DEFAULT_OPTIONS
   }
 }
 
 const validateQuestionValue = (value: string) => value.trim() !== ''
 const validateScore = (score: string) => parseInt(score) > 0
 
-const NUM_OPTIONS = 10
 const DEFAULT_OPTIONS = Array<InputOption>(NUM_OPTIONS).fill({
   value: '',
   score: '',
+  attachments: [],
 })
 const DEFAULT_QUESTION: InputQuestion = {
-  name: 'Народный раунд',
+  name: QuestionName.social,
   value: '',
   value2: '',
   options: DEFAULT_OPTIONS,
 }
+const ALL_NAMES = Object.values(QuestionName)
 
 type Props = {
   editIndex?: number
@@ -57,7 +56,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
     editIndex != null ? makeInputQuestion(state.questions[editIndex]) : DEFAULT_QUESTION
   ))
   const [ question, setQuestion ] = useImmer(initialState)
-  const [ noOptions, setNoOptions ] = useState(initialState.options == DEFAULT_OPTIONS && editIndex != null)
+  const noOptions = question.name === QuestionName.dynamic
   const everythingValid = (
     validateQuestionValue(question.value) && (
       noOptions || (
@@ -82,17 +81,18 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
 
   const onSubmit = useCallback((e: FormEvent) => {
     e.preventDefault()
-    const newQuestion: Question = {
-      name: noOptions ? 'Вспомни всё' : question.name,
-      value: question.value,
-      value2: noOptions ? (question.value2 !== '' ? question.value2 : undefined) : undefined,
-      options: noOptions ? undefined : question.options.map(option => ({
+    const { name, value, value2, options } = question
+    const newQuestion: Question = name === QuestionName.dynamic ? {
+      name, value, value2
+    } : {
+      name, value,
+      options: options.map(option => ({
         value: option.value,
-        attachment: option.attachment,
+        attachments: option.attachments,
         score: parseInt(option.score),
         bonus: option.bonus != null ? {
           score: parseInt(option.bonus.score),
-          attachment: option.bonus.attachment
+          attachments: option.bonus.attachments
         } : undefined
       }))
     }
@@ -102,45 +102,33 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
       dispatch(editQuestion({index: editIndex, newQuestion}))
     }
     onDone?.()
-  }, [question, noOptions])
+  }, [question])
 
   return (
     <Card variant='soft' size='sm'>
       <form onSubmit={onSubmit} onReset={onDone}>
         <Grid container columnSpacing={4} rowSpacing={2}>
-          {!noOptions && (
-            <Grid xs={12}>
-              <Select
-                defaultValue='Народный раунд'
-                value={question.name} onChange={(_, value) => {
-                  setQuestion(draft => {
-                    draft.name = value ?? ''
-                  })
-                }}
-              >
-                <Option value='Народный раунд'>Народный раунд</Option>
-                <Option value='Раунд по фактам'>Раунд по фактам</Option>
-              </Select>
-            </Grid>
-          )}
+          <Grid xs={12}>
+            <Select
+              defaultValue='Народный раунд'
+              value={question.name} onChange={(_, value) => {
+                setQuestion(draft => {
+                  draft.name = value as QuestionName
+                })
+              }}
+            >
+              {ALL_NAMES.map(name => <Option value={name}>{name}</Option>)}
+            </Select>
+          </Grid>
           <Grid xs={12}>
             <Textarea
               value={question.value} onChange={e => {
                 setQuestion(draft => {
                   draft.value = e.target.value
-                  draft.check = true
                 })
               }}
-              onBlur={() => setQuestion(draft => {draft.check = true})}
-              error={question.check && !validateQuestionValue(question.value)}
               placeholder='Вопрос' autoFocus
             />
-          </Grid>
-          <Grid xs={12}>
-            <FormControl orientation='horizontal' sx={{gap: 1}}>
-              <Switch checked={noOptions} onChange={e => setNoOptions(e.target.checked)} />
-              <FormLabel>Вписать варианты ответа потом, во время игры</FormLabel>
-            </FormControl>
           </Grid>
           {noOptions ? (
             <Grid xs={12}>
@@ -175,8 +163,9 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
               </Stack>
             </Grid>
           </>}
-          <Grid xs={12} display='flex' justifyContent='space-between'>
+          <Grid xs={12} display='flex' justifyContent='space-between' alignItems='baseline'>
             <Button type='submit' disabled={!everythingValid}>Сохранить</Button>
+            {!everythingValid && <Typography color='neutral' fontSize='sm'>Все поля обязательны</Typography>}
             <Button type='reset' variant='outlined' color='danger'>Отмена</Button>
           </Grid>
         </Grid>

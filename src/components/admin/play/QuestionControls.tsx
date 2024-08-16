@@ -20,6 +20,7 @@ function teamColor(team: string) {
 }
 
 const QuestionControls: React.FC = () => {
+  /*
   const dispatch = useDispatch()
   const currentTeam = useGameSelector(game => game.currentTeam)
   const currentQuestion = useGameSelector(game => game.currentQuestion)
@@ -159,6 +160,7 @@ const QuestionControls: React.FC = () => {
       <CurrentAttachment />
     </>
   )
+  */ return null
 }
 
 export default QuestionControls

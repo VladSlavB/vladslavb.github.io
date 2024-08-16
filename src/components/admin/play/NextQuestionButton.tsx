@@ -6,6 +6,7 @@ import { nextQuestion, openFinale, useDispatch, useSelector } from '../../../sto
 type Props = React.ComponentProps<typeof Button>
 
 const NextQuestionButton: React.FC<Props> = ({children, ...restProps}) => {
+  /*
   const lastQuestion = useSelector(state => state.questions.length === state.game.present.currentQuestion + 1)
   const dispatch = useDispatch()
   const nextQuestionBonuses = useSelector(state => {
@@ -29,6 +30,7 @@ const NextQuestionButton: React.FC<Props> = ({children, ...restProps}) => {
       {children}
     </Button>
   )
+  */ return null
 }
 
 export default NextQuestionButton

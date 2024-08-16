@@ -7,11 +7,9 @@
     }
 }
 .scoreEdit {
-    margin-left: 8px;
     width: 45px;
 }
 .bonusEdit {
-    margin-left: 8px;
     width: 36px;
 }
 .optionExtra {
@@ -33,11 +31,6 @@
 }
 .bonus {
     margin-top: 4px;
-}
-.header {
-    display: flex;
-    align-items: baseline;
-    margin-right: -8px !important;
 }
 .actions {
     margin: -8px 0 -4px;
@@ -93,11 +86,10 @@ table.options {
     margin: 8px;
 }
 .image {
-    max-width: 100%;
-    max-height: 80px;
-    border: 2px solid white;
-    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
-    align-self: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 4px;
+    object-fit: cover;
 }
 .imgWrapper, .text {
     position: relative;
@@ -108,19 +100,13 @@ table.options {
     }
 }
 .imgWrapper {
-    padding-top: 8px;
+    display: inline-block;
+    margin: 2px;
 }
-.pad {
-    & .imgWrapper {
-        padding: 8px;
-    }
-    & .text {
-        margin: 8px !important;
-    }
-}
-.text {
-    margin: 8px 0 0 0 !important;
+.text.text {
+    margin: 2px;
     white-space: pre-wrap;
+    border-radius: 4px;
 }
 .close {
     visibility: hidden;

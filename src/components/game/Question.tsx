@@ -12,9 +12,10 @@ const Question: React.FC = () => {
   if (currentAttachment?.type === 'text' && attachmentShown) {
     className += ' ' + styles.attachmentShown
   }
+  // TODO second
   return question != null ? (
     <div className={className}>
-      <div>{shown ? (!second ? question.value : question.value2) : ''}</div>
+      <div>{shown ? question.value : ''}</div>
       <div>{currentAttachment?.type === 'text' && currentAttachment.text}</div>
     </div>
   ) : null

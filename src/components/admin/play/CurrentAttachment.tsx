@@ -1,7 +1,7 @@
 import React from 'react'
 import Stack from "@mui/joy/Stack"
 import { toggleAttachmentVisibility, useDispatch, useGameSelector, useSelector } from "../../../store"
-import { AttachmentComponent } from "../edit/StaticQuestion"
+import { AttachmentComponent } from "./QuestionItem"
 import Button from "@mui/joy/Button"
 import styles from './styles.css'
 

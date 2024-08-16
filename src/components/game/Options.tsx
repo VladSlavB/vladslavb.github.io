@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React, { useRef } from 'react'
-import { Option, _selectDynamicReversedOrder, useGameSelector, useSelector } from '../../store'
+import { Option, QuestionName, _selectDynamicReversedOrder, useGameSelector, useSelector } from '../../store'
 import Star from '@mui/icons-material/Star'
 
 
@@ -14,8 +14,10 @@ const Options: React.FC = () => {
   const options = useSelector(state => {
     const qIndex = state.game.present.currentQuestion
     if (qIndex >= state.questions.length || qIndex < 0) return null
-    const staticOptions = state.questions[qIndex].options
-    if (staticOptions != null) return staticOptions
+    const question = state.questions[qIndex]
+    if (question.name != QuestionName.dynamic) {
+      return question.options
+    }
     let dynamicOptions = state.game.present.dynamicOptions[qIndex] ?? []
     dynamicOptions = [...dynamicOptions]
     for (let i = dynamicOptions.length; i < 12; i++) {
@@ -49,6 +51,7 @@ const Options: React.FC = () => {
               bonusOpened={optionsState[index].bonus?.opened ?? false}
               label={rows === 5 ? `${numberLabel}` : '?'}
               highlight={isMax}
+              attachments={[]}
             />
           )
         })}

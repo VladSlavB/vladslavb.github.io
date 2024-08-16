@@ -1,14 +1,14 @@
 import styles from './styles.css'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { finishEditing, startAdding, startAddingFinale, startEditing, startEditingFinale, useDispatch, useGameSelector, useSelector } from '../../../store'
 import Button from '@mui/joy/Button'
-import StaticQuestion from './StaticQuestion'
 import QuestionEdit from './QuestionEdit'
 import Stack from '@mui/joy/Stack'
 import Add from '@mui/icons-material/Add'
 import FinaleEdit from './FinaleEdit'
-import StaticFinale from './StaticFinale'
+import StaticFinale from '../preview/FinalePreview'
 import Finale from '../play/Finale'
+import QuestionPreview from '../preview/QuestionPreview'
 
 const QuestionsList: React.FC = () => {
   const numQuestions = useSelector(state => state.questions.length)
@@ -27,10 +27,21 @@ const QuestionsList: React.FC = () => {
         (editor.mode === 'edit' && index === editor.index) ? (
           <QuestionEdit editIndex={index} onDone={() => dispatch(finishEditing())} key={index} />
         ) : (
-          <StaticQuestion
-            index={index} onEdit={() => dispatch(startEditing(index))} key={index}
-            canEdit={editor.mode === 'view' && !gameActive}
-          />
+          gameActive ? (
+            // TODO QuestionItem
+            // <StaticQuestion
+            //   index={index} onEdit={() => dispatch(startEditing(index))} key={index}
+            //   canEdit={editor.mode === 'view' && !gameActive}
+            // />
+            null
+          ) : (
+            <QuestionPreview 
+              index={index}
+              onEdit={() => dispatch(startEditing(index))}
+              key={index}
+              canEdit={editor.mode === 'view'}
+            />
+          )
         )
       ))}
       {editor.mode === 'add' && (

@@ -1,0 +1,77 @@
+.gameControl {
+    flex: 1;
+    align-items: baseline;
+}
+.toggle {
+    cursor: pointer;
+    user-select: none;
+}
+.overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 100;
+}
+.hideButton {
+    z-index: 101;
+}
+.header {
+    display: flex;
+    align-items: baseline;
+    margin-right: -8px !important;
+}
+.chip {
+    margin-top: 8px;
+}
+.panel {
+    position: fixed;
+    bottom: 16px;
+    height: 0;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    z-index: 2;
+
+    & > * {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+}
+.spacer {
+    flex: 1;
+}
+
+.outlined {
+    background: white;
+}
+
+.finaleScoreEdit {
+    width: 55px;
+
+    & input {
+        font-family: monospace;
+    }
+}
+
+.tabsContainer {
+    background: none !important;
+}
+.finaleButtonGroup {
+    width: 100%;
+}
+.previewOptions {
+    columns: 2;
+    list-style-type: none;
+    padding-left: 0;
+}
+.dots {
+    flex: 1;
+    border-top: 1px dashed #aaa;
+    align-self: center;
+    margin: 0 8px;
+}

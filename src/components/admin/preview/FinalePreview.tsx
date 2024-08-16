@@ -2,7 +2,6 @@ import React from 'react'
 import Card from '@mui/joy/Card'
 import { deleteFinale, useDispatch, useSelector } from '../../../store'
 import HeaderWithActions from './HeaderWithActions'
-import Typography from '@mui/joy/Typography'
 
 
 type Props = {

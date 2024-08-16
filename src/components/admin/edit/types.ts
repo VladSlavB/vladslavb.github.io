@@ -1,24 +1,20 @@
-import { Attachment } from "../../../store"
+import { Attachment, QuestionName } from "../../../store"
 
 export type InputBonus = {
   score: string
-  attachment?: Attachment
-  check?: boolean
+  attachments: Attachment[]
 }
 
 export type InputOption = {
   value: string
   score: string
-  attachment?: Attachment
+  attachments: Attachment[]
   bonus?: InputBonus
-  checkValue?: boolean
-  checkScore?: boolean
 }
 
 export type InputQuestion = {
-  name: string
+  name: QuestionName
   value: string
   value2: string
   options: InputOption[]
-  check?: boolean
 }

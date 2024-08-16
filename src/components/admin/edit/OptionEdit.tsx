@@ -1,5 +1,5 @@
 import styles from './styles.css'
-import React, { useState } from 'react'
+import React from 'react'
 import Stack from '@mui/joy/Stack'
 import Input from '@mui/joy/Input'
 import IconButton from '@mui/joy/IconButton'
@@ -8,12 +8,8 @@ import Star from '@mui/icons-material/Star'
 import Typography from '@mui/joy/Typography'
 import Close from '@mui/icons-material/Close'
 import { InputBonus, InputOption } from './types'
-import Tooltip from '@mui/joy/Tooltip'
-import ButtonGroup from '@mui/joy/ButtonGroup'
-import ImageOutlined from '@mui/icons-material/ImageOutlined'
-import TextFields from '@mui/icons-material/TextFields'
-import Modal from './Modal'
 import { Attachment } from '../../../store'
+import AddAttachment from './AddAttachment'
 
 
 const OptionEdit: React.FC<{
@@ -22,143 +18,109 @@ const OptionEdit: React.FC<{
   placeholder?: string
 }> = props => {
   const { option, onEdit, placeholder } = props
-  const { buttons, modal, attachment } = useAttachments(option, onEdit)
+  const onBonusEdit = (bonusEditFunc: (draft: InputBonus) => void) => onEdit(draft => bonusEditFunc(draft.bonus!))
+  const anyAttachments = option.attachments.length > 0 || (option.bonus && option.bonus.attachments.length > 0)
+
   return (
-    <div>
-      <Tooltip 
-        placement='right' variant='outlined' arrow disableFocusListener
-        title={
-          <ButtonGroup variant='plain'>
-            {...buttons}
-            <IconButton onClick={() => onEdit(draft => {
-              if (draft.bonus == null) {
-                draft.bonus = {score: '1'}
-              } else {
-                delete draft.bonus
+    <Stack gap={1}>
+      <Stack direction='row' gap={1}>
+        <Input
+          value={option.value} onChange={e => onEdit(draft => {
+            draft.value = e.target.value
+          })}
+          type='text' placeholder={placeholder} className={styles.optionText}
+        />
+        <Input
+          className={styles.scoreEdit}
+          value={option.score}
+          onChange={e => onEdit(draft => {
+            draft.score = transformInputScore(e.target.value)
+          })}
+          placeholder='00'
+        />
+        {option.bonus != null && (
+          <Input
+            className={styles.bonusEdit}
+            value={option.bonus.score}
+            onChange={e => onBonusEdit(draft => {
+                draft.score = transformInputBonusScore(e.target.value)
+            })}
+            placeholder='0'
+          />
+        )}
+        <div>
+        <AddAttachment onDone={attachment => onEdit(draft => pushAttachment(draft.attachments, attachment))} />
+        {option.bonus != null && (
+          <AddAttachment
+            onDone={attachment => onEdit(draft => {
+              if (draft.bonus != null) {
+                pushAttachment(draft.bonus.attachments, attachment)
               }
-            })}>
-              {option.bonus == null ? <StarBorder /> : <Star />}
-            </IconButton>
-          </ButtonGroup>
-        }
-      >
-        <Stack direction='row'>
-          <Input
-            value={option.value} onChange={e => onEdit(draft => {
-              draft.value = e.target.value
             })}
-            onBlur={() => onEdit(draft => {draft.checkValue = true})}
-            error={option.checkValue && !validateOptionValue(option.value)}
-            type='text' placeholder={placeholder} className={styles.optionText}
+            small
           />
-          <Input
-            className={styles.scoreEdit}
-            value={option.score}
-            onChange={e => onEdit(draft => {
-              draft.score = transformInputScore(e.target.value)
-            })}
-            onBlur={() => onEdit(draft => {draft.checkScore = true})}
-            error={option.checkScore && !validateScore(option.score)}
-            placeholder='00'
-          />
-        </Stack>
-      </Tooltip>
-      <div className={styles.optionExtra} style={{gap : 8}}>
-        <div className={styles.attachmentsContainer}>
-          {attachment}
+        )}
+        <IconButton onClick={() => onEdit(draft => {
+          if (draft.bonus == null) {
+            draft.bonus = {score: '1', attachments: []}
+          } else {
+            delete draft.bonus
+          }
+        })}>
+          {option.bonus == null ? <StarBorder /> : <Star />}
+        </IconButton>
         </div>
-        <div className={styles.bonusContainer}>
+      </Stack>
+      {anyAttachments && (
+        <Stack direction='row' gap={1} justifyContent='space-between'>
+          <AttachmentsList option={option} onEdit={onEdit} />
           {option.bonus != null && (
-            <BonusEdit
-              bonus={option.bonus}
-              onEdit={bonusEditFunc => onEdit(draft => bonusEditFunc(draft.bonus!))}
-              onDelete={() => onEdit(draft => {delete draft.bonus})}
-            />
+            <AttachmentsList option={option.bonus} onEdit={onBonusEdit} />
           )}
-        </div>
-      </div>
-      {modal}
-    </div>
+        </Stack>
+      )}
+    </Stack>
   )
 }
 
 export default OptionEdit
 
-export const BonusEdit: React.FC<{
-  bonus: InputBonus
-  onEdit:  (draftFunction: (draft: InputBonus) => void) => void
-  onDelete: () => void
-}> = props => {
-  const { onEdit, onDelete, bonus } = props
-  const { buttons, modal, attachment } = useAttachments(bonus, onEdit)
 
-  return <>
-    <Tooltip arrow variant='outlined' placement='right' disableFocusListener title={
-      <ButtonGroup variant='plain'>
-        {...buttons}
-        <IconButton size='sm' onClick={onDelete}>
-          <Close fontSize='small' />
-        </IconButton>
-      </ButtonGroup>
-    }>
-      <Stack direction='row' className={styles.bonus}>
-        <Typography alignSelf='center' fontSize='small'>Бонус</Typography>
-        <Input
-          size='sm' className={styles.bonusEdit}
-          value={bonus.score}
-          onChange={e => onEdit(draft => {
-              draft.score = transformInputBonusScore(e.target.value)
-          })}
-          onBlur={() => onEdit(draft => {draft.check = true})}
-          error={bonus.check && !validateScore(bonus.score)}
-          placeholder='0'
-        />
-      </Stack>
-    </Tooltip>
-    {attachment}
-    {modal}
-  </>
+type AttachmentsListProps = {
+  option: {attachments: Attachment[]}
+  onEdit?: (draftFunction: (draft: {attachments: Attachment[]}) => void) => void
 }
-
-export function useAttachments(
-  option: {attachment?: Attachment},
-  onEdit: (draftFunction: (draft: {attachment?: Attachment}) => void) => void
-) {
-  const [ modalType, setModalType ] = useState<Attachment['type']>()
-  const buttons = [
-    <IconButton onClick={() => setModalType('img')}><ImageOutlined /></IconButton>,
-    <IconButton onClick={() => setModalType('text')}><TextFields /></IconButton>
-  ]
-  const modal = (
-    <Modal
-      initial={option.attachment}
-      open={modalType != null} onClose={() => setModalType(undefined)}
-      type={modalType}
-      onDone={attachment => onEdit(draft => {draft.attachment = attachment})}
-    />
-  )
-  const deleter = (
-    <div
-      className={styles.close}
-      onClick={() => onEdit(draft => {delete draft.attachment})}
-    >
-      <Close fontSize='small' />
+export const AttachmentsList: React.FC<AttachmentsListProps> = ({option, onEdit}) => {
+  return (
+    <div>
+      {option.attachments.map((attachment, i) => {
+        const deleter = onEdit && (
+          <div
+            className={styles.close}
+            onClick={() => onEdit(draft => {draft.attachments.splice(i, 1)})}
+          >
+            <Close fontSize='small' />
+          </div>
+        )
+        return (
+          attachment.type === 'img' ? (
+            <div className={styles.imgWrapper}>
+              <img src={attachment.url} className={styles.image} height={80} />
+              {deleter}
+            </div>
+          ) : (
+            <Typography
+              className={styles.text}
+              level='body-xs' variant='outlined' color='warning'
+            >
+              {attachment.text}
+              {deleter}
+            </Typography>
+          )
+        )
+      })}
     </div>
   )
-  const attachment = option.attachment && (option.attachment.type === 'img' ? (
-    <div className={styles.imgWrapper}>
-      <img src={option.attachment.url} className={styles.image} height={80} />
-      {deleter}
-    </div>
-  ) : (
-    <Typography
-      className={styles.text}
-      level='body-xs' variant='outlined' color='warning'
-    >
-      {option.attachment.text}{deleter}
-    </Typography>
-  ))
-  return {buttons, modal, attachment}
 }
 
 export function transformInputScore(value: string) {
@@ -169,5 +131,11 @@ function transformInputBonusScore(value: string) {
   return transformInputScore(value)
 }
 
-const validateOptionValue = (value: string) => value.trim() !== ''
-const validateScore = (score: string) => parseInt(score) > 0
+function pushAttachment(attachments: Attachment[], attachment: Attachment) {
+  if (attachment.type === 'img') {
+    attachments.push(attachment)
+  } else {
+    const targetIndex = attachments.findIndex(a => a.type === 'text') + 1
+    attachments.splice(targetIndex, 0, attachment)
+  }
+}

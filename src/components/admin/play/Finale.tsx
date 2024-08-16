@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Attachment, Team, addFinaleAnswer, closeAllAnswers, openFinaleAnswer, openFinaleScore, setName, toggleFinaleAnswerVisibility, toggleFinaleQuestion, toggleFinaleScoreVisibility, useDispatch, useGameSelector, useSelector } from '../../../store'
-import HeaderWithActions from '../edit/HeaderWithActions'
+import HeaderWithActions from '../preview/HeaderWithActions'
 import Card from '@mui/joy/Card'
 import Grid from '@mui/joy/Grid'
 import Input from '@mui/joy/Input'
@@ -15,7 +15,7 @@ import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import IconButton from '@mui/joy/IconButton'
-import { transformInputScore, useAttachments } from '../edit/OptionEdit'
+import { transformInputScore } from '../edit/OptionEdit'
 import { useImmer } from 'use-immer'
 import Tooltip from '@mui/joy/Tooltip'
 import CurrentAttachment from './CurrentAttachment'
@@ -115,7 +115,8 @@ const AnswerWithScore: React.FC<AnswerProps> = ({index}) => {
   const [ answer, setAnswer ] = useState('')
   const [ score, setScore ] = useState('')
   const [ attachmentWrapper, setAttachmentWrapper ] = useImmer<{attachment?: Attachment}>({})
-  const { buttons, modal, attachment } = useAttachments(attachmentWrapper, setAttachmentWrapper)
+  // TODO attachments
+  // const { buttons, modal, attachment } = useAttachments(attachmentWrapper, setAttachmentWrapper)
   const fixedAnswer = useGameSelector(game => game.finale.answers.at(index))
   const fixedScore = useGameSelector(game => game.finale.scores.at(index))
   const disabled = useGameSelector(game => game.finale.answers.length < index || !game.finale.active)
@@ -160,7 +161,7 @@ const AnswerWithScore: React.FC<AnswerProps> = ({index}) => {
     <Stack>
       <Tooltip arrow variant='outlined' placement='right' disableFocusListener title={
         <ButtonGroup variant='plain'>
-          {...buttons}
+          {/* {...buttons} */}
         </ButtonGroup>
       }>
         <Stack direction='row' spacing={1} component='form' onSubmit={e => {
@@ -187,8 +188,8 @@ const AnswerWithScore: React.FC<AnswerProps> = ({index}) => {
           <button type='submit' style={{display: 'none'}} />
         </Stack>
       </Tooltip>
-      {attachment}
-      {modal}
+      {/* {attachment}
+      {modal} */}
     </Stack>
   )
 }
