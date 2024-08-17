@@ -5,21 +5,19 @@ import Input from '@mui/joy/Input'
 import IconButton from '@mui/joy/IconButton'
 import StarBorder from '@mui/icons-material/StarBorder'
 import Star from '@mui/icons-material/Star'
-import Typography from '@mui/joy/Typography'
-import Close from '@mui/icons-material/Close'
 import { InputBonus, InputOption } from './types'
 import { Attachment } from '../../../store'
 import AddAttachment from './AddAttachment'
+import OptionAttachments from '../../common/OptionAttachments'
 
 
-const OptionEdit: React.FC<{
+type Props = {
   option: InputOption
   onEdit: (draftFunction: (draft: InputOption) => void) => void
   placeholder?: string
-}> = props => {
-  const { option, onEdit, placeholder } = props
+}
+const OptionEdit: React.FC<Props> = ({option, onEdit, placeholder}) => {
   const onBonusEdit = (bonusEditFunc: (draft: InputBonus) => void) => onEdit(draft => bonusEditFunc(draft.bonus!))
-  const anyAttachments = option.attachments.length > 0 || (option.bonus && option.bonus.attachments.length > 0)
 
   return (
     <Stack gap={1}>
@@ -71,14 +69,7 @@ const OptionEdit: React.FC<{
         </IconButton>
         </div>
       </Stack>
-      {anyAttachments && (
-        <Stack direction='row' gap={1} justifyContent='space-between'>
-          <AttachmentsList option={option} onEdit={onEdit} />
-          {option.bonus != null && (
-            <AttachmentsList option={option.bonus} onEdit={onBonusEdit} />
-          )}
-        </Stack>
-      )}
+      <OptionAttachments option={option} onEdit={onEdit} />
     </Stack>
   )
 }
@@ -86,42 +77,7 @@ const OptionEdit: React.FC<{
 export default OptionEdit
 
 
-type AttachmentsListProps = {
-  option: {attachments: Attachment[]}
-  onEdit?: (draftFunction: (draft: {attachments: Attachment[]}) => void) => void
-}
-export const AttachmentsList: React.FC<AttachmentsListProps> = ({option, onEdit}) => {
-  return (
-    <div>
-      {option.attachments.map((attachment, i) => {
-        const deleter = onEdit && (
-          <div
-            className={styles.close}
-            onClick={() => onEdit(draft => {draft.attachments.splice(i, 1)})}
-          >
-            <Close fontSize='small' />
-          </div>
-        )
-        return (
-          attachment.type === 'img' ? (
-            <div className={styles.imgWrapper}>
-              <img src={attachment.url} className={styles.image} height={80} />
-              {deleter}
-            </div>
-          ) : (
-            <Typography
-              className={styles.text}
-              level='body-xs' variant='outlined' color='warning'
-            >
-              {attachment.text}
-              {deleter}
-            </Typography>
-          )
-        )
-      })}
-    </div>
-  )
-}
+
 
 export function transformInputScore(value: string) {
   return value.replace(/\D/g, '').substring(0, 2)

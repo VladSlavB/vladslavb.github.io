@@ -6,7 +6,7 @@ import Typography from '@mui/joy/Typography'
 import Stack from '@mui/joy/Stack'
 import HeaderWithActions from './HeaderWithActions'
 import Chip from '@mui/joy/Chip'
-import { AttachmentsList } from '../edit/OptionEdit'
+import OptionAttachments from '../../common/OptionAttachments'
 
 type Props = {
   index: number
@@ -33,26 +33,16 @@ const QuestionPreview: React.FC<Props> = ({index, onEdit, canEdit}) => {
         <Chip variant='outlined' color='primary' className={styles.chip}>{question.name}</Chip>
         {question.name !== QuestionName.dynamic ? (
           <ul className={styles.previewOptions}>
-            {question.options.map(option => {
-              const anyAttachments = option.attachments.length > 0 || (option.bonus && option.bonus.attachments.length > 0)
-              return (
+            {question.options.map(option => (
                 <li>
                   <Stack direction='row'>
                     {option.value}
                     <div className={styles.dots} />
                     <b>{option.score}{option.bonus && `+${option.bonus.score}`}</b>
                   </Stack>
-                  {anyAttachments && (
-                    <Stack direction='row' gap={1} justifyContent='space-between'>
-                      <AttachmentsList option={option} />
-                      {option.bonus != null && (
-                        <AttachmentsList option={option.bonus} />
-                      )}
-                    </Stack>
-                  )}
+                  <OptionAttachments option={option} />
                 </li>
-              )
-            })}
+            ))}
           </ul>
         ) : (
           null
@@ -63,8 +53,6 @@ const QuestionPreview: React.FC<Props> = ({index, onEdit, canEdit}) => {
 }
 
 export default QuestionPreview
-
-
 
 export const AttachmentComponent: React.FC<Attachment> = attachment => (
   attachment.type === 'img' ? (
