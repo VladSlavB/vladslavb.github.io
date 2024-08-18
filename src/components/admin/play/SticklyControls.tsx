@@ -28,13 +28,13 @@ const StickyControls: React.FC = () => {
   const rightAlive = useGameSelector(game => game.rightTeam.health > 0)
 
   function openGameWindow() {
-    gameWindow = open('.', '_blank', 'popup,width=640,height=360')
-    if (gameWindow != null) {
+    // gameWindow = open('.', '_blank', 'popup,width=640,height=360')
+    // if (gameWindow != null) {
       setGameWindowOpen(true)
-      onClose(gameWindow, () => setGameWindowOpen(false))
-    } else {
-      alert('Не удалось открыть игровое коно')
-    }
+      // onClose(gameWindow, () => setGameWindowOpen(false))
+    // } else {
+      // alert('Не удалось открыть игровое коно')
+    // }
   }
   function closeGameWindow() {
     gameWindow?.close()

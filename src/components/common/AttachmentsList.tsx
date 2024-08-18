@@ -23,7 +23,7 @@ const AttachmentsList: React.FC<Props> = ({option, onEdit}) => {
         )
         return (
           attachment.type === 'img' ? (
-            <div className={styles.imgWrapper}>
+            <div className={styles.imgWrapper} key={i}>
               <img src={attachment.url} className={styles.image} height={80} />
               {deleter}
             </div>
@@ -31,6 +31,7 @@ const AttachmentsList: React.FC<Props> = ({option, onEdit}) => {
             <Typography
               className={styles.text}
               level='body-xs' variant='outlined' color='warning'
+              key={i}
             >
               {attachment.text}
               {deleter}

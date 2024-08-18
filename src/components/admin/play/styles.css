@@ -57,3 +57,8 @@
 .finaleButtonGroup {
     width: 100%;
 }
+.list {
+    padding: 40px 20px 300px;
+    max-width: 1000px;
+    margin: 0 auto;
+}

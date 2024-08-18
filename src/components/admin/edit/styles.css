@@ -35,9 +35,6 @@
 .actions {
     margin: -8px 0 -4px;
 }
-.add {
-    align-self: center;
-}
 .wrong {
     align-self: flex-start;
 }
@@ -58,20 +55,6 @@ table.options {
     /* #6183a8 */
     background: rgba(100, 128, 150, 0.1);
     padding: 0 5px;
-}
-.list {
-    padding: 40px 20px 300px;
-    max-width: 800px;
-    margin: 0 auto;
-
-    &.wide {
-        max-width: 1000px;
-    }
-}
-.bottomButtons {
-    display: flex;
-    align-items: center;
-    gap: 20px;
 }
 .optionText {
     flex: 1;

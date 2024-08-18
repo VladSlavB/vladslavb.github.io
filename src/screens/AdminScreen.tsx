@@ -1,7 +1,8 @@
 import styles from './styles.css'
 import React from 'react'
-import QuestionsList from '../components/admin/edit/QuestionsList'
-import { useSelector } from '../store'
+import QuestionsListPreview from '../components/admin/preview/QuestionsList'
+import QuestionsListControl from '../components/admin/play/QuestionsList'
+import { useGameSelector, useSelector } from '../store'
 import Typography from '@mui/joy/Typography'
 import StickyControls from '../components/admin/play/SticklyControls'
 import Audio, { allAudioUrls } from '../Audio'
@@ -10,6 +11,7 @@ import Audio, { allAudioUrls } from '../Audio'
 const AdminScreen: React.FC = () => {
   const hasQuestions = useSelector(state => state.questions.length > 0)
   const editorActive = useSelector(state => state.editor.mode !== 'view')
+  const gameActive = useGameSelector(game => game.active)
   return (
     <div id='admin'>
       {!hasQuestions && !editorActive && (
@@ -17,7 +19,7 @@ const AdminScreen: React.FC = () => {
           Это пункт управления игрой. Прежде всего, нужно создать вопросы викторины
         </Typography>
       )}
-      <QuestionsList />
+      {gameActive ? <QuestionsListControl /> : <QuestionsListPreview />}
       {hasQuestions && (
         <StickyControls />
       )}

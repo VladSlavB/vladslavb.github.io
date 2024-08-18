@@ -18,7 +18,6 @@ import IconButton from '@mui/joy/IconButton'
 import { transformInputScore } from '../edit/OptionEdit'
 import { useImmer } from 'use-immer'
 import Tooltip from '@mui/joy/Tooltip'
-import CurrentAttachment from './CurrentAttachment'
 
 
 const getTeamParams = (team: Team) => ({
@@ -31,7 +30,7 @@ const Finale: React.FC = () => {
   const active = useGameSelector(game => game.finale.active)
   const finale = useSelector(state => state.finale)
   const openedQuestions = useGameSelector(game => game.finale.openedQuestions)
-  const ref = useAutoScroll(active)
+  const ref = useAutoScroll()
   const teams = useGameSelector(game => game.finale.teamsOrder)
   const dispatch = useDispatch()
   const names = useGameSelector(game => game.finale.names)
@@ -99,7 +98,7 @@ const Finale: React.FC = () => {
           disabled={!active}
         >Скрыть все вопросы и ответы, оставив очки</Button>
       </Stack>
-      <CurrentAttachment />
+      {/* <CurrentAttachment /> */}
     </Card>
   ) : null
 }

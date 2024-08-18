@@ -10,7 +10,7 @@ import OptionAttachments from '../../common/OptionAttachments'
 
 type Props = {
   index: number
-  onEdit: () => void
+  onEdit?: () => void
   canEdit?: boolean
 }
 
@@ -33,15 +33,15 @@ const QuestionPreview: React.FC<Props> = ({index, onEdit, canEdit}) => {
         <Chip variant='outlined' color='primary' className={styles.chip}>{question.name}</Chip>
         {question.name !== QuestionName.dynamic ? (
           <ul className={styles.previewOptions}>
-            {question.options.map(option => (
-                <li>
-                  <Stack direction='row'>
-                    {option.value}
-                    <div className={styles.dots} />
-                    <b>{option.score}{option.bonus && `+${option.bonus.score}`}</b>
-                  </Stack>
-                  <OptionAttachments option={option} />
-                </li>
+            {question.options.map((option, i) => (
+              <li key={i}>
+                <Stack direction='row'>
+                  {option.value}
+                  <div className={styles.dots} />
+                  <b>{option.score}{option.bonus && `+${option.bonus.score}`}</b>
+                </Stack>
+                <OptionAttachments option={option} />
+              </li>
             ))}
           </ul>
         ) : (

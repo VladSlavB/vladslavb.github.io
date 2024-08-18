@@ -25,15 +25,19 @@ export type Option = {
   bonus?: BonusOption
 }
 
-export type Question = {
+export type OrdinaryQuestion = {
   name: QuestionName.social | QuestionName.objective
   value: string
   options: Option[]
-} | {
+}
+
+export type DynamicQuestion = {
   name: QuestionName.dynamic
   value: string
   value2: string
 }
+
+export type Question = OrdinaryQuestion | DynamicQuestion
 
 export enum QuestionName {
   social = 'Народный раунд',
