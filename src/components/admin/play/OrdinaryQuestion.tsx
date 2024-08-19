@@ -1,6 +1,6 @@
 import styles from './styles.css'
-import React, { useState } from 'react'
-import { Attachment, correctAnswer, correctBonus, useDispatch, useGameSelector, wrongBonus, addOptionDynamically, OrdinaryQuestion, useSelector, areAllOptionsOpened, wrongAnswer, discardBonusChance, utilizeHealthChance, discardHealthChance, chooseTeam, showQuestion, makeSubtotal } from '../../../store'
+import React from 'react'
+import { correctAnswer, correctBonus, useDispatch, useGameSelector, wrongBonus, OrdinaryQuestion, useSelector, areAllOptionsOpened, wrongAnswer, discardBonusChance, utilizeHealthChance, discardHealthChance, chooseTeam, showQuestion, makeSubtotal, OrdinaryState } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -15,15 +15,14 @@ import Box from '@mui/joy/Box'
 import NextQuestionButton from './NextQuestionButton'
 
 
-type Props = {
+
+type WrapperProps = {
   question: OrdinaryQuestion
 }
-const OrdinaryQuestion: React.FC<Props> = ({question}) => {
+type Props = WrapperProps & OrdinaryState
+const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: optionsState, drawFinished}) => {
   const currentTeam = useGameSelector(game => game.currentTeam)
   const everyoneDead = useGameSelector(game => game.leftTeam.health + game.rightTeam.health === 0)
-  const bonusChance = useGameSelector(game => game.bonusChance)
-  const optionsState = useGameSelector(game => game.options)
-  const drawFinished = useGameSelector(game => game.drawFinished)
   const dispatch = useDispatch()
   const ref = useAutoScroll()
   const shown = useGameSelector(game => game.questionShown)
@@ -34,7 +33,7 @@ const OrdinaryQuestion: React.FC<Props> = ({question}) => {
       index: optionIndex,
       score: option.score,
       best: question.options.every(other => other.score <= option.score),
-      attachment: option.attachments[0], // TODO multiple attachments
+      attachments: option.attachments,
       hasBonus: option.bonus != null,
     }))
   }
@@ -45,7 +44,7 @@ const OrdinaryQuestion: React.FC<Props> = ({question}) => {
       dispatch(correctBonus({
         index: optionIndex,
         score: option.bonus.score,
-        attachment: option.bonus.attachments[0], // TODO multiple attachments
+        attachments: option.bonus.attachments,
       }))
     }
   }
@@ -135,27 +134,23 @@ const OrdinaryQuestion: React.FC<Props> = ({question}) => {
   )
 }
 
-export default OrdinaryQuestion
+export default ordinaryWrapper(OrdinaryQuestion)
 
-const BottomControls: React.FC = () => {
+const BottomControlsInner: React.FC<OrdinaryState> = ({drawFinished, bonusChance, healthChance}) => {
   const dispatch = useDispatch()
   const currentTeam = useGameSelector(game => game.currentTeam)
   const currentQuestion = useGameSelector(game => game.currentQuestion)
-  const drawFinished = useGameSelector(game => game.drawFinished)
-  const bonusChance = useGameSelector(game => game.bonusChance)
   const allOptionsOpened = useGameSelector(areAllOptionsOpened)
   const bonusInChance = useSelector(state => {
     const game = state.game.present
-    if (game.bonusChance != null) {
-      return (state.questions.at(game.currentQuestion) as OrdinaryQuestion).options[game.bonusChance?.optionIndex].bonus
+    if (bonusChance != null) {
+      return (state.questions.at(game.currentQuestion) as OrdinaryQuestion).options[bonusChance.optionIndex].bonus
     }
     return null
   })
   const totalQuestions = useSelector(state => state.questions.length)
   const everyoneDead = currentTeam == null && drawFinished
   const lastQuestion = currentQuestion === totalQuestions - 1
-
-  const healthChance = useGameSelector(game => game.healthChance)
 
   const subtotalShown = useGameSelector(game => game.subtotalShown)
   const roundFinished = useGameSelector(game => game.roundFinished)
@@ -176,7 +171,7 @@ const BottomControls: React.FC = () => {
       dispatch(correctBonus({
         index: bonusChance.optionIndex,
         score: bonusInChance.score,
-        attachment: bonusInChance.attachments[0], // TODO multiple attachments
+        attachments: bonusInChance.attachments,
       }))
     } else {
       dispatch(discardBonusChance())
@@ -233,13 +228,13 @@ const BottomControls: React.FC = () => {
               !everyoneDead && (
                 <ButtonGroup>
                   <Button
-                    onClick={() => dispatch(chooseTeam({team: 'leftTeam'}))}
+                    onClick={() => dispatch(chooseTeam('leftTeam'))}
                     variant='outlined'
                     color='primary'
                     size='lg'
                   >Синие быстрее</Button>
                   <Button
-                    onClick={() => dispatch(chooseTeam({team: 'rightTeam'}))}
+                    onClick={() => dispatch(chooseTeam('rightTeam'))}
                     variant='outlined'
                     color='danger'
                     size='lg'
@@ -271,10 +266,20 @@ const BottomControls: React.FC = () => {
   )
 }
 
+const BottomControls = ordinaryWrapper(BottomControlsInner)
+
 function teamColor(team: string) {
   if (team === 'leftTeam') {
     return 'primary'
   } else {
     return 'danger'
+  }
+}
+
+function ordinaryWrapper<P>(Component: React.FC<P & OrdinaryState>): React.FC<P> {
+  return props => {
+    const q = useGameSelector(state => state.q)
+    if (q?.type !== 'ordinary') return null
+    return <Component {...props} {...q} />
   }
 }

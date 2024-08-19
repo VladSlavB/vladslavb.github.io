@@ -7,6 +7,7 @@ import { save, load } from 'redux-localstorage-simple'
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import undoable from 'redux-undo'
 import { playCorrect, playFinish, playWrong } from './Audio'
+import { NUM_DYNAMIC_OPTIONS, NUM_OPTIONS } from './defaults'
 
 
 export type Attachment =
@@ -128,30 +129,11 @@ export type Team = 'leftTeam' | 'rightTeam'
 const GAME_INITIAL_STATE = {
   active: false,
   currentQuestion: -1,
+  finale: false,
   questionShown: false,
-  secondQuestion: false,
   subtotalShown: false,
-  drawFinished: false,
-  currentTeam: null as null | Team,
-  bidScore: null as null | number,
-  currentAttachment: null as null | undefined | Attachment,
-  options: makeDefaultOptions(10),
-  bonusChance: null as null | {
-    optionPayload: {best?: boolean, score: number},
-    optionIndex: number
-  },
-  healthChance: null as null | Team,
+  currentAttachments: [] as Attachment[],
   roundFinished: false,
-  dynamicOptions: {} as Record<number, ({value: string, score: number} | null)[]>,
-  finale: {
-    active: false,
-    teamsOrder: ['leftTeam', 'rightTeam'] as Team[],
-    answers: [] as {value: string, attachment?: Attachment, opened: boolean, hidden: boolean}[],
-    scores: [] as {value: number, opened: boolean, hidden: boolean}[],
-    names: [['', '', ''], ['', '', '']],
-    openedQuestions: [false, false, false, false, false],
-    teamsFinished: [false, false],
-  },
   leftTeam: {
     cumulativeScore: 0,
     wins: 0,
@@ -164,19 +146,62 @@ const GAME_INITIAL_STATE = {
     score: 0,
     health: 3,
   },
+  currentTeam: null as null | Team,
+  q: null as null | OrdinaryState | DynamicState | FinaleState,
 }
 type GameState = typeof GAME_INITIAL_STATE
 
-type BonusState = {
-  opened: boolean
-  vacantFor: Record<Team, boolean>
-}
-function makeDefaultOptions(numOptions: number) {
-  return Array(numOptions).fill(null).map(_ => ({
+function makeDefaultOrdinaryOptions(question: OrdinaryQuestion) {
+  return Array(NUM_OPTIONS).fill(null).map((_, i) => ({
     opened: false,
-    bonus: null as BonusState | null | undefined
+    bonus: question.options[i].bonus == null ? null : {
+      opened: false,
+      vacantFor: {leftTeam: true, rightTeam: true}
+    }
   }))
 }
+
+function makeOrdinaryState(question: OrdinaryQuestion) {
+  return {
+    type: 'ordinary' as 'ordinary',
+    options: makeDefaultOrdinaryOptions(question),
+    drawFinished: false,
+    bidScore: null as null | number,
+    bonusChance: null as null | {
+      optionPayload: {best?: boolean, score: number},
+      optionIndex: number
+    },
+    healthChance: null as null | Team,
+  }
+}
+export type OrdinaryState = ReturnType<typeof makeOrdinaryState>
+
+function makeDynamicState() {
+  return {
+    type: 'dynamic' as 'dynamic',
+    options: Array(NUM_DYNAMIC_OPTIONS).fill(null).map(_ => ({
+      value: '',
+      attachments: [],
+      opened: false
+    })),
+    fixed: false,
+    question2: false,
+  }
+}
+type DynamicState = ReturnType<typeof makeDynamicState>
+
+function makeFinaleState() {
+  return {
+    type: 'finale' as 'finale',
+    teamsOrder: ['leftTeam', 'rightTeam'] as Team[],
+    answers: [] as {value: string, attachments: Attachment[], opened: boolean, hidden: boolean}[],
+    scores: [] as {value: number, opened: boolean, hidden: boolean}[],
+    names: [['', '', ''], ['', '', '']],
+    openedQuestions: [false, false, false, false, false],
+    teamsFinished: [false, false],
+  }
+}
+type FinaleState = ReturnType<typeof makeFinaleState>
 
 function theOtherTeam(team: Team): Team {
   return team === 'leftTeam' ? 'rightTeam' : 'leftTeam'
@@ -186,33 +211,23 @@ const gameSlice = createSlice({
   name: 'game',
   initialState: GAME_INITIAL_STATE,
   reducers: {
-    nextQuestion(state, action: PayloadAction<{bonusesMap: boolean[], dynamic: boolean}>) {
+    nextQuestion(state, action: PayloadAction<Question | undefined>) {
       state.currentQuestion++
       state.questionShown = false
-      state.secondQuestion = false
-      if (action.payload.dynamic) {
-        state.dynamicOptions[state.currentQuestion] = []
-      }
       state.subtotalShown = false
       state.leftTeam.health = state.rightTeam.health = 3
       state.leftTeam.score = state.rightTeam.score = 0
-      state.bidScore = null
-      state.drawFinished = false
-      state.currentTeam = null
-      const options = makeDefaultOptions(action.payload.bonusesMap.length)
-      action.payload.bonusesMap.forEach((hasBonus, i) => options[i].bonus = hasBonus ? {
-        opened: false,
-        vacantFor: {leftTeam: true, rightTeam: true}
-      } : null)
-      state.options = options
-      state.currentAttachment = null
-      state.roundFinished = false
+      state.q = action.payload != null ? (
+        action.payload.name !== QuestionName.dynamic ? (
+          makeOrdinaryState(action.payload)
+        ) : (
+          makeDynamicState()
+        )
+      ) : makeFinaleState()
+      state.currentAttachments = []
     },
-    chooseTeam(state, action: PayloadAction<{team: Team, finishDraw?: boolean}>) {
-      state.currentTeam = action.payload.team
-      if (action.payload.finishDraw) {
-        state.drawFinished = true
-      }
+    chooseTeam(state, action: PayloadAction<Team>) {
+      state.currentTeam = action.payload
     },
     correctAnswer(state, action: PayloadAction<CorrectAnswerPayload>) {
       applyCorrectAnswer(state, action.payload)
@@ -220,84 +235,93 @@ const gameSlice = createSlice({
     correctBonus(state, action: PayloadAction<{
       index: number,
       score: number,
-      attachment?: Attachment,
+      attachments: Attachment[],
     }>) {
-      const bonus = state.options[action.payload.index].bonus
+      if (state.q?.type !== 'ordinary') return
+      const bonus = state.q.options[action.payload.index].bonus
       if (bonus != null) bonus.opened = true
-      state.currentAttachment = action.payload.attachment
+      state.currentAttachments = action.payload.attachments
       if (state.currentTeam != null) {
         state[state.currentTeam].score += action.payload.score
-        if (state.drawFinished) {
+        if (state.q.drawFinished) {
           switchTeamIfPossible(state)
-        } else if (state.bonusChance != null) {
-          decideOnDraw(state, state.bonusChance.optionPayload)
+        } else if (state.q.bonusChance != null) {
+          decideOnDraw(state, state.q.bonusChance.optionPayload)
         }
       }
-      state.bonusChance = null
+      state.q.bonusChance = null
       decideIfRoundFinished(state)
       playCorrect()
     },
     wrongAnswer(state) {
-      if (state.currentTeam == null) return
-      if (!state.drawFinished) {
-        state.currentTeam = theOtherTeam(state.currentTeam)
-        if (state.bidScore == null) {
-          state.bidScore = 0
-        } else if (state.bidScore === 0) {
-          state.bidScore = null
+      switch (state.q?.type) {
+      case 'ordinary':
+        if (state.currentTeam == null) return
+        if (!state.q.drawFinished) {
+          state.currentTeam = theOtherTeam(state.currentTeam)
+          if (state.q.bidScore == null) {
+            state.q.bidScore = 0
+          } else if (state.q.bidScore === 0) {
+            state.q.bidScore = null
+          } else {
+            state.q.drawFinished = true
+            state.q.bidScore = null
+          }
         } else {
-          state.drawFinished = true
-          state.bidScore = null
-        }
-      } else {
-        if (state.dynamicOptions[state.currentQuestion] == null) {
           state[state.currentTeam].health--
           if (state[state.currentTeam].health === 0) {
-            state.healthChance = state.currentTeam
+            state.q.healthChance = state.currentTeam
           } else {
             switchTeamIfPossible(state)
           }
-        } else {
-          state.dynamicOptions[state.currentQuestion].push(null)
-          decideIfRoundFinished(state)
-          if (state.roundFinished) {
-            state.currentTeam = null
-          }
-          switchTeamIfPossible(state)
         }
+        break
+      case 'dynamic':
+        decideIfRoundFinished(state)
+        if (state.roundFinished) {
+          state.currentTeam = null
+        }
+        switchTeamIfPossible(state)
+        break
+      default:
+        return
       }
       playWrong()
     },
     wrongBonus(state, action: PayloadAction<number>) {
       if (state.currentTeam == null) return
-      const bonus = state.options[action.payload].bonus
+      if (state.q?.type !== 'ordinary') return
+      const bonus = state.q.options[action.payload].bonus
       if (bonus != null) bonus.vacantFor[state.currentTeam] = false
       switchTeamIfPossible(state)
       decideIfRoundFinished(state)
       playWrong()
     },
     utilizeHealthChance(state) {
-      if (state.healthChance == null) return
-      state[state.healthChance].health++
-      state.healthChance = null
+      if (state.q?.type !== 'ordinary') return
+      if (state.q.healthChance == null) return
+      state[state.q.healthChance].health++
+      state.q.healthChance = null
       switchTeamIfPossible(state)
       playCorrect()
     },
     discardHealthChance(state) {
-      state.healthChance = null
+      if (state.q?.type !== 'ordinary') return
+      state.q.healthChance = null
       switchTeamIfPossible(state)
       decideIfRoundFinished(state)
     },
     discardBonusChance(state) {
-      if (state.bonusChance == null || state.currentTeam == null) return
-      const bonus = state.options[state.bonusChance.optionIndex].bonus
+      if (state.q?.type !== 'ordinary') return
+      if (state.q.bonusChance == null || state.currentTeam == null) return
+      const bonus = state.q.options[state.q.bonusChance.optionIndex].bonus
       if (bonus != null) bonus.vacantFor[state.currentTeam] = false
-      if (state.drawFinished) {
+      if (state.q.drawFinished) {
         switchTeamIfPossible(state)
-      } else if (state.bonusChance != null) {
-        decideOnDraw(state, state.bonusChance.optionPayload)
+      } else if (state.q.bonusChance != null) {
+        decideOnDraw(state, state.q.bonusChance.optionPayload)
       }
-      state.bonusChance = null
+      state.q.bonusChance = null
       decideIfRoundFinished(state)
       playWrong()
     },
@@ -309,15 +333,6 @@ const gameSlice = createSlice({
         state[action.payload].health += 1
       }
     },
-    addOptionDynamically(state, action: PayloadAction<{value: string, score: number}>) {
-      const idx = state.currentQuestion
-      state.dynamicOptions[idx].push(action.payload)
-      applyCorrectAnswer(state, {
-        index: state.dynamicOptions[idx].length - 1,
-        score: action.payload.score,
-        hasBonus: false
-      })
-    },
     startGame(state) {
       state.active = true
     },
@@ -327,64 +342,17 @@ const gameSlice = createSlice({
     openFinale(state) {
       state.currentQuestion++
       state.subtotalShown = false
-      state.finale.active = true
-      state.finale.teamsOrder = ['leftTeam', 'rightTeam']
-      state.finale.teamsOrder.sort((a, b) => (state[b].wins - state[a].wins) * 100500 + state[b].score - state[a].score)
+      state.finale = true
+      const teamsOrder = ['leftTeam', 'rightTeam'] as Team[]
+      teamsOrder.sort((a, b) => (state[b].wins - state[a].wins) * 100500 + state[b].score - state[a].score)
+      const q = makeFinaleState()
+      q.teamsOrder = teamsOrder
+      state.q = q
       const scale = getHead()
       const lw = state.leftTeam.wins
       const rw = state.rightTeam.wins
       state.leftTeam.score = (lw - Math.min(lw, rw)) * scale
       state.rightTeam.score = (rw - Math.min(lw, rw)) * scale
-    },
-    toggleFinaleQuestion(state, action: PayloadAction<number>) {
-      state.finale.openedQuestions[action.payload] = !state.finale.openedQuestions[action.payload]
-      maybePlayFinaleFinishSound(state)
-    },
-    addFinaleAnswer(state, action: PayloadAction<{answer: string, score: number, attachment?: Attachment}>) {
-      state.finale.answers.push({
-        value: action.payload.answer,
-        attachment: action.payload.attachment,
-        opened: false, hidden: false
-      })
-      state.finale.scores.push({value: action.payload.score, opened: false, hidden: false})
-    },
-    openFinaleAnswer(state, action: PayloadAction<number>) {
-      const answer = state.finale.answers[action.payload]
-      console.log(answer)
-      answer.opened = true
-      state.currentAttachment = answer.attachment
-      maybePlayFinaleFinishSound(state)
-    },
-    openFinaleScore(state, action: PayloadAction<number>) {
-      const idx = action.payload
-      state.finale.scores[idx].opened = true
-      const teamIdx = ~~(idx / 15)
-      const score = state.finale.scores[idx].value
-      state[state.finale.teamsOrder[teamIdx]].score += score
-      if (score > 0) {
-        playCorrect()
-      } else {
-        playWrong()
-      }
-      maybePlayFinaleFinishSound(state)
-    },
-    toggleFinaleAnswerVisibility(state, action: PayloadAction<number>) {
-      const i = action.payload
-      state.finale.answers[i].hidden = !state.finale.answers[i].hidden
-      maybePlayFinaleFinishSound(state)
-    },
-    toggleFinaleScoreVisibility(state, action: PayloadAction<number>) {
-      const i = action.payload
-      state.finale.scores[i].hidden = !state.finale.scores[i].hidden
-      maybePlayFinaleFinishSound(state)
-    },
-    closeAllAnswers(state) {
-      state.finale.openedQuestions = [false, false, false, false, false]
-      state.finale.answers.forEach(answer => answer.hidden = true)
-    },
-    setName(state, action: PayloadAction<{teamIndex: number, nameIndex: number, value: string}>) {
-      const { teamIndex, nameIndex, value } = action.payload
-      state.finale.names[teamIndex][nameIndex] = value
     },
     makeSubtotal(state) {
       state.subtotalShown = true
@@ -400,30 +368,28 @@ const gameSlice = createSlice({
     showQuestion(state) {
       state.questionShown = true
     },
-    showSecondQuestion(state) {
-      state.secondQuestion = true
-    }
   },
 })
 type CorrectAnswerPayload = {
   index: number,
   score: number,
   best?: boolean,
-  attachment?: Attachment,
+  attachments: Attachment[],
   hasBonus: boolean,
 }
 function applyCorrectAnswer(
   state: GameState,
   payload: CorrectAnswerPayload
 ) {
+  if (state.q?.type !== 'ordinary') return
   playCorrect()
-  const option = state.options[payload.index]
+  const option = state.q.options[payload.index]
   option.opened = true
-  state.currentAttachment = payload.attachment
+  state.currentAttachments = payload.attachments
   if (state.currentTeam == null) return
   state[state.currentTeam].score += payload.score
   if (payload.hasBonus) {
-    state.bonusChance = {
+    state.q.bonusChance = {
       optionIndex: payload.index,
       optionPayload: {
         best: payload.best ?? false,
@@ -431,12 +397,12 @@ function applyCorrectAnswer(
       },
     }
   }
-  if (state.drawFinished) {
+  if (state.q.drawFinished) {
     if (!payload.hasBonus) { 
       switchTeamIfPossible(state)
     }
   } else {
-    if (state.bonusChance == null) {
+    if (state.q.bonusChance == null) {
       decideOnDraw(state, payload)
     }
   }
@@ -460,35 +426,39 @@ function canPlay(state: GameState, team: Team): boolean {
   if (state[team].health === 0) {
     return false
   }
-  if (state.options.every(option => option.opened)) {
-    const unresolvedBonuses = state.options.filter(({bonus}) => bonus != null && !bonus.opened)
-    if (unresolvedBonuses.length > 0) {
-      return !unresolvedBonuses.every(({bonus}) => !bonus?.vacantFor[team])
+  if (state.q?.type === 'ordinary') {
+    if (state.q.options.every(option => option.opened)) {
+      const unresolvedBonuses = state.q.options.filter(({bonus}) => bonus != null && !bonus.opened)
+      if (unresolvedBonuses.length > 0) {
+        return !unresolvedBonuses.every(({bonus}) => !bonus?.vacantFor[team])
+      }
     }
   }
   return true
 }
 
 function decideOnDraw(state: GameState, payload: {best?: boolean, score: number}) {
+  if (state.q?.type !== 'ordinary') return
   if (state.currentTeam == null) return
-  if (state.bidScore == null) {
+  if (state.q.bidScore == null) {
     if (payload.best) {
-      state.drawFinished = true
+      state.q.drawFinished = true
     } else {
-      state.bidScore = payload.score
+      state.q.bidScore = payload.score
       state.currentTeam = theOtherTeam(state.currentTeam)
     }
   } else {
-    if (state.bidScore >= payload.score) {
+    if (state.q.bidScore >= payload.score) {
       state.currentTeam = theOtherTeam(state.currentTeam)
     }
-    state.drawFinished = true
+    state.q.drawFinished = true
   }
 }
 
 export function areAllOptionsOpened(state: GameState) {
   if (state.currentQuestion >= 0) {
-    return state.options.every(option => (
+    if (state.q?.type !== 'ordinary') return false
+    return state.q.options.every(option => (
       option.opened && (option.bonus == null || option.bonus.opened)
     ))
   }
@@ -497,34 +467,11 @@ export function areAllOptionsOpened(state: GameState) {
 
 function decideIfRoundFinished(state: GameState) {
   const prevRoundFinished = state.roundFinished
-  const everyOneDead = state.drawFinished && state.currentTeam == null
+  const everyOneDead = (state.q?.type !== 'ordinary' || state.q.drawFinished) && state.currentTeam == null
   const allOptionsOpened = areAllOptionsOpened(state)
-  if (state.dynamicOptions[state.currentQuestion] == null) {
-    state.roundFinished = everyOneDead || allOptionsOpened
-  } else {
-    state.roundFinished = state.dynamicOptions[state.currentQuestion].length === 12
-  }
+  state.roundFinished = everyOneDead || allOptionsOpened
   if (state.roundFinished && !prevRoundFinished) {
     setTimeout(playFinish, 1000)
-  }
-}
-
-function maybePlayFinaleFinishSound(state: GameState) {
-  function checkSlice(l: number, r: number) {
-    return (
-      state.finale.answers.slice(l, r).length == 15 &&
-      state.finale.answers.slice(l, r).every(answer => answer.opened && !answer.hidden) &&
-      state.finale.scores.slice(l, r).every(score => score.opened && !score.hidden) &&
-      state.finale.openedQuestions.every(_ => _)
-    )
-  }
-  if (checkSlice(0, 15) && !state.finale.teamsFinished[0]) {
-    playFinish()
-    state.finale.teamsFinished[0] = true
-  }
-  if (checkSlice(15, 30) && !state.finale.teamsFinished[1]) {
-    playFinish()
-    state.finale.teamsFinished[1] = true
   }
 }
 
@@ -534,14 +481,9 @@ export const {
   correctBonus, discardBonusChance, wrongBonus,
   utilizeHealthChance, discardHealthChance,
   deltaScore, plusHealth,
-  addOptionDynamically,
   startGame, finishGame,
-  openFinale, addFinaleAnswer,
-  openFinaleAnswer, openFinaleScore,
-  toggleFinaleAnswerVisibility, toggleFinaleScoreVisibility,
-  closeAllAnswers, toggleFinaleQuestion,
-  setName,
-  showQuestion, showSecondQuestion,
+  openFinale,
+  showQuestion,
 } = gameSlice.actions
 
 const visibilitySlice = createSlice({
@@ -614,11 +556,6 @@ export const useSelector: TypedUseSelectorHook<RootState> = useOriginalSelector
 export function useGameSelector<T>(selector: (_: typeof GAME_INITIAL_STATE) => T) {
   return useSelector(state => selector(state.game.present))
 }
-export function _selectDynamicReversedOrder(state: RootState) {
-  const game = state.game.present
-  return (game.currentTeam === 'rightTeam') === ((game.dynamicOptions[game.currentQuestion]?.length ?? 0) % 2 === 0)
-}
-
 
 const headKey = 'vladslav_head'
 function getHead() {

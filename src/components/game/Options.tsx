@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React, { useRef } from 'react'
-import { Option, QuestionName, _selectDynamicReversedOrder, useGameSelector, useSelector } from '../../store'
+import { Option, QuestionName, useGameSelector, useSelector } from '../../store'
 import Star from '@mui/icons-material/Star'
 
 
@@ -9,8 +9,6 @@ function transposeIndex(index: number, rows = 5) {
 }
 
 const Options: React.FC = () => {
-  const dynamic = useGameSelector(game => game.dynamicOptions[game.currentQuestion] != null)
-  const reversed = useSelector(_selectDynamicReversedOrder)
   const options = useSelector(state => {
     const qIndex = state.game.present.currentQuestion
     if (qIndex >= state.questions.length || qIndex < 0) return null
@@ -18,37 +16,36 @@ const Options: React.FC = () => {
     if (question.name != QuestionName.dynamic) {
       return question.options
     }
-    let dynamicOptions = state.game.present.dynamicOptions[qIndex] ?? []
-    dynamicOptions = [...dynamicOptions]
-    for (let i = dynamicOptions.length; i < 12; i++) {
-      dynamicOptions.push({value: '', score: 0})
-    }
-    return dynamicOptions
+    // let dynamicOptions = state.game.present.dynamicOptions[qIndex] ?? []
+    // dynamicOptions = [...dynamicOptions]
+    // for (let i = dynamicOptions.length; i < 12; i++) {
+    //   dynamicOptions.push({value: '', score: 0})
+    // }
+    // return dynamicOptions
   })
   let className = styles.options
-  if (dynamic) className += ' ' + styles.dense
-  const optionsState = useGameSelector(game => game.options)
-  if (options != null) {
+  // if (dynamic) className += ' ' + styles.dense
+  const optionsState = useGameSelector(game => (
+    game.q?.type === 'ordinary' || game.q?.type === 'dynamic' ? (
+      game.q.options
+    ) : null
+  ))
+  if (options != null && optionsState != null) {
     const rows = options.length / 2
     return (
       <div className={className}>
         {options.map((_, i) => {
           let index = i
-          if (!dynamic) {
-            index = transposeIndex(index, rows)
-          } else {
-            if (reversed) {
-              if (index % 2 === 0) index++; else index--
-            }
-          }
+          index = transposeIndex(index, rows)
           const numberLabel = index + 1
-          const isMax = !dynamic && options[index]?.score == Math.max(...options.map(o => o?.score ?? 0))
+          const isMax = options[index]?.score == Math.max(...options.map(o => o?.score ?? 0))
           return (
             <Option
               {...(options[index] ?? {score: 0, value: ''})}
               opened={optionsState[index].opened}
               key={i}
-              bonusOpened={optionsState[index].bonus?.opened ?? false}
+              // bonusOpened={optionsState[index].bonus?.opened ?? false} // TODO bonus
+              bonusOpened={false}
               label={rows === 5 ? `${numberLabel}` : '?'}
               highlight={isMax}
               attachments={[]}
