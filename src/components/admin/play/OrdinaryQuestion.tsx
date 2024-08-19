@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React from 'react'
-import { correctAnswer, correctBonus, useDispatch, useGameSelector, wrongBonus, OrdinaryQuestion, useSelector, areAllOptionsOpened, wrongAnswer, discardBonusChance, utilizeHealthChance, discardHealthChance, chooseTeam, showQuestion, makeSubtotal, OrdinaryState } from '../../../store'
+import { correctAnswer, correctBonus, useDispatch, useGameSelector, wrongBonus, OrdinaryQuestion, useSelector, areAllOptionsOpened, wrongAnswer, discardBonusChance, utilizeHealthChance, discardHealthChance, chooseTeam, showQuestion, makeSubtotal, OrdinaryState, QuestionName } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -13,7 +13,7 @@ import { useAutoScroll } from '../scroll'
 import Chip from '@mui/joy/Chip'
 import Box from '@mui/joy/Box'
 import NextQuestionButton from './NextQuestionButton'
-
+import CurrentAttachments from './CurrentAttachments'
 
 
 type WrapperProps = {
@@ -65,68 +65,72 @@ const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: opti
         >{question.value}</Typography>
         <Chip variant='outlined' color='primary'>{question.name}</Chip>
         <div className={styles.options}>
-            {question.options.map((option, i) => {
-              const canClick = (currentTeam != null || everyoneDead) && shown && !optionsState[i].opened && bonusChance == null
-              let className = styles.optionText
-              if (optionsState[i].opened) className += ' ' + styles.tiny
-              const size = 'lg'
-              const buttons = [(
-                <Button fullWidth
-                  key='option'
-                  variant='plain'
-                  color='neutral'
-                  onClick={() => onOptionClick(i)}
-                  size={size}
-                  disabled={!canClick}
-                  // startDecorator={attachmentIcon(option.attachments[0])}
-                  // TODO multiple attachments
-                  endDecorator={<>
-                    {option.score}
-                  </>}
-                >
-                  <span className={className}>{option.value}</span>
-                </Button>
-              )]
-              const disabled = optionsState[i].bonus?.opened || !optionsState[i].opened || bonusChance != null || (
+          {question.options.map((option, i) => {
+            const canClick = (currentTeam != null || everyoneDead) && shown && !optionsState[i].opened && bonusChance == null
+            let className = styles.optionText
+            if (optionsState[i].opened) className += ' ' + styles.tiny
+            const size = 'lg'
+            const buttons = [(
+              <Button fullWidth
+                key='option'
+                variant='plain'
+                color='neutral'
+                onClick={() => onOptionClick(i)}
+                size={size}
+                disabled={!canClick}
+                // startDecorator={attachmentIcon(option.attachments[0])}
+                // TODO multiple attachments
+                endDecorator={<>
+                  {option.score}
+                </>}
+              >
+                <span className={className}>{option.value}</span>
+              </Button>
+            )]
+            const disabled = (
+              optionsState[i].bonus?.opened ||
+              !optionsState[i].opened ||
+              bonusChance != null || (
                 currentTeam != null && !optionsState[i].bonus?.vacantFor[currentTeam]
-              ) || !drawFinished
-              if (option.bonus != null) {
-                buttons.push(
-                  <Button
-                    key='bonus'
-                    title='Правильный ответ на звёздочку'
-                    variant='soft'
-                    disabled={disabled}
-                    size={size}
-                    onClick={() => onBonusClick(i)}
-                    // TODO multiple attachments
-                    // startDecorator={attachmentIcon(option.bonus.attachments[0])}
-                  >
-                    +{option.bonus.score}
-                  </Button>
-                )
-              }
-              if (option.bonus != null && !disabled && currentTeam != null) {
-                buttons.push(
-                  <IconButton
-                    key='bonus-wrong'
-                    title='Неправильный ответ на звёздочку'
-                    variant='soft' color='danger'
-                    onClick={() => onBonusWrong(i)}
-                  >
-                    <Close />
-                  </IconButton>
-                )
-              }
-              const buttonGroupClassName = styles.gameOption
-              return (
-                <div key={i}>
-                  <ButtonGroup size={size} className={buttonGroupClassName}>
-                    {buttons}
-                  </ButtonGroup>
-                </div>
+              ) ||
+              !drawFinished
+            )
+            if (option.bonus != null) {
+              buttons.push(
+                <Button
+                  key='bonus'
+                  title='Правильный ответ на звёздочку'
+                  variant='soft'
+                  disabled={disabled}
+                  size={size}
+                  onClick={() => onBonusClick(i)}
+                  // TODO multiple attachments
+                  // startDecorator={attachmentIcon(option.bonus.attachments[0])}
+                >
+                  +{option.bonus.score}
+                </Button>
               )
-            })}
+            }
+            if (option.bonus != null && !disabled && currentTeam != null) {
+              buttons.push(
+                <IconButton
+                  key='bonus-wrong'
+                  title='Неправильный ответ на звёздочку'
+                  variant='soft' color='danger'
+                  onClick={() => onBonusWrong(i)}
+                >
+                  <Close />
+                </IconButton>
+              )
+            }
+            return (
+              <div className={styles.gameOption}>
+                <ButtonGroup size={size}>
+                  {buttons}
+                </ButtonGroup>
+              </div>
+            )
+          })}
         </div>
         <BottomControls />
       </Stack>
@@ -141,10 +145,10 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawFinished, bonusChance
   const currentTeam = useGameSelector(game => game.currentTeam)
   const currentQuestion = useGameSelector(game => game.currentQuestion)
   const allOptionsOpened = useGameSelector(areAllOptionsOpened)
-  const bonusInChance = useSelector(state => {
-    const game = state.game.present
-    if (bonusChance != null) {
-      return (state.questions.at(game.currentQuestion) as OrdinaryQuestion).options[bonusChance.optionIndex].bonus
+  const bonusChanceBonus = useSelector(state => {
+    const question = state.questions[state.game.present.currentQuestion]
+    if (bonusChance != null && question.name !== QuestionName.dynamic) {
+      return question.options[bonusChance.optionIndex].bonus
     }
     return null
   })
@@ -166,12 +170,12 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawFinished, bonusChance
   }
 
   function onBonusChanceClick(success: boolean) {
-    if (bonusChance == null || bonusInChance == null || currentTeam == null) return
+    if (bonusChance == null || bonusChanceBonus == null || currentTeam == null) return
     if (success) {
       dispatch(correctBonus({
         index: bonusChance.optionIndex,
-        score: bonusInChance.score,
-        attachments: bonusInChance.attachments,
+        score: bonusChanceBonus.score,
+        attachments: bonusChanceBonus.attachments,
       }))
     } else {
       dispatch(discardBonusChance())
@@ -260,8 +264,7 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawFinished, bonusChance
           ))}
         </>}
       </Stack>
-      
-      {/* <CurrentAttachment /> */}
+      <CurrentAttachments />
     </>
   )
 }

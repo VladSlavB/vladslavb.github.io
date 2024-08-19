@@ -37,3 +37,8 @@
         color: white;
     }
 }
+.clickable {
+    & .image, & .text {
+        cursor: pointer;
+    }
+}

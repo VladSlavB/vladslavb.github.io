@@ -38,19 +38,7 @@
 .wrong {
     align-self: flex-start;
 }
-table.options {
-    &, & td {
-        border-collapse: collapse;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-    & td {
-        width: 50%;
-        vertical-align: top;
-    }
-    width: 100%;
-    background: white;
-    border-radius: 4px;
-}
+
 .score {
     /* #6183a8 */
     background: rgba(100, 128, 150, 0.1);
@@ -64,9 +52,6 @@ table.options {
     &.tiny {
         font-weight: normal;
     }
-}
-.gameOption {
-    margin: 8px;
 }
 :global .MuiModal-root.MuiModal-root {
     z-index: 100500;

@@ -62,18 +62,15 @@ const GameScreen: React.FC = () => {
 export default GameScreen
 
 const Demonstration: React.FC = () => {
-  // TODO multiple attachments
-  const currentAttachment = useSelector(state => state.visibility.instantAttachment ?? state.game.present.currentAttachments[0])
-  const attachmentShown = useSelector(state => state.visibility.attachment || state.visibility.instantAttachment != null)
-  console.log(currentAttachment)
+  const attachment = useSelector(state => state.visibility.attachment)
   let className = styles.imgModal
-  if (currentAttachment?.type === 'img' && attachmentShown) {
+  if (attachment?.type === 'img') {
     className += ' ' + styles.shown
   }
   return (
     <div className={className}>
-      {currentAttachment?.type === 'img' ? (
-        <img src={currentAttachment.url} className={styles.img} />
+      {attachment?.type === 'img' ? (
+        <img src={attachment.url} className={styles.img} />
       ) : <span />}
     </div>
   )

@@ -8,10 +8,11 @@ import styles from './styles.css'
 type Props = {
   option: {attachments: Attachment[]}
   onEdit?: (draftFunction: (draft: {attachments: Attachment[]}) => void) => void
+  onClick?: (attachment: Attachment) => void
 }
-const AttachmentsList: React.FC<Props> = ({option, onEdit}) => {
+const AttachmentsList: React.FC<Props> = ({option, onEdit, onClick}) => {
   return (
-    <div>
+    <div className={onClick != null ? styles.clickable : undefined}>
       {option.attachments.map((attachment, i) => {
         const deleter = onEdit && (
           <div
@@ -24,18 +25,21 @@ const AttachmentsList: React.FC<Props> = ({option, onEdit}) => {
         return (
           attachment.type === 'img' ? (
             <div className={styles.imgWrapper} key={i}>
-              <img src={attachment.url} className={styles.image} height={80} />
+              <img src={attachment.url} className={styles.image} onClick={() => onClick?.(attachment)} />
               {deleter}
             </div>
           ) : (
-            <Typography
-              className={styles.text}
-              level='body-xs' variant='outlined' color='warning'
-              key={i}
-            >
-              {attachment.text}
-              {deleter}
-            </Typography>
+            <span>
+              <Typography
+                className={styles.text}
+                level='body-xs' variant='outlined' color='warning'
+                key={i}
+                onClick={() => onClick?.(attachment)}
+              >
+                {attachment.text}
+                {deleter}
+              </Typography>
+            </span>
           )
         )
       })}

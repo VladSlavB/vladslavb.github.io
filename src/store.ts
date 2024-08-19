@@ -132,7 +132,10 @@ const GAME_INITIAL_STATE = {
   finale: false,
   questionShown: false,
   subtotalShown: false,
-  currentAttachments: [] as Attachment[],
+  currentAttachments: null as null | {
+    optionIndex: number
+    bonus: boolean
+  },
   roundFinished: false,
   leftTeam: {
     cumulativeScore: 0,
@@ -217,6 +220,7 @@ const gameSlice = createSlice({
       state.subtotalShown = false
       state.leftTeam.health = state.rightTeam.health = 3
       state.leftTeam.score = state.rightTeam.score = 0
+      state.currentAttachments = null
       state.q = action.payload != null ? (
         action.payload.name !== QuestionName.dynamic ? (
           makeOrdinaryState(action.payload)
@@ -224,7 +228,6 @@ const gameSlice = createSlice({
           makeDynamicState()
         )
       ) : makeFinaleState()
-      state.currentAttachments = []
     },
     chooseTeam(state, action: PayloadAction<Team>) {
       state.currentTeam = action.payload
@@ -240,7 +243,7 @@ const gameSlice = createSlice({
       if (state.q?.type !== 'ordinary') return
       const bonus = state.q.options[action.payload.index].bonus
       if (bonus != null) bonus.opened = true
-      state.currentAttachments = action.payload.attachments
+      state.currentAttachments = {optionIndex: action.payload.index, bonus: true}
       if (state.currentTeam != null) {
         state[state.currentTeam].score += action.payload.score
         if (state.q.drawFinished) {
@@ -385,7 +388,7 @@ function applyCorrectAnswer(
   playCorrect()
   const option = state.q.options[payload.index]
   option.opened = true
-  state.currentAttachments = payload.attachments
+  state.currentAttachments = {optionIndex: payload.index, bonus: false}
   if (state.currentTeam == null) return
   state[state.currentTeam].score += payload.score
   if (payload.hasBonus) {
@@ -489,30 +492,29 @@ export const {
 const visibilitySlice = createSlice({
   name: 'visibility',
   initialState: {
-    attachment: false,
-    instantAttachment: null as null | Attachment
+    attachment: null as null | Attachment,
   },
   reducers: {
-    toggleAttachmentVisibility(state) {
-      state.attachment = !state.attachment
+    showAttachment(state, action: PayloadAction<Attachment>) {
+      state.attachment = action.payload
     },
-    toggleInstantAttachment(state, action: PayloadAction<Attachment>) {
-      if (state.instantAttachment == null) {
-        state.instantAttachment = action.payload
+    deleteAttachment(state) {
+      state.attachment = null
+    },
+    toggleAttachment(state, action: PayloadAction<Attachment>) {
+      if (state.attachment === action.payload) {
+        state.attachment = null
       } else {
-        state.instantAttachment = null
+        state.attachment = action.payload
       }
     },
-    deleteInstantAttachment(state) {
-      state.instantAttachment = null
-    }
   }
 })
 
 export const {
-  toggleAttachmentVisibility,
-  toggleInstantAttachment,
-  deleteInstantAttachment,
+  showAttachment,
+  deleteAttachment,
+  toggleAttachment,
 } = visibilitySlice.actions
 
 

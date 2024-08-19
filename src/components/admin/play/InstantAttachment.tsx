@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import ButtonGroup from '@mui/joy/ButtonGroup'
-import { deleteInstantAttachment, toggleInstantAttachment, useDispatch } from '../../../store'
+import { useDispatch } from '../../../store'
 import Button from '@mui/joy/Button'
 import ImageOutlined from '@mui/icons-material/ImageOutlined'
 import TextFields from '@mui/icons-material/TextFields'
