@@ -6,7 +6,7 @@ import QuestionEdit from '../edit/QuestionEdit'
 import Stack from '@mui/joy/Stack'
 import Add from '@mui/icons-material/Add'
 import FinaleEdit from '../edit/FinaleEdit'
-import StaticFinale from './FinalePreview'
+import FinalePreview from './FinalePreview'
 import QuestionPreview from './QuestionPreview'
 
 const QuestionsList: React.FC = () => {
@@ -55,7 +55,7 @@ const QuestionsList: React.FC = () => {
         </>}
       </div>
       {editor.mode !== 'editFinale' && (
-        <StaticFinale onEdit={() => dispatch(startEditingFinale())} canEdit={editor.mode === 'view'} />
+        <FinalePreview onEdit={() => dispatch(startEditingFinale())} canEdit={editor.mode === 'view'} />
       )}
       {editor.mode === 'addFinale' && (
         <FinaleEdit onDone={() => dispatch(finishEditing())} />

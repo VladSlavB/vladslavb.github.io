@@ -7,7 +7,7 @@ import { save, load } from 'redux-localstorage-simple'
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import undoable from 'redux-undo'
 import { playCorrect, playFinish, playWrong } from './Audio'
-import { NUM_DYNAMIC_OPTIONS, NUM_OPTIONS } from './defaults'
+import { NUM_DYNAMIC_OPTIONS, NUM_FINALE_OPTIONS, NUM_OPTIONS } from './defaults'
 
 
 export type Attachment =
@@ -136,6 +136,7 @@ const GAME_INITIAL_STATE = {
     optionIndex: number
     bonus?: boolean
     secondGroup?: boolean
+    teamIndex?: number
   },
   roundFinished: false,
   leftTeam: {
@@ -204,14 +205,27 @@ function makeFinaleState() {
   return {
     type: 'finale' as 'finale',
     teamsOrder: ['leftTeam', 'rightTeam'] as Team[],
-    answers: [] as {value: string, attachments: Attachment[], opened: boolean, hidden: boolean}[],
-    scores: [] as {value: number, opened: boolean, hidden: boolean}[],
+    options: [
+      makeFinaleOptions(),
+      makeFinaleOptions(),
+    ],
     names: [['', '', ''], ['', '', '']],
     openedQuestions: [false, false, false, false, false],
+    optionsDone: [false, false],
     teamsFinished: [false, false],
   }
 }
 export type FinaleState = ReturnType<typeof makeFinaleState>
+
+function makeFinaleOptions() {
+  return Array(NUM_FINALE_OPTIONS).fill(0).map(_ => ({
+    value: '',
+    score: 0,
+    attachments: [] as Attachment[],
+    opened: false,
+    scoreOpened: false,
+  }))
+}
 
 function theOtherTeam(team: Team): Team {
   return team === 'leftTeam' ? 'rightTeam' : 'leftTeam'
@@ -349,6 +363,7 @@ const gameSlice = createSlice({
         state[action.payload].health += 1
       }
     },
+
     setOptions(state, action: PayloadAction<{
       options: DynamicState['options']
       second: boolean
@@ -381,6 +396,7 @@ const gameSlice = createSlice({
       state.q.showSecond = true
       state.q.editing = true
     },
+
     openFinale(state) {
       state.currentQuestion++
       state.subtotalShown = false
@@ -395,7 +411,37 @@ const gameSlice = createSlice({
       const rw = state.rightTeam.wins
       state.leftTeam.score = (lw - Math.min(lw, rw)) * scale
       state.rightTeam.score = (rw - Math.min(lw, rw)) * scale
+      state.currentAttachments = null
     },
+    setFinaleOptions(state, action: PayloadAction<{options: FinaleState['options'], teamIndex: number}>) {
+      if (state.q?.type !== 'finale') return
+      state.q.options = action.payload.options
+      state.q.optionsDone[action.payload.teamIndex] = true
+    },
+    openFinaleQuestion(state, action: PayloadAction<number>) {
+      if (state.q?.type !== 'finale') return
+      state.q.openedQuestions[action.payload] = true
+    },
+    openFinaleOption(state, action: PayloadAction<{teamIndex: number, index: number}>) {
+      if (state.q?.type !== 'finale') return
+      const { teamIndex, index } = action.payload
+      state.q.options[teamIndex][index].opened = true
+      state.currentAttachments = {teamIndex, optionIndex: index}
+    },
+    openFinaleScore(state, action: PayloadAction<{teamIndex: number, index: number}>) {
+      if (state.q?.type !== 'finale') return
+      const { teamIndex, index } = action.payload
+      const option = state.q.options[teamIndex][index]
+      option.scoreOpened = true
+      state[state.q.teamsOrder[teamIndex]].score += option.score
+      playCorrect()
+    },
+    setName(state, action: PayloadAction<{teamIndex: number, index: number, value: string}>) {
+      if (state.q?.type !== 'finale') return
+      const { teamIndex, index, value } = action.payload
+      state.q.names[teamIndex][index] = value
+    },
+
     makeSubtotal(state) {
       state.subtotalShown = true
       state.leftTeam.cumulativeScore += state.leftTeam.score
@@ -525,11 +571,13 @@ export const {
   correctAnswer, wrongAnswer,
   correctBonus, discardBonusChance, wrongBonus,
   utilizeHealthChance, discardHealthChance,
+  showQuestion,
 
   setOptions, openOption, switchToQuestion2,
 
-  openFinale,
-  showQuestion,
+  openFinale, openFinaleQuestion,
+  setFinaleOptions, openFinaleOption, openFinaleScore,
+  setName,
 } = gameSlice.actions
 
 const visibilitySlice = createSlice({

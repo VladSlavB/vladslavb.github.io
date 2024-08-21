@@ -40,7 +40,7 @@ const DynamicQuestion: React.FC<Props> = ({question, options: options1, options2
         <OptionsEditor defaultOptions={options2} visible={editing && showSecond} second={showSecond} />
         {!editing && options.map((option, i) => (
           <Grid xs={6} key={i}>
-            <ButtonGroup disabled={option.opened} size='lg' className={styles.dynamicOption}>
+            <ButtonGroup disabled={option.opened} size='lg' className={styles.optionButton}>
               <Button
                 fullWidth
                 variant='plain'
@@ -80,7 +80,7 @@ type OptionsEditorProps = {
   second: boolean
 }
 const OptionsEditor: React.FC<OptionsEditorProps> = ({defaultOptions, visible, second}) => {
-  const [ options, setLocalOptions ] = useImmer(() => defaultOptions.map(option =>   ({...option, opened: false, wrong: false})))
+  const [ options, setLocalOptions ] = useImmer(() => defaultOptions.map(option => ({...option, opened: false, wrong: false})))
   const everythingValid = options.every(option => option.value != '')
   const dispatch = useDispatch()
   function onSubmit() {
@@ -96,7 +96,8 @@ const OptionsEditor: React.FC<OptionsEditorProps> = ({defaultOptions, visible, s
           size='lg'
           option={option}
           onEdit={optionEditFunc => setLocalOptions(draft => optionEditFunc(draft[i]))}
-          truncated
+          noScore
+          noBonus
         />
       </Grid>
     ))}

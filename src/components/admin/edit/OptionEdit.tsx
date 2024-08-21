@@ -11,20 +11,22 @@ import AddAttachment from './AddAttachment'
 import OptionAttachments from '../../common/OptionAttachments'
 
 
-type TruncatedInputOption = Omit<InputOption, 'score'>
+type NoScoreInputOption = Omit<InputOption, 'score'>
 type Props = {
   placeholder?: string
   size?: 'lg'
+  noBonus?: boolean
+  onBlur?: () => void
 } & ({
   option: InputOption
   onEdit: (draftFunction: (draft: InputOption) => void) => void
-  truncated?: false
+  noScore?: false
 } | {
-  option: TruncatedInputOption
-  onEdit: (draftFunction: (draft: TruncatedInputOption) => void) => void
-  truncated: true
+  option: NoScoreInputOption
+  onEdit: (draftFunction: (draft: NoScoreInputOption) => void) => void
+  noScore: true
 })
-const OptionEdit: React.FC<Props> = ({option, onEdit, placeholder, size, truncated}) => {
+const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size, noScore, noBonus}) => {
   const onBonusEdit = (bonusEditFunc: (draft: InputBonus) => void) => onEdit(draft => bonusEditFunc(draft.bonus!))
 
   return (
@@ -32,12 +34,15 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, placeholder, size, truncat
       <Stack direction='row' gap={1}>
         <Input
           size={size}
-          value={option.value} onChange={e => onEdit(draft => {
+          value={option.value}
+          onChange={e => onEdit(draft => {
             draft.value = e.target.value
           })}
-          type='text' placeholder={placeholder} className={styles.optionText}
+          onBlur={onBlur}
+          placeholder={placeholder}
+          className={styles.optionText}
         />
-        {!truncated && (
+        {!noScore && (
           <Input
             size={size}
             className={styles.scoreEdit}
@@ -45,6 +50,7 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, placeholder, size, truncat
             onChange={e => onEdit(draft => {
               draft.score = transformInputScore(e.target.value)
             })}
+            onBlur={onBlur}
             placeholder='00'
           />
         )}
@@ -54,8 +60,9 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, placeholder, size, truncat
             className={styles.bonusEdit}
             value={option.bonus.score}
             onChange={e => onBonusEdit(draft => {
-                draft.score = transformInputBonusScore(e.target.value)
+              draft.score = transformInputBonusScore(e.target.value)
             })}
+            onBlur={onBlur}
             placeholder='0'
           />
         )}
@@ -74,7 +81,7 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, placeholder, size, truncat
               bonus
             />
           )}
-          {!truncated && (
+          {!noBonus && (
             <IconButton onClick={() => onEdit(draft => {
               if (draft.bonus == null) {
                 draft.bonus = {score: '1', attachments: []}

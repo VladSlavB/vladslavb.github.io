@@ -1,15 +1,19 @@
 import React from 'react'
-import { QuestionName, useSelector } from '../../../store'
+import { QuestionName, useGameSelector, useSelector } from '../../../store'
 import styles from './styles.css'
 import Stack from '@mui/joy/Stack'
 import OrdinaryQuestion from './OrdinaryQuestion'
 import QuestionPreview from '../preview/QuestionPreview'
 import DynamicQuestion from './DynamicQuestion'
+import Finale from './Finale'
+import FinalePreview from '../preview/FinalePreview'
 
 
 const QuestionsList: React.FC = () => {
   const questions = useSelector(state => state.questions)
-  const currentQuestionIndex = useSelector(state => state.game.present.currentQuestion)
+  const currentQuestionIndex = useGameSelector(game => game.currentQuestion)
+  const hasFinale = useSelector(state => state.finale != null)
+  const finaleActive = useGameSelector(game => game.finale)
 
   return (
     <Stack spacing={2} className={styles.list}>
@@ -24,6 +28,9 @@ const QuestionsList: React.FC = () => {
           <QuestionPreview index={index} key={index} />
         )
       ))}
+      {hasFinale && (
+        finaleActive ? <Finale /> : <FinalePreview />
+      )}
     </Stack>
   )
 }

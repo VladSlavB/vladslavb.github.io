@@ -5,11 +5,11 @@ import HeaderWithActions from './HeaderWithActions'
 
 
 type Props = {
-  onEdit: () => void
-  canEdit: boolean
+  onEdit?: () => void
+  canEdit?: boolean
 }
 
-const StaticFinale: React.FC<Props> = ({onEdit, canEdit}) => {
+const FinalePreview: React.FC<Props> = ({onEdit, canEdit}) => {
   const finale = useSelector(state => state.finale)
   const dispatch = useDispatch()
 
@@ -30,4 +30,4 @@ const StaticFinale: React.FC<Props> = ({onEdit, canEdit}) => {
   ) : null
 }
 
-export default StaticFinale
+export default FinalePreview
