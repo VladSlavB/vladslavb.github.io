@@ -11,33 +11,46 @@ import AddAttachment from './AddAttachment'
 import OptionAttachments from '../../common/OptionAttachments'
 
 
+type TruncatedInputOption = Omit<InputOption, 'score'>
 type Props = {
+  placeholder?: string
+  size?: 'lg'
+} & ({
   option: InputOption
   onEdit: (draftFunction: (draft: InputOption) => void) => void
-  placeholder?: string
-}
-const OptionEdit: React.FC<Props> = ({option, onEdit, placeholder}) => {
+  truncated?: false
+} | {
+  option: TruncatedInputOption
+  onEdit: (draftFunction: (draft: TruncatedInputOption) => void) => void
+  truncated: true
+})
+const OptionEdit: React.FC<Props> = ({option, onEdit, placeholder, size, truncated}) => {
   const onBonusEdit = (bonusEditFunc: (draft: InputBonus) => void) => onEdit(draft => bonusEditFunc(draft.bonus!))
 
   return (
     <Stack gap={1}>
       <Stack direction='row' gap={1}>
         <Input
+          size={size}
           value={option.value} onChange={e => onEdit(draft => {
             draft.value = e.target.value
           })}
           type='text' placeholder={placeholder} className={styles.optionText}
         />
-        <Input
-          className={styles.scoreEdit}
-          value={option.score}
-          onChange={e => onEdit(draft => {
-            draft.score = transformInputScore(e.target.value)
-          })}
-          placeholder='00'
-        />
+        {!truncated && (
+          <Input
+            size={size}
+            className={styles.scoreEdit}
+            value={option.score}
+            onChange={e => onEdit(draft => {
+              draft.score = transformInputScore(e.target.value)
+            })}
+            placeholder='00'
+          />
+        )}
         {option.bonus != null && (
           <Input
+            size={size}
             className={styles.bonusEdit}
             value={option.bonus.score}
             onChange={e => onBonusEdit(draft => {
@@ -47,26 +60,31 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, placeholder}) => {
           />
         )}
         <div>
-        <AddAttachment onDone={attachment => onEdit(draft => pushAttachment(draft.attachments, attachment))} />
-        {option.bonus != null && (
           <AddAttachment
-            onDone={attachment => onEdit(draft => {
-              if (draft.bonus != null) {
-                pushAttachment(draft.bonus.attachments, attachment)
-              }
-            })}
-            small
+            onDone={attachment => onEdit(draft => pushAttachment(draft.attachments, attachment))}
+            size={size}
           />
-        )}
-        <IconButton onClick={() => onEdit(draft => {
-          if (draft.bonus == null) {
-            draft.bonus = {score: '1', attachments: []}
-          } else {
-            delete draft.bonus
-          }
-        })}>
-          {option.bonus == null ? <StarBorder /> : <Star />}
-        </IconButton>
+          {option.bonus != null && (
+            <AddAttachment
+              onDone={attachment => onEdit(draft => {
+                if (draft.bonus != null) {
+                  pushAttachment(draft.bonus.attachments, attachment)
+                }
+              })}
+              bonus
+            />
+          )}
+          {!truncated && (
+            <IconButton onClick={() => onEdit(draft => {
+              if (draft.bonus == null) {
+                draft.bonus = {score: '1', attachments: []}
+              } else {
+                delete draft.bonus
+              }
+            })}>
+              {option.bonus == null ? <StarBorder /> : <Star />}
+            </IconButton>
+          )}
         </div>
       </Stack>
       <OptionAttachments option={option} onEdit={onEdit} />

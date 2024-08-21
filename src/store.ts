@@ -134,7 +134,8 @@ const GAME_INITIAL_STATE = {
   subtotalShown: false,
   currentAttachments: null as null | {
     optionIndex: number
-    bonus: boolean
+    bonus?: boolean
+    secondGroup?: boolean
   },
   roundFinished: false,
   leftTeam: {
@@ -182,16 +183,22 @@ export type OrdinaryState = ReturnType<typeof makeOrdinaryState>
 function makeDynamicState() {
   return {
     type: 'dynamic' as 'dynamic',
-    options: Array(NUM_DYNAMIC_OPTIONS).fill(null).map(_ => ({
-      value: '',
-      attachments: [],
-      opened: false
-    })),
-    fixed: false,
-    question2: false,
+    options: makeDynamicOptions(),
+    options2: makeDynamicOptions(),
+    editing: true,
+    showSecond: false,
   }
 }
-type DynamicState = ReturnType<typeof makeDynamicState>
+export type DynamicState = ReturnType<typeof makeDynamicState>
+
+function makeDynamicOptions() {
+  return Array(NUM_DYNAMIC_OPTIONS).fill(null).map(_ => ({
+    value: '',
+    attachments: [] as Attachment[],
+    opened: false,
+    wrong: false,
+  }))
+}
 
 function makeFinaleState() {
   return {
@@ -204,7 +211,7 @@ function makeFinaleState() {
     teamsFinished: [false, false],
   }
 }
-type FinaleState = ReturnType<typeof makeFinaleState>
+export type FinaleState = ReturnType<typeof makeFinaleState>
 
 function theOtherTeam(team: Team): Team {
   return team === 'leftTeam' ? 'rightTeam' : 'leftTeam'
@@ -214,6 +221,12 @@ const gameSlice = createSlice({
   name: 'game',
   initialState: GAME_INITIAL_STATE,
   reducers: {
+    startGame(state) {
+      state.active = true
+    },
+    finishGame(_) {
+      return GAME_INITIAL_STATE
+    },
     nextQuestion(state, action: PayloadAction<Question | undefined>) {
       state.currentQuestion++
       state.questionShown = false
@@ -336,11 +349,37 @@ const gameSlice = createSlice({
         state[action.payload].health += 1
       }
     },
-    startGame(state) {
-      state.active = true
+    setOptions(state, action: PayloadAction<{
+      options: DynamicState['options']
+      second: boolean
+    }>) {
+      if (state.q?.type !== 'dynamic') return
+      if (!action.payload.second) {
+        state.q.options = action.payload.options
+      } else {
+        state.q.options2 = action.payload.options
+      }
+      state.q.editing = false
     },
-    finishGame(_) {
-      return GAME_INITIAL_STATE
+    openOption(state, action: PayloadAction<{index: number, wrong: boolean, second: boolean}>) {
+      if (state.q?.type !== 'dynamic') return
+      const {index, wrong, second} = action.payload
+      const options = second ? state.q.options2 : state.q.options
+      options[index].opened = true
+      options[index].wrong = wrong
+      state.currentAttachments = {optionIndex: index, secondGroup: second}
+      const team = index % 2 === 0 ? 'leftTeam' : 'rightTeam'
+      if (wrong) {
+        playWrong()
+      } else {
+        playCorrect()
+        state[team].score += 5
+      }
+    },
+    switchToQuestion2(state) {
+      if (state.q?.type !== 'dynamic') return
+      state.q.showSecond = true
+      state.q.editing = true
     },
     openFinale(state) {
       state.currentQuestion++
@@ -479,12 +518,16 @@ function decideIfRoundFinished(state: GameState) {
 }
 
 export const {
+  startGame, finishGame,
   nextQuestion, chooseTeam, makeSubtotal,
+  deltaScore, plusHealth,
+
   correctAnswer, wrongAnswer,
   correctBonus, discardBonusChance, wrongBonus,
   utilizeHealthChance, discardHealthChance,
-  deltaScore, plusHealth,
-  startGame, finishGame,
+
+  setOptions, openOption, switchToQuestion2,
+
   openFinale,
   showQuestion,
 } = gameSlice.actions

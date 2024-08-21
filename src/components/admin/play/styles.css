@@ -79,3 +79,7 @@
     padding: 8px;
     margin: 0 -1px -1px 0;
 }
+.dynamicOption.dynamicOption {
+    background: white;
+    border: 1px solid #ddd;
+}

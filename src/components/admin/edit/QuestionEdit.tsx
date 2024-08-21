@@ -1,4 +1,4 @@
-import React, { FormEvent, useCallback, useState } from 'react'
+import React, { FormEvent, useCallback } from 'react'
 import { useImmer } from 'use-immer'
 import { Question, QuestionName, addQuestion, editQuestion, useDispatch, useSelector } from '../../../store'
 import Button from '@mui/joy/Button'
@@ -12,6 +12,7 @@ import Select from '@mui/joy/Select'
 import Option from '@mui/joy/Option'
 import { NUM_OPTIONS } from '../../../defaults'
 import Typography from '@mui/joy/Typography'
+import TwoColumns from '../../common/TwoColumns'
 
 
 function makeInputQuestion(question: Question): InputQuestion {
@@ -175,23 +176,3 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
 }
 
 export default QuestionEdit
-
-
-function TwoColumns({children}: {children: JSX.Element[]}) {
-  const total = children.length
-  const half = Math.floor(total / 2)
-  return (
-    <>
-      <Grid xs={6}>
-        <Stack spacing={1}>
-          {children.slice(0, half)}
-        </Stack>
-      </Grid>
-      <Grid xs={6}>
-        <Stack spacing={1}>
-          {children.slice(half, total)}
-        </Stack>
-      </Grid>
-    </>
-  )
-}

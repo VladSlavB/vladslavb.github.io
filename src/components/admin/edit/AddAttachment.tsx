@@ -11,9 +11,10 @@ import Stack from '@mui/joy/Stack'
 
 type Props = {
   onDone: (_: Attachment) => void
-  small?: boolean
+  size?: 'lg'
+  bonus?: boolean
 }
-const AddAttachment: React.FC<Props> = ({onDone, small}) => {
+const AddAttachment: React.FC<Props> = ({onDone, size, bonus}) => {
   const [ tooltipOpen, setTooltipOpen ] = useState(false)
   const [ input, setInput ] = useState('')
   const [ loading, setLoading ] = useState(false)
@@ -86,8 +87,8 @@ const AddAttachment: React.FC<Props> = ({onDone, small}) => {
       <IconButton
         ref={buttonRef}
         variant={tooltipOpen ? 'solid' : 'plain'}
-        onClick={e => setTooltipOpen(!tooltipOpen)}
-        size={small ? 'sm' : undefined}
+        onClick={() => setTooltipOpen(!tooltipOpen)}
+        size={size != null ? size : (bonus ? 'sm' : undefined)}
       >
         <AddLink />
       </IconButton>

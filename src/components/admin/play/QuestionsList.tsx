@@ -4,6 +4,7 @@ import styles from './styles.css'
 import Stack from '@mui/joy/Stack'
 import OrdinaryQuestion from './OrdinaryQuestion'
 import QuestionPreview from '../preview/QuestionPreview'
+import DynamicQuestion from './DynamicQuestion'
 
 
 const QuestionsList: React.FC = () => {
@@ -16,7 +17,9 @@ const QuestionsList: React.FC = () => {
         index === currentQuestionIndex ? (
           question.name !== QuestionName.dynamic ? (
             <OrdinaryQuestion question={question} key={index} />
-          ) : null // TODO
+          ) : (
+            <DynamicQuestion question={question} key={index} />
+          )
         ) : (
           <QuestionPreview index={index} key={index} />
         )
