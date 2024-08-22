@@ -322,8 +322,14 @@ const gameSlice = createSlice({
     wrongBonus(state, action: PayloadAction<number>) {
       if (state.currentTeam == null) return
       if (state.q?.type !== 'ordinary') return
-      const bonus = state.q.options[action.payload].bonus
-      if (bonus != null) bonus.vacantFor[state.currentTeam] = false
+      const optionIndex = action.payload
+      const bonus = state.q.options[optionIndex].bonus
+      if (bonus != null) {
+        bonus.vacantFor[state.currentTeam] = false
+        if (!bonus.vacantFor.leftTeam && !bonus.vacantFor.rightTeam) {
+          state.currentAttachments = {optionIndex, bonus: true}
+        }
+      }
       switchTeamIfPossible(state)
       decideIfRoundFinished(state)
       playWrong()
@@ -392,6 +398,9 @@ const gameSlice = createSlice({
         playCorrect()
         state[team].score += 5
       }
+      if (options.every(option => option.opened)) {
+        setTimeout(playFinish, 1000)
+      }
     },
     switchToQuestion2(state) {
       if (state.q?.type !== 'dynamic') return
@@ -408,11 +417,12 @@ const gameSlice = createSlice({
       const q = makeFinaleState()
       q.teamsOrder = teamsOrder
       state.q = q
-      const scale = getHead()
       const lw = state.leftTeam.wins
       const rw = state.rightTeam.wins
-      state.leftTeam.score = (lw - Math.min(lw, rw)) * scale
-      state.rightTeam.score = (rw - Math.min(lw, rw)) * scale
+      state.leftTeam.score = (lw - Math.min(lw, rw)) * 3
+      state.rightTeam.score = (rw - Math.min(lw, rw)) * 3
+      if (state.leftTeam.score > 0) state.leftTeam.score += 5
+      if (state.rightTeam.score > 0) state.rightTeam.score += 5
       state.currentAttachments = null
     },
     setFinaleOptions(state, action: PayloadAction<{options: FinaleState['options'], teamIndex: number}>) {
@@ -664,21 +674,3 @@ export const useSelector: TypedUseSelectorHook<RootState> = useOriginalSelector
 export function useGameSelector<T>(selector: (_: typeof GAME_INITIAL_STATE) => T) {
   return useSelector(state => selector(state.game.present))
 }
-
-const headKey = 'vladslav_head'
-function getHead() {
-  localStorage[headKey] = localStorage[headKey] ?? 5
-  return parseInt(localStorage[headKey])
-}
-
-window.addEventListener('keydown', e => {
-  if (e.ctrlKey && e.code === 'Digit5') {
-    while (true) {
-      const v = parseInt(prompt('Множитель форы:', localStorage[headKey]) ?? '')
-      if (v > 0) {
-        localStorage[headKey] = v
-        break
-      }
-    }
-  }
-})

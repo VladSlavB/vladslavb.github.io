@@ -34,13 +34,14 @@ function play(src: string) {
   }
 }
 
-export const allAudioUrls = [correct, wrong, finish]
-export const backgroundMusic = [intro, background1, background2, background3, background4]
+export const allAudioUrls = [correct, wrong, intro, finish]
+export const backgroundMusic = [background1, background2, background3, background4]
 
 export const playCorrect = () => play(correct)
 export const playWrong = () => play(wrong)
+export const playIntro = () => play(intro)
 export const playFinish = () => {
-  backgroundMusic.forEach(url => {
+  [...backgroundMusic, intro].forEach(url => {
     const audio = audioByUrl[url]?.current
     if (audio != null) {
       audio.pause()
