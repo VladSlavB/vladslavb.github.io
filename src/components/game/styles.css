@@ -64,8 +64,8 @@
   width: 100%;
   padding: 0 61px;
   top: 419px;
-  &.dense {
-    top: 400px;
+  &.dynamic {
+    top: 380px;
   }
   left: 0;
   display: flex;
@@ -74,11 +74,22 @@
   justify-content: space-between;
   perspective: 1000px;
 }
+.sep {
+  border-top: 2px solid black;
+  margin-top: 20px; 
+  width: 100%;
+}
 .optionContainer {
   position: relative;
   margin-top: 32px;
-  .dense & {
+  .dynamic & {
     margin-top: 20px;
+  }
+  .swap &:nth-child(-n+6) {
+    translate: 0 344px;
+  }
+  .swap &:nth-child(n+7) {
+    translate: 0 -344px;
   }
   width: 836px;
   height: 88px;

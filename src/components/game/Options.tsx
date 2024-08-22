@@ -2,6 +2,7 @@ import styles from './styles.css'
 import React, { useRef } from 'react'
 import { Option, QuestionName, useGameSelector, useSelector } from '../../store'
 import Star from '@mui/icons-material/Star'
+import { NUM_DYNAMIC_OPTIONS } from '../../defaults'
 
 
 function transposeIndex(index: number, rows = 5) {
@@ -23,8 +24,14 @@ const Options: React.FC = () => {
     }
   })
   const dynamic = useGameSelector(game => game.q?.type === 'dynamic')
+  const secondQuestion = useGameSelector(game => game.q?.type === 'dynamic' && game.q.showSecond)
   let className = styles.options
-  if (dynamic) className += ' ' + styles.dense
+  if (dynamic) {
+    className += ' ' + styles.dynamic
+    if (secondQuestion) {
+      className += ' ' + styles.swap
+    }
+  }
   const optionsState = useGameSelector(game => (
     game.q?.type === 'ordinary' ? game.q.options : (
       game.q?.type === 'dynamic' ? options : null
@@ -32,27 +39,28 @@ const Options: React.FC = () => {
   ))
   if (options != null && optionsState != null) {
     const rows = options.length / 2
+    const optionNodes = options.map((_, i) => {
+      let index = dynamic ? i : transposeIndex(i, rows)
+      const numberLabel = dynamic ? '?' : `${index + 1}`
+      const isMax = !dynamic && options[index]?.score == Math.max(...options.map(o => o?.score ?? 0))
+      const optionState = optionsState[index] as {opened: boolean, bonus?: {opened: boolean}}
+      return (
+        <Option
+          {...(options[index] ?? {score: 0, value: ''})}
+          opened={optionState.opened}
+          key={i}
+          bonusOpened={optionState.bonus?.opened ?? false}
+          label={numberLabel}
+          highlight={isMax}
+        />
+      )
+    })
+    if (dynamic) {
+      optionNodes.splice(NUM_DYNAMIC_OPTIONS, 0, <div className={styles.sep} />)
+    }
     return (
       <div className={className}>
-        {options.map((_, i) => {
-          let index = i
-          if (!dynamic) {
-            index = transposeIndex(index, rows)
-          }
-          const numberLabel = dynamic ? '?' : `${index + 1}`
-          const isMax = !dynamic && options[index]?.score == Math.max(...options.map(o => o?.score ?? 0))
-          const optionState = optionsState[index] as {opened: boolean, bonus?: {opened: boolean}}
-          return (
-            <Option
-              {...(options[index] ?? {score: 0, value: ''})}
-              opened={optionState.opened}
-              key={i}
-              bonusOpened={optionState.bonus?.opened ?? false}
-              label={numberLabel}
-              highlight={isMax}
-            />
-          )
-        })}
+        {optionNodes}
       </div>
     )
   }

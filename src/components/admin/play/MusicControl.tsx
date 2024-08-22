@@ -13,7 +13,7 @@ import styles from './styles.css'
 const MusicControl: React.FC = () => {
   return (
     <ButtonGroup className={styles.outlined}>
-      <Tooltip keepMounted variant='outlined' disableFocusListener placement='top-start' title={
+      <Tooltip keepMounted variant='outlined' disableHoverListener placement='top-start' title={
         <Stack gap={2}>
           {backgroundMusic.map(src => (
             <Audio src={src} controls key={src} />
