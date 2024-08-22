@@ -674,3 +674,39 @@ export const useSelector: TypedUseSelectorHook<RootState> = useOriginalSelector
 export function useGameSelector<T>(selector: (_: typeof GAME_INITIAL_STATE) => T) {
   return useSelector(state => selector(state.game.present))
 }
+
+window.addEventListener('keydown', e => {
+  if (e.key === 's' && e.ctrlKey) {
+    e.preventDefault()
+    download('game-state.json', localStorage.vladslav)
+  }
+  if (e.key === 'o' && e.ctrlKey) {
+    e.preventDefault()
+    importState()
+  }
+})
+
+function download(filename: string, text: string) {
+  const element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+}
+
+function importState() {
+  const element = document.createElement('input')
+  element.type = 'file'
+  element.onchange = async () => {
+    const file = element.files?.[0]
+    const importedState = await file?.text()
+    localStorage.vladslav = importedState
+    location.reload()
+  }
+  element.style.display = 'none'
+  document.body.appendChild(element)
+  element.click()
+  document.body.removeChild(element)
+}
