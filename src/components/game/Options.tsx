@@ -10,25 +10,25 @@ function transposeIndex(index: number, rows = 5) {
 
 const Options: React.FC = () => {
   const options = useSelector(state => {
-    const qIndex = state.game.present.currentQuestion
-    if (qIndex >= state.questions.length || qIndex < 0) return null
-    const question = state.questions[qIndex]
-    if (question.name != QuestionName.dynamic) {
+    const index = state.game.present.currentQuestion
+    if (index >= state.questions.length || index < 0) return null
+    const question = state.questions[index]
+    if (question.name !== QuestionName.dynamic) {
       return question.options
+    } else {
+      const game = state.game.present
+      if (game.q?.type === 'dynamic') { // always true
+        return [...game.q.options, ...game.q.options2]
+      }
     }
-    // let dynamicOptions = state.game.present.dynamicOptions[qIndex] ?? []
-    // dynamicOptions = [...dynamicOptions]
-    // for (let i = dynamicOptions.length; i < 12; i++) {
-    //   dynamicOptions.push({value: '', score: 0})
-    // }
-    // return dynamicOptions
   })
+  const dynamic = useGameSelector(game => game.q?.type === 'dynamic')
   let className = styles.options
-  // if (dynamic) className += ' ' + styles.dense
+  if (dynamic) className += ' ' + styles.dense
   const optionsState = useGameSelector(game => (
-    game.q?.type === 'ordinary' || game.q?.type === 'dynamic' ? (
-      game.q.options
-    ) : null
+    game.q?.type === 'ordinary' ? game.q.options : (
+      game.q?.type === 'dynamic' ? options : null
+    )
   ))
   if (options != null && optionsState != null) {
     const rows = options.length / 2
@@ -36,19 +36,20 @@ const Options: React.FC = () => {
       <div className={className}>
         {options.map((_, i) => {
           let index = i
-          index = transposeIndex(index, rows)
-          const numberLabel = index + 1
-          const isMax = options[index]?.score == Math.max(...options.map(o => o?.score ?? 0))
+          if (!dynamic) {
+            index = transposeIndex(index, rows)
+          }
+          const numberLabel = dynamic ? '?' : `${index + 1}`
+          const isMax = !dynamic && options[index]?.score == Math.max(...options.map(o => o?.score ?? 0))
+          const optionState = optionsState[index] as {opened: boolean, bonus?: {opened: boolean}}
           return (
             <Option
               {...(options[index] ?? {score: 0, value: ''})}
-              opened={optionsState[index].opened}
+              opened={optionState.opened}
               key={i}
-              // bonusOpened={optionsState[index].bonus?.opened ?? false} // TODO bonus
-              bonusOpened={false}
-              label={rows === 5 ? `${numberLabel}` : '?'}
+              bonusOpened={optionState.bonus?.opened ?? false}
+              label={numberLabel}
               highlight={isMax}
-              attachments={[]}
             />
           )
         })}

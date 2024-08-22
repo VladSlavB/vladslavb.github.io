@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { FinaleState, Team, openFinaleOption, openFinaleQuestion, openFinaleScore, setFinaleOptions, setName, useDispatch, useGameSelector, useSelector } from '../../../store'
+import { FinaleState, Team, hideAllOptions, hideAllQuestions, openFinaleOption, openFinaleQuestion, openFinaleScore, setFinaleOptions, setName, useDispatch, useGameSelector, useSelector } from '../../../store'
 import HeaderWithActions from '../preview/HeaderWithActions'
 import Card from '@mui/joy/Card'
 import Grid from '@mui/joy/Grid'
@@ -72,6 +72,7 @@ const Finale: React.FC<FinaleState> = ({teamsOrder: teams, names, openedQuestion
                       variant='plain'
                       color='neutral'
                       className={styles.optionButton}
+                      size='lg'
                     >
                       <Button
                         fullWidth
@@ -96,14 +97,30 @@ const Finale: React.FC<FinaleState> = ({teamsOrder: teams, names, openedQuestion
             })}
           </React.Fragment>
         ))}
-        <Grid xs={3} />
+        <Grid xs={3}>
+          {openedQuestions.every(_ => _) && (
+            <Button
+              variant='outlined'
+              color='neutral'
+              onClick={() => dispatch(hideAllQuestions())}
+            >Скрыть все вопросы</Button>
+          )}
+        </Grid>
         <Grid xs={9}>
-          {!optionsDone[teamIndex] && (
+          {optionsDone[teamIndex] ? (
+            options[teamIndex].every(option => option.opened) && (
+              <Button
+                variant='outlined'
+                color='neutral'
+                onClick={() => dispatch(hideAllOptions({teamIndex}))}
+              >Скрыть ответы этой команды</Button>
+            )
+          ) : (
             <Button
               onClick={() => dispatch(setFinaleOptions({
                 options: localOptions.map(optionsOfTeam => optionsOfTeam.map(option => ({
                   ...option,
-                  score: parseInt(option.score)
+                  score: parseInt(option.score !== '' ? option.score : '0')
                 }))),
                 teamIndex
               }))}
@@ -132,7 +149,7 @@ const Finale: React.FC<FinaleState> = ({teamsOrder: teams, names, openedQuestion
   ) : null
 }
 
-function finaleWrapper<P>(Component: React.FC<P & FinaleState>): React.FC<P> {
+export function finaleWrapper<P>(Component: React.FC<P & FinaleState>): React.FC<P> {
   return props => {
     const q = useGameSelector(state => state.q)
     if (q?.type !== 'finale') return null

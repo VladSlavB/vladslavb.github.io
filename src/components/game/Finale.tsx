@@ -1,50 +1,48 @@
 import React from 'react'
-import { Team, useGameSelector, useSelector } from '../../store'
+import { FinaleState, Team, useGameSelector, useSelector } from '../../store'
 import styles from './styles.css'
+import { finaleWrapper } from '../admin/play/Finale'
 
 
-const NUM_CELLS = 15
-
-const Finale: React.FC = () => {
-  const gameFinale = useGameSelector(game => game.finale)
+const Finale: React.FC<FinaleState> = ({teamsOrder, names, openedQuestions, options}) => {
   const staticFinale = useSelector(state => state.finale)
-  const team1 = gameFinale.teamsOrder[0]
-  const team2 = gameFinale.teamsOrder[1]
+  const team1 = teamsOrder[0]
+  const team2 = teamsOrder[1]
   const team1Score = useGameSelector(game => game[team1].score)
   const team2Score = useGameSelector(game => game[team2].score)
   function teamStyle(team: Team) {
     return team === 'leftTeam' ? styles.blue : styles.red
   }
   
-  return gameFinale.active ? <>
+  return <>
     <div className={styles.finaleName}>{'Вспомни всё\nФинал'}</div>
     <div className={styles.finaleQuestions}>
       {staticFinale?.questions.map((question, i) => (
-        <Question text={question.value} opened={gameFinale.openedQuestions[i]} index={i} />
+        <Question text={question.value} opened={openedQuestions[i]} index={i} />
       ))}
     </div>
     <div className={styles.finaleScore + ' ' + teamStyle(team1)}>{team1Score}</div>
     <div className={styles.finaleScore + ' ' + styles.second + ' ' + teamStyle(team2)}>{team2Score}</div>
     <div className={styles.finaleTeam}>
-      {gameFinale.names[0].map(name => (
+      {names[0].map(name => (
         <div className={styles.name + ' ' + teamStyle(team1)}>{name}</div>
       ))}
       <div className={styles.cells}>
-        {Array(NUM_CELLS).fill(0).map((_, i) => <AnswerWithScore index={i} />)}
+        {options[0].map(option => <AnswerWithScore {...option} />)}
       </div>
     </div>
     <div className={styles.finaleTeam + ' ' + styles.second}>
-      {gameFinale.names[1].map(name => (
+      {names[1].map(name => (
         <div className={styles.name + ' ' + teamStyle(team2)}>{name}</div>
       ))}
       <div className={styles.cells}>
-        {Array(NUM_CELLS).fill(0).map((_, i) => <AnswerWithScore index={NUM_CELLS + i} />)}
+        {options[1].map(option => <AnswerWithScore {...option} />)}
       </div>
     </div>
-  </> : null
+  </>
 }
 
-export default Finale
+export default finaleWrapper(Finale)
 
 
 type QuestionProps = {
@@ -64,20 +62,18 @@ const Question: React.FC<QuestionProps> = ({opened, text, index}) => {
 }
 
 type AnswerWithScoreProps = {
-  index: number
+  value: string
+  score: number
+  opened: boolean
+  scoreOpened: boolean
 }
-const AnswerWithScore: React.FC<AnswerWithScoreProps> = ({index}) => {
-  const answer = useGameSelector(game => game.finale.answers.at(index))
-  const score = useGameSelector(game => game.finale.scores.at(index))
-
-  const displayAnswer = answer?.opened && !answer?.hidden
-  const displayScore = score?.opened && !score?.hidden
+const AnswerWithScore: React.FC<AnswerWithScoreProps> = ({value, score, opened, scoreOpened}) => {
   let className = styles.finaleCell
-  if (displayAnswer || displayScore) {
+  if (opened || scoreOpened) {
     className += ' ' + styles.opened
   }
   let scoreClassName = styles.cellScore
-  if (displayScore) {
+  if (scoreOpened) {
     scoreClassName += ' ' + styles.opened
   }
 
@@ -85,9 +81,9 @@ const AnswerWithScore: React.FC<AnswerWithScoreProps> = ({index}) => {
     <div className={className}>
       <div className={styles.empty} />
       <div className={styles.content}>
-        {displayAnswer && <div className={styles.cellValue}>{answer.value}</div>}
+        {opened && <div className={styles.cellValue}>{value}</div>}
         {score != null && (
-          <div className={scoreClassName}>{score.value}</div>
+          <div className={scoreClassName}>{score}</div>
         )}
       </div>
     </div>

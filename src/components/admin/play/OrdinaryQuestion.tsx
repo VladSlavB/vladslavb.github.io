@@ -14,6 +14,7 @@ import Chip from '@mui/joy/Chip'
 import Box from '@mui/joy/Box'
 import NextQuestionButton from './NextQuestionButton'
 import CurrentAttachments from './CurrentAttachments'
+import SubtotalThenNextQuestion from './SubtotalThenNextQuestion'
 
 
 type WrapperProps = {
@@ -124,7 +125,7 @@ const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: opti
               )
             }
             return (
-              <div className={styles.gameOption}>
+              <div className={styles.gameOption} key={i}>
                 <ButtonGroup size={size}>
                   {buttons}
                 </ButtonGroup>
@@ -152,14 +153,10 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawFinished, bonusChance
     }
     return null
   })
-  const totalQuestions = useSelector(state => state.questions.length)
   const everyoneDead = currentTeam == null && drawFinished
-  const lastQuestion = currentQuestion === totalQuestions - 1
 
-  const subtotalShown = useGameSelector(game => game.subtotalShown)
   const roundFinished = useGameSelector(game => game.roundFinished)
 
-  const hasFinale = useSelector(state => state.finale != null)
   const shown = useGameSelector(game => game.questionShown)
 
   function onFail() {
@@ -255,13 +252,7 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawFinished, bonusChance
           </> : (
             <Button color='primary' onClick={() => dispatch(showQuestion())}>Показать вопрос</Button>
           ))}
-          {roundFinished && (subtotalShown ? (
-            (!lastQuestion || hasFinale) && (
-              <NextQuestionButton style={{alignSelf: 'flex-start'}}>Следующий вопрос</NextQuestionButton>
-            )
-          ) : (
-            <Button color='primary' onClick={() => dispatch(makeSubtotal())}>Показать счёт</Button>
-          ))}
+          {roundFinished && <SubtotalThenNextQuestion />}
         </>}
       </Stack>
       <CurrentAttachments />

@@ -196,6 +196,7 @@ function makeDynamicOptions() {
   return Array(NUM_DYNAMIC_OPTIONS).fill(null).map(_ => ({
     value: '',
     attachments: [] as Attachment[],
+    score: 5,
     opened: false,
     wrong: false,
   }))
@@ -385,6 +386,7 @@ const gameSlice = createSlice({
       state.currentAttachments = {optionIndex: index, secondGroup: second}
       const team = index % 2 === 0 ? 'leftTeam' : 'rightTeam'
       if (wrong) {
+        options[index].score = 0
         playWrong()
       } else {
         playCorrect()
@@ -402,7 +404,7 @@ const gameSlice = createSlice({
       state.subtotalShown = false
       state.finale = true
       const teamsOrder = ['leftTeam', 'rightTeam'] as Team[]
-      teamsOrder.sort((a, b) => (state[b].wins - state[a].wins) * 100500 + state[b].score - state[a].score)
+      teamsOrder.sort((a, b) => (state[b].wins - state[a].wins) * 100500 + state[b].cumulativeScore - state[a].cumulativeScore)
       const q = makeFinaleState()
       q.teamsOrder = teamsOrder
       state.q = q
@@ -434,12 +436,24 @@ const gameSlice = createSlice({
       const option = state.q.options[teamIndex][index]
       option.scoreOpened = true
       state[state.q.teamsOrder[teamIndex]].score += option.score
-      playCorrect()
+      if (option.score > 0) {
+        playCorrect()
+      } else {
+        playWrong()
+      }
     },
     setName(state, action: PayloadAction<{teamIndex: number, index: number, value: string}>) {
       if (state.q?.type !== 'finale') return
       const { teamIndex, index, value } = action.payload
       state.q.names[teamIndex][index] = value
+    },
+    hideAllOptions(state, action: PayloadAction<{teamIndex: number}>) {
+      if (state.q?.type !== 'finale') return
+      state.q.options[action.payload.teamIndex].forEach(option => option.opened = false)
+    },
+    hideAllQuestions(state) {
+      if (state.q?.type !== 'finale') return
+      state.q.openedQuestions.forEach((_, i, arr) => arr[i] = false)
     },
 
     makeSubtotal(state) {
@@ -578,6 +592,7 @@ export const {
   openFinale, openFinaleQuestion,
   setFinaleOptions, openFinaleOption, openFinaleScore,
   setName,
+  hideAllOptions, hideAllQuestions,
 } = gameSlice.actions
 
 const visibilitySlice = createSlice({

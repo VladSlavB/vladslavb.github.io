@@ -1,4 +1,4 @@
-import { useGameSelector, useSelector } from '../../store'
+import { DynamicQuestion, useGameSelector, useSelector } from '../../store'
 import styles from './styles.css'
 import React from 'react'
 
@@ -10,10 +10,16 @@ const Question: React.FC = () => {
   if (attachment?.type === 'text') {
     className += ' ' + styles.attachmentShown
   }
-  // TODO second
+  const maybeSecondQuestion = useSelector(state => {
+    const game = state.game.present
+    if (game.q?.type === 'dynamic' && game.q.showSecond) {
+      return (state.questions[game.currentQuestion] as DynamicQuestion).value2
+    }
+  })
+
   return question != null ? (
     <div className={className}>
-      <div>{shown ? question.value : ''}</div>
+      <div>{shown ? (maybeSecondQuestion ?? question.value) : ''}</div>
       <div>{attachment?.type === 'text' && attachment.text}</div>
     </div>
   ) : null

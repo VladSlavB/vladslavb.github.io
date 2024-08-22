@@ -366,8 +366,7 @@
 }
 .cells {
   display: flex;
-  height: 700px;
-  flex-direction: column;
+  width: 700px;
   flex-wrap: wrap;
 }
 .finaleCell {
@@ -380,7 +379,7 @@
     transform: rotateX(180deg);
   }
 
-  &:nth-child(5) > * {
+  &:nth-child(13) > * {
     border-radius: 0 0 0 18px;
   }
 
