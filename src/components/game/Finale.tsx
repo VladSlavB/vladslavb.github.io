@@ -2,6 +2,7 @@ import React from 'react'
 import { FinaleState, Team, useGameSelector, useSelector } from '../../store'
 import styles from './styles.css'
 import { finaleWrapper } from '../admin/play/Finale'
+import textFit from 'textfit'
 
 
 const Finale: React.FC<FinaleState> = ({teamsOrder, names, openedQuestions, options}) => {
@@ -25,7 +26,10 @@ const Finale: React.FC<FinaleState> = ({teamsOrder, names, openedQuestions, opti
     <div className={styles.finaleScore + ' ' + styles.second + ' ' + teamStyle(team2)}>{team2Score}</div>
     <div className={styles.finaleTeam}>
       {names[0].map(name => (
-        <div className={styles.name + ' ' + teamStyle(team1)}>{name}</div>
+        <div
+          className={styles.name + ' ' + teamStyle(team1)}
+          ref={ref => ref != null && textFit(ref, {maxFontSize: 29})}
+        >{name}</div>
       ))}
       <div className={styles.cells}>
         {options[0].map(option => <AnswerWithScore {...option} />)}

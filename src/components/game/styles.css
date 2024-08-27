@@ -358,6 +358,8 @@
   justify-content: center;
   color: white;
   text-transform: uppercase;
+  text-align: center;
+  padding: 0 6px;
 
   &.blue {
     background: var(--blue);
