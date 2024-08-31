@@ -13,8 +13,9 @@ type Props = {
   onDone: (_: Attachment) => void
   size?: 'lg'
   bonus?: boolean
+  className?: string
 }
-const AddAttachment: React.FC<Props> = ({onDone, size, bonus}) => {
+const AddAttachment: React.FC<Props> = ({onDone, size, bonus, className}) => {
   const [ tooltipOpen, setTooltipOpen ] = useState(false)
   const [ input, setInput ] = useState('')
   const [ loading, setLoading ] = useState(false)
@@ -89,6 +90,7 @@ const AddAttachment: React.FC<Props> = ({onDone, size, bonus}) => {
         variant={tooltipOpen ? 'solid' : 'plain'}
         onClick={() => setTooltipOpen(!tooltipOpen)}
         size={size != null ? size : (bonus ? 'sm' : undefined)}
+        className={className}
       >
         <AddLink />
       </IconButton>

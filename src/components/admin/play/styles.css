@@ -39,8 +39,8 @@
     flex: 1;
 }
 
-.outlined {
-    background: white;
+.outlined.outlined {
+    background-color: white;
 }
 
 .finaleScoreEdit {

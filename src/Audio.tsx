@@ -6,7 +6,6 @@ import finish from '../assets/finish.mp3'
 import background1 from '../assets/background1.mp3'
 import background2 from '../assets/background2.mp3'
 import background3 from '../assets/background3.mp3'
-import background4 from '../assets/background4.mp3'
 
 
 const audioByUrl: Record<string, React.RefObject<HTMLAudioElement>> = {}
@@ -35,11 +34,20 @@ function play(src: string) {
 }
 
 export const allAudioUrls = [correct, wrong, intro, finish]
-export const backgroundMusic = [background1, background2, background3, background4]
+export const backgroundMusic = [background1, background2, background3]
 
 export const playCorrect = () => play(correct)
 export const playWrong = () => play(wrong)
 export const playIntro = () => play(intro)
+export function stopIntro() {
+  const audio = audioByUrl[intro]?.current
+  if (audio != null ) {
+    audio.pause()
+    audio.currentTime = 0
+  }
+
+}
+export const getIntroAudioRef = () => audioByUrl[intro]?.current
 export const playFinish = () => {
   [...backgroundMusic, intro].forEach(url => {
     const audio = audioByUrl[url]?.current
