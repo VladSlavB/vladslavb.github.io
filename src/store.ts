@@ -420,10 +420,10 @@ const gameSlice = createSlice({
       state.q = q
       const lw = state.leftTeam.wins
       const rw = state.rightTeam.wins
-      state.leftTeam.score = (lw - Math.min(lw, rw)) * 3
-      state.rightTeam.score = (rw - Math.min(lw, rw)) * 3
-      if (state.leftTeam.score > 0) state.leftTeam.score += 5
-      if (state.rightTeam.score > 0) state.rightTeam.score += 5
+      state.leftTeam.score = (lw - Math.min(lw, rw)) * 4
+      state.rightTeam.score = (rw - Math.min(lw, rw)) * 4
+      if (state.leftTeam.score > 0) state.leftTeam.score += 4
+      if (state.rightTeam.score > 0) state.rightTeam.score += 4
       state.currentAttachments = null
     },
     setFinaleOptions(state, action: PayloadAction<{options: FinaleState['options'], teamIndex: number}>) {
