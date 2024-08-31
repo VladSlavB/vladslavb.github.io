@@ -17,6 +17,8 @@ type Props = {
   size?: 'lg'
   noBonus?: boolean
   onBlur?: () => void
+  onlyValue?: boolean
+  disabled?: boolean
 } & ({
   option: InputOption
   onEdit: (draftFunction: (draft: InputOption) => void) => void
@@ -26,7 +28,7 @@ type Props = {
   onEdit: (draftFunction: (draft: NoScoreInputOption) => void) => void
   noScore: true
 })
-const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size, noScore, noBonus}) => {
+const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size, noScore, noBonus, onlyValue, disabled}) => {
   const onBonusEdit = (bonusEditFunc: (draft: InputBonus) => void) => onEdit(draft => bonusEditFunc(draft.bonus!))
 
   return (
@@ -41,6 +43,7 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
           onBlur={onBlur}
           placeholder={placeholder}
           className={styles.optionText}
+          disabled={disabled}
         />
         {!noScore && (
           <Input
@@ -52,6 +55,7 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
             })}
             onBlur={onBlur}
             placeholder='00'
+            disabled={onlyValue}
           />
         )}
         {option.bonus != null && (
@@ -64,14 +68,17 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
             })}
             onBlur={onBlur}
             placeholder='0'
+            disabled={onlyValue}
           />
         )}
         <div>
-          <AddAttachment
-            onDone={attachment => onEdit(draft => pushAttachment(draft.attachments, attachment))}
-            size={size}
-          />
-          {option.bonus != null && (
+          {!onlyValue && (
+            <AddAttachment
+              onDone={attachment => onEdit(draft => pushAttachment(draft.attachments, attachment))}
+              size={size}
+            />
+          )}
+          {option.bonus != null && !onlyValue && (
             <AddAttachment
               onDone={attachment => onEdit(draft => {
                 if (draft.bonus != null) {
@@ -82,19 +89,22 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
             />
           )}
           {!noBonus && (
-            <IconButton onClick={() => onEdit(draft => {
-              if (draft.bonus == null) {
-                draft.bonus = {score: '1', attachments: []}
-              } else {
-                delete draft.bonus
-              }
-            })}>
+            <IconButton
+              onClick={() => onEdit(draft => {
+                if (draft.bonus == null) {
+                  draft.bonus = {score: '1', attachments: []}
+                } else {
+                  delete draft.bonus
+                }
+              })}
+              disabled={onlyValue}
+            >
               {option.bonus == null ? <StarBorder /> : <Star />}
             </IconButton>
           )}
         </div>
       </Stack>
-      <OptionAttachments option={option} onEdit={onEdit} />
+      <OptionAttachments option={option} onEdit={onlyValue ? undefined : onEdit} />
     </Stack>
   )
 }

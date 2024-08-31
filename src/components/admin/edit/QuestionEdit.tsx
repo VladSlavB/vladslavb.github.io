@@ -1,6 +1,6 @@
 import React, { FormEvent, useCallback } from 'react'
 import { useImmer } from 'use-immer'
-import { Question, QuestionName, addQuestion, editQuestion, useDispatch, useSelector } from '../../../store'
+import { Question, QuestionName, addQuestion, editQuestion, finishEditing, useDispatch, useGameSelector, useSelector } from '../../../store'
 import Button from '@mui/joy/Button'
 import Grid from '@mui/joy/Grid'
 import Stack from '@mui/joy/Stack'
@@ -48,10 +48,9 @@ const ALL_NAMES = Object.values(QuestionName)
 
 type Props = {
   editIndex?: number
-  onDone?: () => void
 }
 
-const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
+const QuestionEdit: React.FC<Props> = ({editIndex}) => {
   const dispatch = useDispatch()
   const initialState = useSelector<InputQuestion>(state => (
     editIndex != null ? makeInputQuestion(state.questions[editIndex]) : DEFAULT_QUESTION
@@ -60,7 +59,9 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
   const noOptions = question.name === QuestionName.dynamic
   const everythingValid = (
     validateQuestionValue(question.value) && (
-      noOptions || (
+      noOptions ? (
+        validateQuestionValue(question.value2)
+      ) : (
         question.options.every(option => validateQuestionValue(option.value)) &&
         question.options.every(option => (
           validateScore(option.score) && (option.bonus == null || validateScore(option.bonus.score))
@@ -68,6 +69,12 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
       )
     )
   )
+  const partiallyEditable = useGameSelector(game => game.active && game.currentQuestion === editIndex)
+  const firstQuestionDisabled = useGameSelector(game => (
+    game.currentQuestion === editIndex &&
+    game.q?.type === 'dynamic' &&
+    game.q.showSecond
+  ))
 
   const setAscendingScores = () => setQuestion(draft => {
     draft.options.forEach((option, i) => {
@@ -102,12 +109,12 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
     } else {
       dispatch(editQuestion({index: editIndex, newQuestion}))
     }
-    onDone?.()
+    dispatch(finishEditing())
   }, [question])
 
   return (
     <Card variant='soft' size='sm'>
-      <form onSubmit={onSubmit} onReset={onDone}>
+      <form onSubmit={onSubmit} onReset={() => dispatch(finishEditing())}>
         <Grid container columnSpacing={4} rowSpacing={2}>
           <Grid xs={12}>
             <Select
@@ -117,18 +124,22 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
                   draft.name = value as QuestionName
                 })
               }}
+              disabled={partiallyEditable}
             >
               {ALL_NAMES.map(name => <Option value={name}>{name}</Option>)}
             </Select>
           </Grid>
           <Grid xs={12}>
             <Textarea
-              value={question.value} onChange={e => {
+              value={question.value}
+              onChange={e => {
                 setQuestion(draft => {
                   draft.value = e.target.value
                 })
               }}
-              placeholder='Вопрос' autoFocus
+              placeholder='Вопрос'
+              disabled={firstQuestionDisabled}
+              autoFocus
             />
           </Grid>
           {noOptions ? (
@@ -139,7 +150,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
                     draft.value2 = e.target.value
                   })
                 }}
-                placeholder='Второй вопрос (необязательно)'
+                placeholder='Второй вопрос'
               />
             </Grid>
           ) : <>
@@ -150,19 +161,22 @@ const QuestionEdit: React.FC<Props> = ({editIndex, onDone}) => {
                   onEdit={optionEditFunc => setQuestion(draft => optionEditFunc(draft.options[i]))}
                   placeholder={`Ответ #${i + 1}`}
                   key={i}
+                  onlyValue={partiallyEditable}
                 />
               ))}
             </TwoColumns>
-            <Grid xs={12}>
-              <Stack direction='row' spacing={1}>
-                <Button variant='outlined' color='neutral' onClick={setAscendingScores} size='sm'>
-                  Установить очки 1 &#10230; {NUM_OPTIONS}
-                </Button>
-                <Button variant='outlined' color='neutral' onClick={setDescendingScores} size='sm'>
-                  Установить очки {NUM_OPTIONS} &#10230; 1
-                </Button>
-              </Stack>
-            </Grid>
+            {!partiallyEditable && (
+              <Grid xs={12}>
+                <Stack direction='row' spacing={1}>
+                  <Button variant='outlined' color='neutral' onClick={setAscendingScores} size='sm'>
+                    Установить очки 1 &#10230; {NUM_OPTIONS}
+                  </Button>
+                  <Button variant='outlined' color='neutral' onClick={setDescendingScores} size='sm'>
+                    Установить очки {NUM_OPTIONS} &#10230; 1
+                  </Button>
+                </Stack>
+              </Grid>
+            )}
           </>}
           <Grid xs={12} display='flex' justifyContent='space-between' alignItems='baseline'>
             <Button type='submit' disabled={!everythingValid}>Сохранить</Button>

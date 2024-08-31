@@ -1,12 +1,11 @@
 import React, { FormEvent } from 'react'
 import Card from '@mui/joy/Card'
-import { Team, setFinale, useDispatch, useSelector } from '../../../store'
+import { finishEditing, setFinale, useDispatch, useSelector } from '../../../store'
 import { useImmer } from 'use-immer'
 import Input from '@mui/joy/Input'
 import Grid from '@mui/joy/Grid'
 import Button from '@mui/joy/Button'
 import styles from './styles.css'
-import Typography from '@mui/joy/Typography'
 
 
 const NUM_QUESTIONS = 5
@@ -16,9 +15,8 @@ const DEFAULT = {
 
 type Props = {
   edit?: boolean
-  onDone: () => void
 }
-const FinaleEdit: React.FC<Props> = ({edit, onDone}) => {
+const FinaleEdit: React.FC<Props> = ({edit}) => {
   const dispatch = useDispatch()
   const initialState = useSelector(state => edit && state.finale != null ? state.finale : DEFAULT)
   const [ state, setState ] = useImmer(initialState)
@@ -26,11 +24,11 @@ const FinaleEdit: React.FC<Props> = ({edit, onDone}) => {
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
     dispatch(setFinale(state))
-    onDone?.()
+    dispatch(finishEditing())
   }
 
   return (
-    <Card variant='soft' size='sm' component='form' onSubmit={onSubmit} onReset={onDone}>
+    <Card variant='soft' size='sm' component='form' onSubmit={onSubmit} onReset={() => dispatch(finishEditing())}>
       <Grid container spacing={1}>
         {state.questions.map((question, i) => (
           <Grid xs={12} key={i}>

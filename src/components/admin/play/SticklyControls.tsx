@@ -58,6 +58,9 @@ const StickyControls: React.FC = () => {
     playCorrect()
   }
 
+  const editing = useSelector(state => state.editor.mode === 'edit' || state.editor.mode === 'editFinale')
+  if (editing) return null
+
   return (
     <div className={styles.panel}>
       {gameWindowOpen ? <>

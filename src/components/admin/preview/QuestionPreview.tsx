@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React from 'react'
-import { Attachment, removeQuestion, useDispatch, useSelector, QuestionName } from '../../../store'
+import { Attachment, removeQuestion, useDispatch, useSelector, QuestionName, startEditing } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Stack from '@mui/joy/Stack'
@@ -10,11 +10,11 @@ import OptionAttachments from '../../common/OptionAttachments'
 
 type Props = {
   index: number
-  onEdit?: () => void
   canEdit?: boolean
+  disableDelete?: boolean
 }
 
-const QuestionPreview: React.FC<Props> = ({index, onEdit, canEdit}) => {
+const QuestionPreview: React.FC<Props> = ({index, canEdit, disableDelete}) => {
   const question = useSelector(state => state.questions[index])
   const dispatch = useDispatch()
 
@@ -23,9 +23,10 @@ const QuestionPreview: React.FC<Props> = ({index, onEdit, canEdit}) => {
       <Stack>
         <HeaderWithActions
           header={question.value}
-          onEdit={onEdit}
+          onEdit={() => dispatch(startEditing(index))}
           onDelete={() => dispatch(removeQuestion(index))}
           showActions={canEdit}
+          disableDelete={disableDelete}
         />
         {question.name === QuestionName.dynamic && (
           <HeaderWithActions header={question.value2} />

@@ -1,15 +1,15 @@
 import React from 'react'
 import Card from '@mui/joy/Card'
-import { deleteFinale, useDispatch, useSelector } from '../../../store'
+import { deleteFinale, startEditingFinale, useDispatch, useSelector } from '../../../store'
 import HeaderWithActions from './HeaderWithActions'
 
 
 type Props = {
-  onEdit?: () => void
   canEdit?: boolean
+  disableDelete?: boolean
 }
 
-const FinalePreview: React.FC<Props> = ({onEdit, canEdit}) => {
+const FinalePreview: React.FC<Props> = ({canEdit, disableDelete}) => {
   const finale = useSelector(state => state.finale)
   const dispatch = useDispatch()
 
@@ -17,9 +17,10 @@ const FinalePreview: React.FC<Props> = ({onEdit, canEdit}) => {
     <Card variant='outlined'>
       <HeaderWithActions
         header='Финальный раунд'
-        onEdit={onEdit}
+        onEdit={() => dispatch(startEditingFinale())}
         onDelete={() => dispatch(deleteFinale())}
         showActions={canEdit}
+        disableDelete={disableDelete}
       />
       <ol>
         {finale.questions.map((question, i) => (

@@ -1,5 +1,5 @@
 import React from 'react'
-import { DynamicQuestion, DynamicState, openOption, setOptions, showQuestion, switchToQuestion2, useDispatch, useGameSelector } from '../../../store'
+import { DynamicQuestion, DynamicState, openOption, setOptions, showQuestion, startEditing, switchToQuestion2, useDispatch, useGameSelector, useSelector } from '../../../store'
 import { useAutoScroll } from '../scroll'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
@@ -12,9 +12,9 @@ import Close from '@mui/icons-material/Close'
 import IconButton from '@mui/joy/IconButton'
 import styles from './styles.css'
 import CurrentAttachments from './CurrentAttachments'
-import NextQuestionButton from './NextQuestionButton'
 import { hitAnimation } from '../../game/Teams'
 import SubtotalThenNextQuestion from './SubtotalThenNextQuestion'
+import HeaderWithActions from '../preview/HeaderWithActions'
 
 
 type WrapperProps = {
@@ -26,21 +26,34 @@ const DynamicQuestion: React.FC<Props> = ({question, options: options1, options2
   const dispatch = useDispatch()
   const shown = useGameSelector(game => game.questionShown)
   const options = showSecond ? options2 : options1
+  const index = useGameSelector(game => game.currentQuestion)
+  const editorStateView = useSelector(state => state.editor.mode === 'view')
 
   return (
     <Card variant='soft' ref={ref}>
       <Grid container columnSpacing={4} rowSpacing={2}>
         <Grid xs={12}>
-          <Typography
-            level='title-lg'
-            flexGrow={1}
-            whiteSpace='pre-wrap'
-          >{showSecond ? question.value2 : question.value}</Typography>
+          <HeaderWithActions
+            header={showSecond ? question.value2 : question.value}
+            onEdit={() => dispatch(startEditing(index))}
+            showActions={editorStateView}
+            disableDelete
+          />
         </Grid>
         <Grid xs={6}><Typography color='primary' textAlign='center'>Синяя команда</Typography></Grid>
         <Grid xs={6}><Typography color='danger' textAlign='center'>Красная команда</Typography></Grid>
-        <OptionsEditor defaultOptions={options1} visible={editing && !showSecond} second={showSecond} />
-        <OptionsEditor defaultOptions={options2} visible={editing && showSecond} second={showSecond} />
+        <OptionsEditor
+          defaultOptions={options1}
+          visible={editing && !showSecond}
+          second={showSecond}
+          disabled={!shown}
+        />
+        <OptionsEditor
+          defaultOptions={options2}
+          visible={editing && showSecond}
+          second={showSecond}
+          disabled={!shown}
+        />
         {!editing && options.map((option, i) => (
           <Grid xs={6} key={i}>
             <ButtonGroup disabled={option.opened && shown} size='lg' className={styles.optionButton}>
@@ -84,8 +97,9 @@ type OptionsEditorProps = {
   defaultOptions: DynamicState['options']
   visible: boolean
   second: boolean
+  disabled?: boolean
 }
-const OptionsEditor: React.FC<OptionsEditorProps> = ({defaultOptions, visible, second}) => {
+const OptionsEditor: React.FC<OptionsEditorProps> = ({defaultOptions, visible, second, disabled}) => {
   const [ options, setLocalOptions ] = useImmer(() => defaultOptions.map(option => ({...option, opened: false, wrong: false})))
   const everythingValid = options.every(option => option.value != '')
   const dispatch = useDispatch()
@@ -104,6 +118,8 @@ const OptionsEditor: React.FC<OptionsEditorProps> = ({defaultOptions, visible, s
           onEdit={optionEditFunc => setLocalOptions(draft => optionEditFunc(draft[i]))}
           noScore
           noBonus
+          disabled={disabled}
+          onlyValue={disabled}
         />
       </Grid>
     ))}

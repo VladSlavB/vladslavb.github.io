@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { FinaleState, Team, hideAllOptions, hideAllQuestions, openFinaleOption, openFinaleQuestion, openFinaleScore, setFinaleOptions, setName, useDispatch, useGameSelector, useSelector } from '../../../store'
+import { FinaleState, Team, hideAllOptions, hideAllQuestions, openFinaleOption, openFinaleQuestion, openFinaleScore, setFinaleOptions, setName, startEditingFinale, useDispatch, useGameSelector, useSelector } from '../../../store'
 import HeaderWithActions from '../preview/HeaderWithActions'
 import Card from '@mui/joy/Card'
 import Grid from '@mui/joy/Grid'
@@ -134,7 +134,12 @@ const Finale: React.FC<FinaleState> = ({teamsOrder: teams, names, openedQuestion
 
   return finale != null ? (
     <Card variant='soft' ref={ref}>
-      <HeaderWithActions header='Финальный раунд' />
+      <HeaderWithActions
+        header='Финальный раунд'
+        onEdit={() => dispatch(startEditingFinale())}
+        showActions
+        disableDelete
+      />
       <Tabs defaultValue={0} className={styles.tabsContainer}>
         <TabList>
           {teams.map(getTeamParams).map(({color, title}) => (

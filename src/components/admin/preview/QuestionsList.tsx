@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React from 'react'
-import { finishEditing, startAdding, startAddingFinale, startEditing, startEditingFinale, useDispatch, useSelector } from '../../../store'
+import { finishEditing, startAdding, startAddingFinale, startEditingFinale, useDispatch, useSelector } from '../../../store'
 import Button from '@mui/joy/Button'
 import QuestionEdit from '../edit/QuestionEdit'
 import Stack from '@mui/joy/Stack'
@@ -21,20 +21,18 @@ const QuestionsList: React.FC = () => {
         (editor.mode === 'edit' && index === editor.index) ? (
           <QuestionEdit
             editIndex={index}
-            onDone={() => dispatch(finishEditing())}
             key={index}
           />
         ) : (
           <QuestionPreview 
             index={index}
-            onEdit={() => dispatch(startEditing(index))}
             key={index}
             canEdit={editor.mode === 'view'}
           />
         )
       ))}
       {editor.mode === 'add' && (
-        <QuestionEdit onDone={() => dispatch(finishEditing())} />
+        <QuestionEdit />
       )}
       <div className={styles.bottomButtons}>
         {editor.mode === 'view' && <>
@@ -55,13 +53,13 @@ const QuestionsList: React.FC = () => {
         </>}
       </div>
       {editor.mode !== 'editFinale' && (
-        <FinalePreview onEdit={() => dispatch(startEditingFinale())} canEdit={editor.mode === 'view'} />
+        <FinalePreview canEdit={editor.mode === 'view'} />
       )}
       {editor.mode === 'addFinale' && (
-        <FinaleEdit onDone={() => dispatch(finishEditing())} />
+        <FinaleEdit />
       )}
       {editor.mode === 'editFinale' && (
-        <FinaleEdit onDone={() => dispatch(finishEditing())} edit />
+        <FinaleEdit edit />
       )}
     </Stack>
   )

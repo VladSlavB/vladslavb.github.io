@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React from 'react'
-import { correctAnswer, correctBonus, useDispatch, useGameSelector, wrongBonus, OrdinaryQuestion, useSelector, areAllOptionsOpened, wrongAnswer, discardBonusChance, utilizeHealthChance, discardHealthChance, chooseTeam, showQuestion, makeSubtotal, OrdinaryState, QuestionName } from '../../../store'
+import { correctAnswer, correctBonus, useDispatch, useGameSelector, wrongBonus, OrdinaryQuestion, useSelector, areAllOptionsOpened, wrongAnswer, discardBonusChance, utilizeHealthChance, discardHealthChance, chooseTeam, showQuestion, OrdinaryState, QuestionName, startEditing } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -12,9 +12,9 @@ import { hitAnimation } from '../../game/Teams'
 import { useAutoScroll } from '../scroll'
 import Chip from '@mui/joy/Chip'
 import Box from '@mui/joy/Box'
-import NextQuestionButton from './NextQuestionButton'
 import CurrentAttachments from './CurrentAttachments'
 import SubtotalThenNextQuestion from './SubtotalThenNextQuestion'
+import HeaderWithActions from '../preview/HeaderWithActions'
 
 
 type WrapperProps = {
@@ -27,6 +27,8 @@ const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: opti
   const dispatch = useDispatch()
   const ref = useAutoScroll()
   const shown = useGameSelector(game => game.questionShown)
+  const index = useGameSelector(game => game.currentQuestion)
+  const editorStateView = useSelector(state => state.editor.mode === 'view')
 
   function onOptionClick(optionIndex: number) {
     const option = question.options[optionIndex]
@@ -59,11 +61,12 @@ const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: opti
   return (
     <Card variant='soft' ref={ref}>
       <Stack spacing={2}>
-        <Typography
-          level='title-lg'
-          flexGrow={1}
-          whiteSpace='pre-wrap'
-        >{question.value}</Typography>
+        <HeaderWithActions
+          header={question.value}
+          onEdit={() => dispatch(startEditing(index))}
+          showActions={editorStateView}
+          disableDelete
+        />
         <Chip variant='outlined' color='primary'>{question.name}</Chip>
         <div className={styles.options}>
           {question.options.map((option, i) => {

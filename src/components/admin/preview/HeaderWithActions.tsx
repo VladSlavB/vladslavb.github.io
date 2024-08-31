@@ -12,9 +12,10 @@ type Props = {
   onEdit?: () => void
   onDelete?: () => void
   showActions?: boolean
+  disableDelete?: boolean
 }
 
-const HeaderWithActions: React.FC<Props> = ({header, dim, onEdit, onDelete, showActions}) => (
+const HeaderWithActions: React.FC<Props> = ({header, dim, onEdit, onDelete, showActions, disableDelete}) => (
   <div className={styles.header}>
     <Typography
       level='title-lg'
@@ -25,16 +26,18 @@ const HeaderWithActions: React.FC<Props> = ({header, dim, onEdit, onDelete, show
     {showActions && (
       <div className={styles.actions}>
         <Button onClick={onEdit} variant='plain' size='sm'><Edit /></Button>
-        <Button
-          onClick={() => {
-            if (confirm(`Удалить "${header}"?`)) {
-              onDelete?.()
-            }
-          }}
-          variant='plain' color='danger' size='sm'
-        >
-          <Delete />
-        </Button>
+        {!disableDelete && (
+          <Button
+            onClick={() => {
+              if (confirm(`Удалить "${header}"?`)) {
+                onDelete?.()
+              }
+            }}
+            variant='plain' color='danger' size='sm'
+          >
+            <Delete />
+          </Button>
+        )}
       </div>
     )}
   </div>

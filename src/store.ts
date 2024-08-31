@@ -405,6 +405,7 @@ const gameSlice = createSlice({
     switchToQuestion2(state) {
       if (state.q?.type !== 'dynamic') return
       state.q.showSecond = true
+      state.questionShown = false
       state.q.editing = true
     },
 
