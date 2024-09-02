@@ -677,11 +677,11 @@ export function useGameSelector<T>(selector: (_: typeof GAME_INITIAL_STATE) => T
 }
 
 window.addEventListener('keydown', e => {
-  if (e.key === 's' && e.ctrlKey) {
+  if (e.key === 's' && (navigator.userAgent.includes('Mac') ? e.metaKey : e.ctrlKey)) {
     e.preventDefault()
     download('game-state.json', localStorage.vladslav)
   }
-  if (e.key === 'o' && e.ctrlKey) {
+  if (e.key === 'o' && (navigator.userAgent.includes('Mac') ? e.metaKey : e.ctrlKey)) {
     e.preventDefault()
     importState()
   }
