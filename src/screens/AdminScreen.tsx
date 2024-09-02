@@ -6,6 +6,7 @@ import { useGameSelector, useSelector } from '../store'
 import Typography from '@mui/joy/Typography'
 import StickyControls from '../components/admin/play/SticklyControls'
 import Audio, { allAudioUrls } from '../Audio'
+import ImportExport from '../components/common/ImportExport'
 
 
 const AdminScreen: React.FC = () => {
@@ -24,6 +25,7 @@ const AdminScreen: React.FC = () => {
         <StickyControls />
       )}
       {allAudioUrls.map(url => <Audio src={url} key={url} controls style={{overflow: 'hidden', height: 0}} />)}
+      <ImportExport />
     </div>
   )
 }
