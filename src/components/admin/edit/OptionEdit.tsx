@@ -17,7 +17,7 @@ type Props = {
   size?: 'lg'
   noBonus?: boolean
   onBlur?: () => void
-  onlyValue?: boolean
+  disableScoreAndBonus?: boolean
   disabled?: boolean
 } & ({
   option: InputOption
@@ -28,7 +28,7 @@ type Props = {
   onEdit: (draftFunction: (draft: NoScoreInputOption) => void) => void
   noScore: true
 })
-const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size, noScore, noBonus, onlyValue, disabled}) => {
+const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size, noScore, noBonus, disableScoreAndBonus, disabled}) => {
   const onBonusEdit = (bonusEditFunc: (draft: InputBonus) => void) => onEdit(draft => bonusEditFunc(draft.bonus!))
 
   return (
@@ -55,7 +55,7 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
             })}
             onBlur={onBlur}
             placeholder='00'
-            disabled={onlyValue}
+            disabled={disableScoreAndBonus}
           />
         )}
         {option.bonus != null && (
@@ -68,17 +68,15 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
             })}
             onBlur={onBlur}
             placeholder='0'
-            disabled={onlyValue}
+            disabled={disableScoreAndBonus}
           />
         )}
         <div>
-          {!onlyValue && (
-            <AddAttachment
-              onDone={attachment => onEdit(draft => pushAttachment(draft.attachments, attachment))}
-              size={size}
-            />
-          )}
-          {option.bonus != null && !onlyValue && (
+          <AddAttachment
+            onDone={attachment => onEdit(draft => pushAttachment(draft.attachments, attachment))}
+            size={size}
+          />
+          {option.bonus != null && (
             <AddAttachment
               onDone={attachment => onEdit(draft => {
                 if (draft.bonus != null) {
@@ -97,14 +95,14 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
                   delete draft.bonus
                 }
               })}
-              disabled={onlyValue}
+              disabled={disableScoreAndBonus}
             >
               {option.bonus == null ? <StarBorder /> : <Star />}
             </IconButton>
           )}
         </div>
       </Stack>
-      <OptionAttachments option={option} onEdit={onlyValue ? undefined : onEdit} />
+      <OptionAttachments option={option} onEdit={onEdit} />
     </Stack>
   )
 }

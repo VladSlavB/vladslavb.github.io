@@ -119,7 +119,7 @@ const OptionsEditor: React.FC<OptionsEditorProps> = ({defaultOptions, visible, s
           noScore
           noBonus
           disabled={disabled}
-          onlyValue={disabled}
+          disableScoreAndBonus={disabled}
         />
       </Grid>
     ))}

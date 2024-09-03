@@ -69,7 +69,12 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
       )
     )
   )
-  const partiallyEditable = useGameSelector(game => game.active && game.currentQuestion === editIndex)
+  const partiallyEditable = useGameSelector(game => game.currentQuestion === editIndex)
+  const optionOpened = useGameSelector(game => (
+    game.currentQuestion === editIndex && game.q?.type === 'ordinary' ? (
+      game.q.options.map(option => option.opened)
+    ) : undefined
+  ))
   const firstQuestionDisabled = useGameSelector(game => (
     game.currentQuestion === editIndex &&
     game.q?.type === 'dynamic' &&
@@ -161,7 +166,8 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
                   onEdit={optionEditFunc => setQuestion(draft => optionEditFunc(draft.options[i]))}
                   placeholder={`Ответ #${i + 1}`}
                   key={i}
-                  onlyValue={partiallyEditable}
+                  disabled={optionOpened?.[i]}
+                  disableScoreAndBonus={partiallyEditable}
                 />
               ))}
             </TwoColumns>

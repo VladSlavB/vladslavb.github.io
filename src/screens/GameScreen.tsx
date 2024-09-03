@@ -13,29 +13,7 @@ import Name from '../components/game/Name'
 const CANVAS_W = 1920, CANVAS_H = 1080
 
 const GameScreen: React.FC = () => {
-  const [ { scale, left, top }, setTransform ] = useState({scale: 0, left: 0, top: 0})
-  const store = useStore()
-  useEffect(() => {
-    adaptSize()
-    window.addEventListener('resize', adaptSize)
-    const interval = setInterval(() => {
-      if (opener?.store != store) {
-        close()
-      }
-    }, 500)
-    return () => {
-      window.removeEventListener('resize', adaptSize)
-      clearInterval(interval)
-    }
-  }, [])
-  function adaptSize() {
-    const windowW = document.body.clientWidth
-    const windowH = document.body.clientHeight
-    const scale = Math.min(windowW / CANVAS_W, windowH / CANVAS_H)
-    const top = Math.max(0, windowH - CANVAS_H * windowW / CANVAS_W) / 2
-    const left = Math.max(0, windowW - CANVAS_W * windowH / CANVAS_H) / 2
-    setTransform({scale, left, top})
-  }
+  const { scale, left, top } = useAdaptiveTransform()
   const subtotalShown = useGameSelector(game => game.subtotalShown)
   return (
     <div className={styles.game} style={{backgroundImage: `url(${background})`}}>
@@ -74,4 +52,31 @@ const Demonstration: React.FC = () => {
       ) : <span />}
     </div>
   )
+}
+
+function useAdaptiveTransform() {
+  const [ transform, setTransform ] = useState({scale: 0, left: 0, top: 0})
+  const store = useStore()
+  useEffect(() => {
+    adaptSize()
+    window.addEventListener('resize', adaptSize)
+    const interval = setInterval(() => {
+      if (opener?.store != store) {
+        close()
+      }
+    }, 500)
+    return () => {
+      window.removeEventListener('resize', adaptSize)
+      clearInterval(interval)
+    }
+  }, [])
+  function adaptSize() {
+    const windowW = document.body.clientWidth
+    const windowH = document.body.clientHeight
+    const scale = Math.min(windowW / CANVAS_W, windowH / CANVAS_H)
+    const top = Math.max(0, windowH - CANVAS_H * windowW / CANVAS_W) / 2
+    const left = Math.max(0, windowW - CANVAS_W * windowH / CANVAS_H) / 2
+    setTransform({scale, left, top})
+  }
+  return transform
 }
