@@ -9,12 +9,13 @@ type Props = {
   option: {attachments: Attachment[]}
   onEdit?: (draftFunction: (draft: {attachments: Attachment[]}) => void) => void
   onClick?: (attachment: Attachment) => void
+  disabled?: boolean
 }
-const AttachmentsList: React.FC<Props> = ({option, onEdit, onClick}) => {
+const AttachmentsList: React.FC<Props> = ({option, onEdit, onClick, disabled}) => {
   return (
     <div className={onClick != null ? styles.clickable : undefined}>
       {option.attachments.map((attachment, i) => {
-        const deleter = onEdit && (
+        const deleter = !disabled && onEdit && (
           <div
             className={styles.close}
             onClick={() => onEdit(draft => {draft.attachments.splice(i, 1)})}

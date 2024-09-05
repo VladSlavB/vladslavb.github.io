@@ -108,9 +108,9 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
 
   // Инфа для редактирования вопроса прямо во время игры
   const partiallyEditable = useGameSelector(game => game.currentQuestion === editIndex)
-  const optionOpened = useGameSelector(game => (
+  const options = useGameSelector(game => (
     game.currentQuestion === editIndex && game.q?.type === 'ordinary' ? (
-      game.q.options.map(option => option.opened)
+      game.q.options
     ) : undefined
   ))
   const firstQuestionDisabled = useGameSelector(game => (
@@ -168,8 +168,9 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
                   onEdit={optionEditFunc => setQuestion(draft => optionEditFunc(draft.options[i]))}
                   placeholder={`Ответ #${i + 1}`}
                   key={i}
-                  disabled={optionOpened?.[i]}
-                  disableScoreAndBonus={partiallyEditable}
+                  disabled={options?.[i].opened}
+                  disabledBonus={options?.[i].bonus?.opened}
+                  disableScores={partiallyEditable}
                 />
               ))}
             </TwoColumns>

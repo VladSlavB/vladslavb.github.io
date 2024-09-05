@@ -17,8 +17,9 @@ type Props = {
   size?: 'lg'
   noBonus?: boolean
   onBlur?: () => void
-  disableScoreAndBonus?: boolean
+  disableScores?: boolean
   disabled?: boolean
+  disabledBonus?: boolean
 } & ({
   option: InputOption
   onEdit: (draftFunction: (draft: InputOption) => void) => void
@@ -28,7 +29,7 @@ type Props = {
   onEdit: (draftFunction: (draft: NoScoreInputOption) => void) => void
   noScore: true
 })
-const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size, noScore, noBonus, disableScoreAndBonus, disabled}) => {
+const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size, noScore, noBonus, disableScores, disabled, disabledBonus}) => {
   const onBonusEdit = (bonusEditFunc: (draft: InputBonus) => void) => onEdit(draft => bonusEditFunc(draft.bonus!))
 
   return (
@@ -55,7 +56,7 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
             })}
             onBlur={onBlur}
             placeholder='00'
-            disabled={disableScoreAndBonus || disabled}
+            disabled={disableScores || disabled}
           />
         )}
         {option.bonus != null && (
@@ -68,7 +69,7 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
             })}
             onBlur={onBlur}
             placeholder='0'
-            disabled={disableScoreAndBonus || disabled}
+            disabled={disableScores || disabled}
           />
         )}
         <div>
@@ -85,7 +86,7 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
                 }
               })}
               bonus
-              disabled={disabled}
+              disabled={disabledBonus}
             />
           )}
           {!noBonus && (
@@ -97,14 +98,19 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
                   delete draft.bonus
                 }
               })}
-              disabled={disableScoreAndBonus}
+              disabled={disableScores}
             >
               {option.bonus == null ? <StarBorder /> : <Star />}
             </IconButton>
           )}
         </div>
       </Stack>
-      <OptionAttachments option={option} onEdit={disabled ? undefined : onEdit} />
+      <OptionAttachments
+        option={option}
+        onEdit={onEdit}
+        disabled={disabled}
+        disabledBonus={disabledBonus}
+      />
     </Stack>
   )
 }
