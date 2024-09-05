@@ -1,5 +1,5 @@
 import React from 'react'
-import { DynamicQuestion, DynamicState, openOption, setOptions, showQuestion, startEditing, switchToQuestion2, useDispatch, useGameSelector, useSelector } from '../../../store'
+import { DynamicQuestion, DynamicState, openOption, setOptions, showQuestion, startEditing, startEditingDynamicOptions, switchToQuestion2, useDispatch, useGameSelector, useSelector } from '../../../store'
 import { useAutoScroll } from '../scroll'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
@@ -15,6 +15,7 @@ import CurrentAttachments from './CurrentAttachments'
 import { hitAnimation } from '../../game/Teams'
 import SubtotalThenNextQuestion from './SubtotalThenNextQuestion'
 import HeaderWithActions from '../preview/HeaderWithActions'
+import AttachmentIcon from '@mui/icons-material/Attachment'
 
 
 type WrapperProps = {
@@ -28,6 +29,8 @@ const DynamicQuestion: React.FC<Props> = ({question, options: options1, options2
   const options = showSecond ? options2 : options1
   const index = useGameSelector(game => game.currentQuestion)
   const editorStateView = useSelector(state => state.editor.mode === 'view')
+  const questionShown = useGameSelector(game => game.questionShown)
+  const allOptionsOpened = options.every(option => option.opened)
 
   return (
     <Card variant='soft' ref={ref}>
@@ -40,20 +43,21 @@ const DynamicQuestion: React.FC<Props> = ({question, options: options1, options2
             disableDelete
           />
         </Grid>
-        <Grid xs={6}><Typography color='primary' textAlign='center'>Синяя команда</Typography></Grid>
-        <Grid xs={6}><Typography color='danger' textAlign='center'>Красная команда</Typography></Grid>
-        <OptionsEditor
-          defaultOptions={options1}
-          visible={editing && !showSecond}
-          second={showSecond}
-          disabled={!shown}
-        />
-        <OptionsEditor
-          defaultOptions={options2}
-          visible={editing && showSecond}
-          second={showSecond}
-          disabled={!shown}
-        />
+        {questionShown && <>
+          <Grid xs={6}><Typography color='primary' textAlign='center'>Синяя команда</Typography></Grid>
+          <Grid xs={6}><Typography color='danger' textAlign='center'>Красная команда</Typography></Grid>
+        </>}
+        {editing && questionShown && (!showSecond ? (
+          <OptionsEditor
+            defaultOptions={options1}
+            second={showSecond}
+          />
+        ) : (
+          <OptionsEditor
+            defaultOptions={options2}
+            second={showSecond}
+          />
+        ))}
         {!editing && options.map((option, i) => (
           <Grid xs={6} key={i}>
             <ButtonGroup disabled={option.opened && shown} size='lg' className={styles.optionButton}>
@@ -62,6 +66,7 @@ const DynamicQuestion: React.FC<Props> = ({question, options: options1, options2
                 variant='plain'
                 color='neutral'
                 onClick={() => dispatch(openOption({index: i, wrong: false, second: showSecond}))}
+                startDecorator={option.attachments.length > 0 ? <AttachmentIcon /> : undefined}
               >{option.wrong ? <s>{option.value}</s> : option.value}</Button>
               <IconButton
                 variant='soft'
@@ -76,6 +81,16 @@ const DynamicQuestion: React.FC<Props> = ({question, options: options1, options2
             </ButtonGroup>
           </Grid>
         ))}
+        {!editing && !allOptionsOpened && (
+          <Grid xs={12}>
+            <Button
+              variant='outlined'
+              size='sm'
+              color='primary'
+              onClick={() => dispatch(startEditingDynamicOptions())}
+            >Исправить варианты</Button>
+          </Grid>
+        )}
         <Grid xs={12}><CurrentAttachments /></Grid>
         <BottomControls />
       </Grid>
@@ -95,19 +110,15 @@ function dynamicWrapper<P>(Component: React.FC<P & DynamicState>): React.FC<P> {
 
 type OptionsEditorProps = {
   defaultOptions: DynamicState['options']
-  visible: boolean
   second: boolean
-  disabled?: boolean
 }
-const OptionsEditor: React.FC<OptionsEditorProps> = ({defaultOptions, visible, second, disabled}) => {
-  const [ options, setLocalOptions ] = useImmer(() => defaultOptions.map(option => ({...option, opened: false, wrong: false})))
+export const OptionsEditor: React.FC<OptionsEditorProps> = ({defaultOptions, second}) => {
+  const [ options, setLocalOptions ] = useImmer(defaultOptions)
   const everythingValid = options.every(option => option.value != '')
   const dispatch = useDispatch()
   function onSubmit() {
     dispatch(setOptions({options, second}))
   }
-
-  if (!visible) return null
 
   return <>
     {options.map((option, i) => (
@@ -118,8 +129,7 @@ const OptionsEditor: React.FC<OptionsEditorProps> = ({defaultOptions, visible, s
           onEdit={optionEditFunc => setLocalOptions(draft => optionEditFunc(draft[i]))}
           noScore
           noBonus
-          disabled={disabled}
-          disableScoreAndBonus={disabled}
+          disabled={option.opened}
         />
       </Grid>
     ))}

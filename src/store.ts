@@ -408,6 +408,10 @@ const gameSlice = createSlice({
       state.questionShown = false
       state.q.editing = true
     },
+    startEditingDynamicOptions(state) {
+      if (state.q?.type !== 'dynamic') return
+      state.q.editing = true
+    },
 
     openFinale(state) {
       state.currentQuestion++
@@ -465,6 +469,10 @@ const gameSlice = createSlice({
     hideAllQuestions(state) {
       if (state.q?.type !== 'finale') return
       state.q.openedQuestions.forEach((_, i, arr) => arr[i] = false)
+    },
+    startEditingFinaleOptions(state, action: PayloadAction<{teamIndex: number}>) {
+      if (state.q?.type !== 'finale') return
+      state.q.optionsDone[action.payload.teamIndex] = false
     },
 
     makeSubtotal(state) {
@@ -599,11 +607,13 @@ export const {
   showQuestion,
 
   setOptions, openOption, switchToQuestion2,
+  startEditingDynamicOptions,
 
   openFinale, openFinaleQuestion,
   setFinaleOptions, openFinaleOption, openFinaleScore,
   setName,
   hideAllOptions, hideAllQuestions,
+  startEditingFinaleOptions,
 } = gameSlice.actions
 
 const visibilitySlice = createSlice({

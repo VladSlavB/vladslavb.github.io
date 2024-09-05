@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { FinaleState, Team, hideAllOptions, hideAllQuestions, openFinaleOption, openFinaleQuestion, openFinaleScore, setFinaleOptions, setName, startEditingFinale, useDispatch, useGameSelector, useSelector } from '../../../store'
+import { FinaleState, Team, hideAllOptions, hideAllQuestions, openFinaleOption, openFinaleQuestion, openFinaleScore, setFinaleOptions, setName, startEditingFinale, startEditingFinaleOptions, useDispatch, useGameSelector, useSelector } from '../../../store'
 import HeaderWithActions from '../preview/HeaderWithActions'
 import Card from '@mui/joy/Card'
 import Grid from '@mui/joy/Grid'
@@ -18,6 +18,7 @@ import CurrentAttachments from './CurrentAttachments'
 import IconButton from '@mui/joy/IconButton'
 import Check from '@mui/icons-material/Check'
 import Stack from '@mui/joy/Stack'
+import AttachmentIcon from '@mui/icons-material/Attachment'
 
 
 const getTeamParams = (team: Team) => ({
@@ -28,10 +29,11 @@ const getTeamParams = (team: Team) => ({
 
 const Finale: React.FC<FinaleState> = ({teamsOrder: teams, names, openedQuestions, options, optionsDone}) => {
   const finale = useSelector(state => state.finale)
-  const [ localOptions, setLocalOptions ] = useImmer(() => options.map(optionsOfTeam => optionsOfTeam.map(option => ({
+  const makeDefaultLocalOptions = () => options.map(optionsOfTeam => optionsOfTeam.map(option => ({
     ...option,
     score: `${option.score === 0 ? '' : option.score}`
-  }))))
+  })))
+  const [ localOptions, setLocalOptions ] = useImmer(makeDefaultLocalOptions)
   const ref = useAutoScroll()
   const dispatch = useDispatch()
   const optionsReady = localOptions.map(optionsOfTeam => optionsOfTeam.every(option => option.value != '' && option.score != ''))
@@ -78,6 +80,7 @@ const Finale: React.FC<FinaleState> = ({teamsOrder: teams, names, openedQuestion
                         fullWidth
                         disabled={option.opened}
                         onClick={() => dispatch(openFinaleOption({teamIndex, index}))}
+                        startDecorator={option.attachments.length > 0 ? <AttachmentIcon /> : undefined}
                       >{option.value}</Button>
                       <Button
                         disabled={option.scoreOpened}
@@ -90,6 +93,7 @@ const Finale: React.FC<FinaleState> = ({teamsOrder: teams, names, openedQuestion
                       onEdit={optionEditFunc => setLocalOptions(draft => optionEditFunc(draft[teamIndex][index]))}
                       placeholder='Ответ...'
                       noBonus
+                      disabled={localOptions[teamIndex][index].opened}
                     />
                   )}
                 </Grid>
@@ -108,12 +112,22 @@ const Finale: React.FC<FinaleState> = ({teamsOrder: teams, names, openedQuestion
         </Grid>
         <Grid xs={9}>
           {optionsDone[teamIndex] ? (
-            options[teamIndex].every(option => option.opened) && (
+            options[teamIndex].every(option => option.opened) ? (
               <Button
                 variant='outlined'
                 color='neutral'
                 onClick={() => dispatch(hideAllOptions({teamIndex}))}
               >Скрыть ответы этой команды</Button>
+            ) : (
+              <Button
+                variant='outlined'
+                color='primary'
+                size='sm'
+                onClick={() => {
+                  dispatch(startEditingFinaleOptions({teamIndex}))
+                  setLocalOptions(makeDefaultLocalOptions())
+                }}
+              >Исправить варианты</Button>
             )
           ) : (
             <Button

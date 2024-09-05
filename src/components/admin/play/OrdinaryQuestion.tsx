@@ -15,6 +15,7 @@ import Box from '@mui/joy/Box'
 import CurrentAttachments from './CurrentAttachments'
 import SubtotalThenNextQuestion from './SubtotalThenNextQuestion'
 import HeaderWithActions from '../preview/HeaderWithActions'
+import AttachmentIcon from '@mui/icons-material/Attachment'
 
 
 type WrapperProps = {
@@ -82,8 +83,7 @@ const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: opti
                 onClick={() => onOptionClick(i)}
                 size={size}
                 disabled={!canClick}
-                // startDecorator={attachmentIcon(option.attachments[0])}
-                // TODO multiple attachments
+                startDecorator={option.attachments.length > 0 ? <AttachmentIcon /> : undefined}
                 endDecorator={<>
                   {option.score}
                 </>}
@@ -108,8 +108,7 @@ const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: opti
                   disabled={disabled}
                   size={size}
                   onClick={() => onBonusClick(i)}
-                  // TODO multiple attachments
-                  // startDecorator={attachmentIcon(option.bonus.attachments[0])}
+                  startDecorator={option.bonus.attachments.length > 0 ? <AttachmentIcon /> : undefined}
                 >
                   +{option.bonus.score}
                 </Button>

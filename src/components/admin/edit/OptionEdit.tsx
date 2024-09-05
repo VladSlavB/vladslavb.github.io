@@ -55,7 +55,7 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
             })}
             onBlur={onBlur}
             placeholder='00'
-            disabled={disableScoreAndBonus}
+            disabled={disableScoreAndBonus || disabled}
           />
         )}
         {option.bonus != null && (
@@ -68,13 +68,14 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
             })}
             onBlur={onBlur}
             placeholder='0'
-            disabled={disableScoreAndBonus}
+            disabled={disableScoreAndBonus || disabled}
           />
         )}
         <div>
           <AddAttachment
             onDone={attachment => onEdit(draft => pushAttachment(draft.attachments, attachment))}
             size={size}
+            disabled={disabled}
           />
           {option.bonus != null && (
             <AddAttachment
@@ -84,6 +85,7 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
                 }
               })}
               bonus
+              disabled={disabled}
             />
           )}
           {!noBonus && (
@@ -102,7 +104,7 @@ const OptionEdit: React.FC<Props> = ({option, onEdit, onBlur, placeholder, size,
           )}
         </div>
       </Stack>
-      <OptionAttachments option={option} onEdit={onEdit} />
+      <OptionAttachments option={option} onEdit={disabled ? undefined : onEdit} />
     </Stack>
   )
 }

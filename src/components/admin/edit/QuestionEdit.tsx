@@ -69,17 +69,6 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
       )
     )
   )
-  const partiallyEditable = useGameSelector(game => game.currentQuestion === editIndex)
-  const optionOpened = useGameSelector(game => (
-    game.currentQuestion === editIndex && game.q?.type === 'ordinary' ? (
-      game.q.options.map(option => option.opened)
-    ) : undefined
-  ))
-  const firstQuestionDisabled = useGameSelector(game => (
-    game.currentQuestion === editIndex &&
-    game.q?.type === 'dynamic' &&
-    game.q.showSecond
-  ))
 
   const setAscendingScores = () => setQuestion(draft => {
     draft.options.forEach((option, i) => {
@@ -116,6 +105,19 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
     }
     dispatch(finishEditing())
   }, [question])
+
+  // Инфа для редактирования вопроса прямо во время игры
+  const partiallyEditable = useGameSelector(game => game.currentQuestion === editIndex)
+  const optionOpened = useGameSelector(game => (
+    game.currentQuestion === editIndex && game.q?.type === 'ordinary' ? (
+      game.q.options.map(option => option.opened)
+    ) : undefined
+  ))
+  const firstQuestionDisabled = useGameSelector(game => (
+    game.currentQuestion === editIndex &&
+    game.q?.type === 'dynamic' &&
+    game.q.showSecond
+  ))
 
   return (
     <Card variant='soft' size='sm'>
