@@ -47,7 +47,7 @@ const QuestionsList: React.FC = () => {
               startDecorator={<Add />} size='lg' variant='soft'
               onClick={() => dispatch(startAddingFinale())}
             >
-              Добавить финальный раунд
+              Добавить финал
             </Button>
           )}
         </>}

@@ -17,7 +17,7 @@ const AdminScreen: React.FC = () => {
     <div id='admin'>
       {!hasQuestions && !editorActive && (
         <Typography className={styles.welcome}>
-          Это пункт управления игрой. Прежде всего, нужно создать вопросы викторины
+          Это пункт управления игрой.<br />Прежде всего, нужно создать вопросы викторины
         </Typography>
       )}
       {gameActive ? <QuestionsListControl /> : <QuestionsListPreview />}

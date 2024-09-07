@@ -87,9 +87,12 @@
 }
 .bottomButtons {
     display: flex;
-    align-items: center;
+    justify-content: center;
     gap: 20px;
+    & > * {
+        flex: 1;
+    }
 }
-.add {
-    align-self: center;
+.add.add {
+    flex: 2;
 }
