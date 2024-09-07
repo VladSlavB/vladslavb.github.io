@@ -78,8 +78,10 @@
     border-style: none solid solid none;
     padding: 8px;
     margin: 0 -1px -1px 0;
+    word-break: break-all;
 }
 .optionButton.optionButton {
     background: white;
     border: 1px solid #ddd;
+    word-break: break-all;
 }
