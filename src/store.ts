@@ -273,6 +273,7 @@ const gameSlice = createSlice({
     ) {
       if (state.q?.type !== 'ordinary') return
       playCorrect()
+      decideIfRoundFinished(state)
       const payload = action.payload
       const option = state.q.options[payload.index]
       option.opened = true
@@ -297,7 +298,6 @@ const gameSlice = createSlice({
           decideOnDraw(state)
         }
       }
-      decideIfRoundFinished(state)
     },
     correctBonus(state, action: PayloadAction<{
       index: number,
