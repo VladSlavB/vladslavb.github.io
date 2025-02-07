@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React from 'react'
-import { correctAnswer, correctBonus, useDispatch, useGameSelector, wrongBonus, OrdinaryQuestion, useSelector, areAllOptionsOpened, wrongAnswer, discardBonusChance, utilizeHealthChance, discardHealthChance, chooseTeam, showQuestion, OrdinaryState, QuestionName, startEditing } from '../../../store'
+import { correctAnswer, correctBonus, useDispatch, useGameSelector, wrongBonus, OrdinaryQuestion, useSelector, areAllOptionsOpened, wrongAnswer, discardBonusChance, utilizeHealthChance, discardHealthChance, chooseTeam, showQuestion, OrdinaryState, QuestionName, startEditing, isEveryoneDeadSelector } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -16,15 +16,16 @@ import CurrentAttachments from './CurrentAttachments'
 import SubtotalThenNextQuestion from './SubtotalThenNextQuestion'
 import HeaderWithActions from '../preview/HeaderWithActions'
 import AttachmentIcon from '@mui/icons-material/Attachment'
+import { NUM_DRAWS } from '../../../defaults'
 
 
 type WrapperProps = {
   question: OrdinaryQuestion
 }
 type Props = WrapperProps & OrdinaryState
-const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: optionsState, drawFinished}) => {
+const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: optionsState, drawsFinished}) => {
   const currentTeam = useGameSelector(game => game.currentTeam)
-  const everyoneDead = useGameSelector(game => game.leftTeam.health + game.rightTeam.health === 0)
+  const everyoneDead = useGameSelector(isEveryoneDeadSelector)
   const dispatch = useDispatch()
   const ref = useAutoScroll()
   const shown = useGameSelector(game => game.questionShown)
@@ -97,7 +98,7 @@ const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: opti
               bonusChance != null || (
                 currentTeam != null && !optionsState[i].bonus?.vacantFor[currentTeam]
               ) ||
-              !drawFinished
+              drawsFinished < NUM_DRAWS
             )
             if (option.bonus != null) {
               buttons.push(
@@ -143,7 +144,7 @@ const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: opti
 
 export default ordinaryWrapper(OrdinaryQuestion)
 
-const BottomControlsInner: React.FC<OrdinaryState> = ({drawFinished, bonusChance, healthChance}) => {
+const BottomControlsInner: React.FC<OrdinaryState> = ({drawsFinished, bonusChance, healthChance, drawHalfFinished}) => {
   const dispatch = useDispatch()
   const currentTeam = useGameSelector(game => game.currentTeam)
   const currentQuestion = useGameSelector(game => game.currentQuestion)
@@ -155,17 +156,17 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawFinished, bonusChance
     }
     return null
   })
-  const everyoneDead = currentTeam == null && drawFinished
+  const everyoneDead = useGameSelector(isEveryoneDeadSelector)
 
   const roundFinished = useGameSelector(game => game.roundFinished)
 
   const shown = useGameSelector(game => game.questionShown)
 
-  function onFail() {
+  function onFail(punch: boolean = true) {
     if (currentTeam != null) {
       hitAnimation(currentTeam)
     }
-    dispatch(wrongAnswer())
+    dispatch(wrongAnswer(punch))
   }
 
   function onBonusChanceClick(success: boolean) {
@@ -190,6 +191,13 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawFinished, bonusChance
     }
   }
 
+  const lastAnswerWasWrong = useSelector(state => {
+    const previousGame = state.game.past[state.game.past.length - 1]
+    const presentGame = state.game.present
+    if (previousGame?.currentTeam == null) return false
+    return previousGame[previousGame.currentTeam].score === presentGame[previousGame.currentTeam].score
+  })
+
   return (
     <>
       <Stack direction='row' spacing={2} className={styles.gameControl} flexWrap='wrap'>
@@ -210,21 +218,32 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawFinished, bonusChance
           <Button color='success' onClick={() => onHealthChanceClick(true)}>Да</Button>
           <Button color='danger' onClick={() => onHealthChanceClick(false)}>Нет</Button>
         </> : <>
-          <Box flexGrow={1}>
+          <Stack direction='row' flexGrow={1} gap={1}>
             {currentTeam != null && !allOptionsOpened && (
               <Button
                 size='lg'
                 className={styles.wrong}
                 color='danger' variant='solid'
-                onClick={onFail}
+                onClick={() => onFail(true)}
                 disabled={everyoneDead}
               >
                 Промах
               </Button>
             )}
-          </Box>
+            {currentTeam != null && drawsFinished < NUM_DRAWS && drawHalfFinished && !lastAnswerWasWrong && (
+              <Button
+                size='lg'
+                className={styles.same}
+                color='danger' variant='outlined'
+                onClick={() => onFail(false)}
+                disabled={everyoneDead}
+              >
+                Ответы совпали
+              </Button>
+            )}
+          </Stack>
           {currentQuestion >= 0 && (shown ? <>
-            {!drawFinished && (
+            {drawsFinished < NUM_DRAWS && (
               <Chip color='warning' variant='soft'>Розыгрыш хода...</Chip>
             )}
             {currentTeam == null ? (

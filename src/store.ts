@@ -7,7 +7,7 @@ import { save, load } from 'redux-localstorage-simple'
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import undoable from 'redux-undo'
 import { playCorrect, playFinish, playWrong } from './Audio'
-import { NUM_DYNAMIC_OPTIONS, NUM_FINALE_OPTIONS, NUM_OPTIONS } from './defaults'
+import { NUM_DYNAMIC_OPTIONS, NUM_FINALE_OPTIONS, NUM_OPTIONS, NUM_DRAWS } from './defaults'
 
 
 export type Attachment =
@@ -170,8 +170,9 @@ function makeOrdinaryState(question: OrdinaryQuestion) {
   return {
     type: 'ordinary' as 'ordinary',
     options: makeDefaultOrdinaryOptions(question),
-    drawFinished: false,
-    bidScore: null as null | number,
+    drawsFinished: 0,
+    drawHalfFinished: false,
+    numFastestDraws: {leftTeam: 0, rightTeam: 0},
     bonusChance: null as null | {
       optionPayload: {best?: boolean, score: number},
       optionIndex: number
@@ -259,9 +260,47 @@ const gameSlice = createSlice({
     },
     chooseTeam(state, action: PayloadAction<Team>) {
       state.currentTeam = action.payload
+      if (state.q?.type === 'ordinary' && state.q.drawsFinished < NUM_DRAWS) {
+        state.q.numFastestDraws[action.payload]++
+      }
     },
-    correctAnswer(state, action: PayloadAction<CorrectAnswerPayload>) {
-      applyCorrectAnswer(state, action.payload)
+    correctAnswer(
+      state: GameState,
+      action: PayloadAction<{
+        index: number,
+        score: number,
+        best?: boolean,
+        attachments: Attachment[],
+        hasBonus: boolean,
+      }>
+    ) {
+      if (state.q?.type !== 'ordinary') return
+      playCorrect()
+      const payload = action.payload
+      const option = state.q.options[payload.index]
+      option.opened = true
+      state.currentAttachments = {optionIndex: payload.index, bonus: false}
+      if (state.currentTeam == null) return
+      state[state.currentTeam].score += payload.score
+      if (payload.hasBonus) {
+        state.q.bonusChance = {
+          optionIndex: payload.index,
+          optionPayload: {
+            best: payload.best ?? false,
+            score: payload.score
+          },
+        }
+      }
+      if (state.q.drawsFinished === NUM_DRAWS) {
+        if (!payload.hasBonus) { 
+          switchTeamIfPossible(state)
+        }
+      } else {
+        if (state.q.bonusChance == null) {
+          decideOnDraw(state)
+        }
+      }
+      decideIfRoundFinished(state)
     },
     correctBonus(state, action: PayloadAction<{
       index: number,
@@ -274,34 +313,28 @@ const gameSlice = createSlice({
       state.currentAttachments = {optionIndex: action.payload.index, bonus: true}
       if (state.currentTeam != null) {
         state[state.currentTeam].score += action.payload.score
-        if (state.q.drawFinished) {
+        if (state.q.drawsFinished === NUM_DRAWS) {
           switchTeamIfPossible(state)
         } else if (state.q.bonusChance != null) {
-          decideOnDraw(state, state.q.bonusChance.optionPayload)
+          decideOnDraw(state)
         }
       }
       state.q.bonusChance = null
       decideIfRoundFinished(state)
       playCorrect()
     },
-    wrongAnswer(state) {
+    wrongAnswer(state, punchAction: PayloadAction<boolean>) {
       switch (state.q?.type) {
       case 'ordinary':
         if (state.currentTeam == null) return
-        if (!state.q.drawFinished) {
-          state.currentTeam = theOtherTeam(state.currentTeam)
-          if (state.q.bidScore == null) {
-            state.q.bidScore = 0
-          } else if (state.q.bidScore === 0) {
-            state.q.bidScore = null
-          } else {
-            state.q.drawFinished = true
-            state.q.bidScore = null
-          }
+        if (state[state.currentTeam].health === 0) {
+          state.q.healthChance = state.currentTeam
         } else {
-          state[state.currentTeam].health--
-          if (state[state.currentTeam].health === 0) {
-            state.q.healthChance = state.currentTeam
+          if (punchAction.payload) {
+            state[state.currentTeam].health--
+          }
+          if (state.q.drawsFinished < NUM_DRAWS) {
+            decideOnDraw(state)
           } else {
             switchTeamIfPossible(state)
           }
@@ -353,10 +386,10 @@ const gameSlice = createSlice({
       if (state.q.bonusChance == null || state.currentTeam == null) return
       const bonus = state.q.options[state.q.bonusChance.optionIndex].bonus
       if (bonus != null) bonus.vacantFor[state.currentTeam] = false
-      if (state.q.drawFinished) {
+      if (state.q.drawsFinished === NUM_DRAWS) {
         switchTeamIfPossible(state)
       } else if (state.q.bonusChance != null) {
-        decideOnDraw(state, state.q.bonusChance.optionPayload)
+        decideOnDraw(state)
       }
       state.q.bonusChance = null
       decideIfRoundFinished(state)
@@ -491,44 +524,6 @@ const gameSlice = createSlice({
     },
   },
 })
-type CorrectAnswerPayload = {
-  index: number,
-  score: number,
-  best?: boolean,
-  attachments: Attachment[],
-  hasBonus: boolean,
-}
-function applyCorrectAnswer(
-  state: GameState,
-  payload: CorrectAnswerPayload
-) {
-  if (state.q?.type !== 'ordinary') return
-  playCorrect()
-  const option = state.q.options[payload.index]
-  option.opened = true
-  state.currentAttachments = {optionIndex: payload.index, bonus: false}
-  if (state.currentTeam == null) return
-  state[state.currentTeam].score += payload.score
-  if (payload.hasBonus) {
-    state.q.bonusChance = {
-      optionIndex: payload.index,
-      optionPayload: {
-        best: payload.best ?? false,
-        score: payload.score
-      },
-    }
-  }
-  if (state.q.drawFinished) {
-    if (!payload.hasBonus) { 
-      switchTeamIfPossible(state)
-    }
-  } else {
-    if (state.q.bonusChance == null) {
-      decideOnDraw(state, payload)
-    }
-  }
-  decideIfRoundFinished(state)
-}
 
 function switchTeamIfPossible(state: GameState) {
   if (state.currentTeam == null) return
@@ -558,21 +553,28 @@ function canPlay(state: GameState, team: Team): boolean {
   return true
 }
 
-function decideOnDraw(state: GameState, payload: {best?: boolean, score: number}) {
+function decideOnDraw(state: GameState) {
   if (state.q?.type !== 'ordinary') return
   if (state.currentTeam == null) return
-  if (state.q.bidScore == null) {
-    if (payload.best) {
-      state.q.drawFinished = true
+  if (state.q.drawHalfFinished) {
+    state.q.drawsFinished++
+    state.q.drawHalfFinished = false
+    if (state.q.drawsFinished === NUM_DRAWS) {
+      if (state.leftTeam.score < state.rightTeam.score) {
+        state.currentTeam = 'rightTeam'
+      } else if (state.leftTeam.score > state.rightTeam.score) {
+        state.currentTeam = 'leftTeam'
+      } else if (state.q.numFastestDraws.leftTeam < state.q.numFastestDraws.rightTeam) {
+        state.currentTeam = 'rightTeam'
+      } else {
+        state.currentTeam = 'leftTeam'
+      }
     } else {
-      state.q.bidScore = payload.score
-      state.currentTeam = theOtherTeam(state.currentTeam)
+      state.currentTeam = null
     }
   } else {
-    if (state.q.bidScore >= payload.score) {
-      state.currentTeam = theOtherTeam(state.currentTeam)
-    }
-    state.q.drawFinished = true
+    state.q.drawHalfFinished = true
+    state.currentTeam = theOtherTeam(state.currentTeam)
   }
 }
 
@@ -588,7 +590,7 @@ export function areAllOptionsOpened(state: GameState) {
 
 function decideIfRoundFinished(state: GameState) {
   const prevRoundFinished = state.roundFinished
-  const everyOneDead = (state.q?.type !== 'ordinary' || state.q.drawFinished) && state.currentTeam == null
+  const everyOneDead = isEveryoneDeadSelector(state)
   const allOptionsOpened = areAllOptionsOpened(state)
   state.roundFinished = everyOneDead || allOptionsOpened
   if (state.roundFinished && !prevRoundFinished) {
@@ -646,11 +648,7 @@ export const {
 
 
 // managing old versions
-const CURRENT_VERSION = 11
-
-if (localStorage.vladslav_version < 11) {
-  localStorage.clear()
-}
+const CURRENT_VERSION = 12
 
 ;(function() {
   if (localStorage.vladslav_version != CURRENT_VERSION && localStorage.vladslav) {
@@ -682,6 +680,9 @@ type RootState = ReturnType<typeof store.getState>
 type AppDispatch = typeof store.dispatch
 export const useDispatch: () => AppDispatch = useOriginalDispatch
 export const useSelector: TypedUseSelectorHook<RootState> = useOriginalSelector
-export function useGameSelector<T>(selector: (_: typeof GAME_INITIAL_STATE) => T) {
+export function useGameSelector<T>(selector: (_: GameState) => T) {
   return useSelector(state => selector(state.game.present))
+}
+export function isEveryoneDeadSelector(gameState: GameState) {
+  return gameState.leftTeam.health === 0 && gameState.rightTeam.health === 0 && gameState.q?.type === 'ordinary' && gameState.q.healthChance == null
 }
