@@ -75,6 +75,7 @@
   perspective: 1000px;
 }
 .sep {
+  visibility: hidden;
   border-top: 2px solid black;
   margin-top: 20px; 
   width: 100%;
@@ -488,4 +489,7 @@
   display: flex;
   align-items: center;
   padding: 0 30px;
+}
+.wrong {
+  text-decoration: line-through 5px;
 }

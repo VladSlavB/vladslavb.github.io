@@ -28,9 +28,6 @@ const QuestionPreview: React.FC<Props> = ({index, canEdit, disableDelete}) => {
           showActions={canEdit}
           disableDelete={disableDelete}
         />
-        {question.name === QuestionName.dynamic && (
-          <HeaderWithActions header={question.value2} />
-        )}
         <Chip variant='outlined' color='primary' className={styles.chip}>{question.name}</Chip>
         {question.name !== QuestionName.dynamic ? (
           <ul className={styles.previewOptions}>

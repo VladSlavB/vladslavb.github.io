@@ -21,7 +21,7 @@ const CurrentAttachments: React.FC = () => {
             return option.attachments
           }
         } else if (game.q?.type === 'dynamic') { // always true
-          const options = coordinates.secondGroup ? game.q.options2 : game.q.options
+          const options = game.q.options
           return options[coordinates.optionIndex].attachments
         }
       }

@@ -19,18 +19,14 @@ const Options: React.FC = () => {
     } else {
       const game = state.game.present
       if (game.q?.type === 'dynamic') { // always true
-        return [...game.q.options, ...game.q.options2]
+        return game.q.options
       }
     }
   })
   const dynamic = useGameSelector(game => game.q?.type === 'dynamic')
-  const secondQuestion = useGameSelector(game => game.q?.type === 'dynamic' && game.q.showSecond)
   let className = styles.options
   if (dynamic) {
     className += ' ' + styles.dynamic
-    if (secondQuestion) {
-      className += ' ' + styles.swap
-    }
   }
   const optionsState = useGameSelector(game => (
     game.q?.type === 'ordinary' ? game.q.options : (
@@ -80,6 +76,12 @@ function Option(props: Option & {label: string, opened: boolean, bonusOpened: bo
     starClassName += ' ' + (prevBonusOpened.current ? styles.invisible : styles.opened)
   }
   prevBonusOpened.current = props.bonusOpened
+
+  let valueClassName = styles.value
+  if (props.score === 0) {
+    valueClassName += ' ' + styles.wrong
+  }
+
   return (
     <div className={className}>
       <div className={styles.faceDown}>
@@ -87,7 +89,7 @@ function Option(props: Option & {label: string, opened: boolean, bonusOpened: bo
       </div>
       <div className={styles.option}>
         {props.opened && <>
-          <span className={styles.value}>{props.value}</span>
+          <span className={valueClassName}>{props.value}</span>
           {props.bonus != null && (
               <span className={starClassName}><Star className={starClassName} /></span>
             )}

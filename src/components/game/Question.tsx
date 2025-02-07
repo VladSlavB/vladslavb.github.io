@@ -10,16 +10,10 @@ const Question: React.FC = () => {
   if (attachment?.type === 'text') {
     className += ' ' + styles.attachmentShown
   }
-  const maybeSecondQuestion = useSelector(state => {
-    const game = state.game.present
-    if (game.q?.type === 'dynamic' && game.q.showSecond) {
-      return (state.questions[game.currentQuestion] as DynamicQuestion).value2
-    }
-  })
 
   return question != null ? (
     <div className={className}>
-      <div>{shown ? (maybeSecondQuestion ?? question.value) : ''}</div>
+      <div>{shown ? question.value : ''}</div>
       <div>{attachment?.type === 'text' && attachment.text}</div>
     </div>
   ) : null

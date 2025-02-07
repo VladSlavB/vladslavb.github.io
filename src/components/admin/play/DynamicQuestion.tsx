@@ -1,5 +1,5 @@
 import React from 'react'
-import { DynamicQuestion, DynamicState, openOption, setOptions, showQuestion, startEditing, startEditingDynamicOptions, switchToQuestion2, useDispatch, useGameSelector, useSelector } from '../../../store'
+import { DynamicQuestion, DynamicState, openOption, setOptions, showQuestion, startEditing, startEditingDynamicOptions, useDispatch, useGameSelector, useSelector } from '../../../store'
 import { useAutoScroll } from '../scroll'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
@@ -22,11 +22,10 @@ type WrapperProps = {
   question: DynamicQuestion
 }
 type Props = WrapperProps & DynamicState
-const DynamicQuestion: React.FC<Props> = ({question, options: options1, options2, showSecond, editing}) => {
+const DynamicQuestion: React.FC<Props> = ({question, options, editing}) => {
   const ref = useAutoScroll()
   const dispatch = useDispatch()
   const shown = useGameSelector(game => game.questionShown)
-  const options = showSecond ? options2 : options1
   const index = useGameSelector(game => game.currentQuestion)
   const editorStateView = useSelector(state => state.editor.mode === 'view')
   const questionShown = useGameSelector(game => game.questionShown)
@@ -37,7 +36,7 @@ const DynamicQuestion: React.FC<Props> = ({question, options: options1, options2
       <Grid container columnSpacing={4} rowSpacing={2}>
         <Grid xs={12}>
           <HeaderWithActions
-            header={showSecond ? question.value2 : question.value}
+            header={question.value}
             onEdit={() => dispatch(startEditing(index))}
             showActions={editorStateView}
             disableDelete
@@ -47,17 +46,9 @@ const DynamicQuestion: React.FC<Props> = ({question, options: options1, options2
           <Grid xs={6}><Typography color='primary' textAlign='center'>Синяя команда</Typography></Grid>
           <Grid xs={6}><Typography color='danger' textAlign='center'>Красная команда</Typography></Grid>
         </>}
-        {editing && questionShown && (!showSecond ? (
-          <OptionsEditor
-            defaultOptions={options1}
-            second={showSecond}
-          />
-        ) : (
-          <OptionsEditor
-            defaultOptions={options2}
-            second={showSecond}
-          />
-        ))}
+        {editing && questionShown && (
+          <OptionsEditor defaultOptions={options} />
+        )}
         {!editing && options.map((option, i) => (
           <Grid xs={6} key={i}>
             <ButtonGroup disabled={option.opened && shown} size='lg' className={styles.optionButton}>
@@ -65,14 +56,14 @@ const DynamicQuestion: React.FC<Props> = ({question, options: options1, options2
                 fullWidth
                 variant='plain'
                 color='neutral'
-                onClick={() => dispatch(openOption({index: i, wrong: false, second: showSecond}))}
+                onClick={() => dispatch(openOption({index: i, wrong: false}))}
                 startDecorator={option.attachments.length > 0 ? <AttachmentIcon /> : undefined}
               >{option.wrong ? <s>{option.value}</s> : option.value}</Button>
               <IconButton
                 variant='soft'
                 color='danger'
                 onClick={() => {
-                  dispatch(openOption({index: i, wrong: true, second: showSecond}))
+                  dispatch(openOption({index: i, wrong: true}))
                   hitAnimation(i % 2 == 0 ? 'leftTeam' : 'rightTeam')
                 }}
               >
@@ -110,14 +101,13 @@ function dynamicWrapper<P>(Component: React.FC<P & DynamicState>): React.FC<P> {
 
 type OptionsEditorProps = {
   defaultOptions: DynamicState['options']
-  second: boolean
 }
-export const OptionsEditor: React.FC<OptionsEditorProps> = ({defaultOptions, second}) => {
+export const OptionsEditor: React.FC<OptionsEditorProps> = ({defaultOptions}) => {
   const [ options, setLocalOptions ] = useImmer(defaultOptions)
   const everythingValid = options.every(option => option.value != '')
   const dispatch = useDispatch()
   function onSubmit() {
-    dispatch(setOptions({options, second}))
+    dispatch(setOptions({options}))
   }
 
   return <>
@@ -139,24 +129,15 @@ export const OptionsEditor: React.FC<OptionsEditorProps> = ({defaultOptions, sec
   </>
 }
 
-const BottomControlsInner: React.FC<DynamicState> = ({options: options1, options2, showSecond}) => {
+const BottomControlsInner: React.FC<DynamicState> = ({options}) => {
   const questionShown = useGameSelector(game => game.questionShown)
   const dispatch = useDispatch()
-  const options = showSecond ? options2 : options1
   const allOptionsOpened = options.every(option => option.opened)
 
   return !questionShown || allOptionsOpened ? (
     <Grid xs={12} display='flex' justifyContent='flex-end'>
       {questionShown ? (
-        showSecond ? (
-          <SubtotalThenNextQuestion />
-        ) : (
-          <Button
-            variant='solid'
-            color='primary'
-            onClick={() => dispatch(switchToQuestion2())}
-          >Второй вопрос</Button>
-        )
+        <SubtotalThenNextQuestion />
       ) : (
         <Button
           variant='solid'

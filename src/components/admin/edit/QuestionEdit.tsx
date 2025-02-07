@@ -18,7 +18,6 @@ import TwoColumns from '../../common/TwoColumns'
 function makeInputQuestion(question: Question): InputQuestion {
   return {
     ...question,
-    value2: question.name === QuestionName.dynamic ? question.value2 : '',
     options: question.name !== QuestionName.dynamic ? question.options?.map(option => ({
       ...option,
       score: `${option.score}`,
@@ -41,7 +40,6 @@ const DEFAULT_OPTIONS = Array<InputOption>(NUM_OPTIONS).fill({
 const DEFAULT_QUESTION: InputQuestion = {
   name: QuestionName.social,
   value: '',
-  value2: '',
   options: DEFAULT_OPTIONS,
 }
 const ALL_NAMES = Object.values(QuestionName)
@@ -60,7 +58,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
   const everythingValid = (
     validateQuestionValue(question.value) && (
       noOptions ? (
-        validateQuestionValue(question.value2)
+        true
       ) : (
         question.options.every(option => validateQuestionValue(option.value)) &&
         question.options.every(option => (
@@ -83,9 +81,9 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
 
   const onSubmit = useCallback((e: FormEvent) => {
     e.preventDefault()
-    const { name, value, value2, options } = question
+    const { name, value, options } = question
     const newQuestion: Question = name === QuestionName.dynamic ? {
-      name, value, value2
+      name, value,
     } : {
       name, value,
       options: options.map(option => ({
@@ -112,11 +110,6 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
     game.currentQuestion === editIndex && game.q?.type === 'ordinary' ? (
       game.q.options
     ) : undefined
-  ))
-  const firstQuestionDisabled = useGameSelector(game => (
-    game.currentQuestion === editIndex &&
-    game.q?.type === 'dynamic' &&
-    game.q.showSecond
   ))
 
   return (
@@ -145,22 +138,10 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
                 })
               }}
               placeholder='Вопрос'
-              disabled={firstQuestionDisabled}
               autoFocus
             />
           </Grid>
-          {noOptions ? (
-            <Grid xs={12}>
-              <Textarea
-                value={question.value2} onChange={e => {
-                  setQuestion(draft => {
-                    draft.value2 = e.target.value
-                  })
-                }}
-                placeholder='Второй вопрос'
-              />
-            </Grid>
-          ) : <>
+          {!noOptions && <>
             <TwoColumns>
               {question.options.map((option, i) => (
                 <OptionEdit

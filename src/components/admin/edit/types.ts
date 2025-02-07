@@ -15,6 +15,5 @@ export type InputOption = {
 export type InputQuestion = {
   name: QuestionName
   value: string
-  value2: string
   options: InputOption[]
 }

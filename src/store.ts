@@ -35,7 +35,6 @@ export type OrdinaryQuestion = {
 export type DynamicQuestion = {
   name: QuestionName.dynamic
   value: string
-  value2: string
 }
 
 export type Question = OrdinaryQuestion | DynamicQuestion
@@ -186,9 +185,7 @@ function makeDynamicState() {
   return {
     type: 'dynamic' as 'dynamic',
     options: makeDynamicOptions(),
-    options2: makeDynamicOptions(),
     editing: true,
-    showSecond: false,
   }
 }
 export type DynamicState = ReturnType<typeof makeDynamicState>
@@ -406,23 +403,18 @@ const gameSlice = createSlice({
 
     setOptions(state, action: PayloadAction<{
       options: DynamicState['options']
-      second: boolean
     }>) {
       if (state.q?.type !== 'dynamic') return
-      if (!action.payload.second) {
-        state.q.options = action.payload.options
-      } else {
-        state.q.options2 = action.payload.options
-      }
+      state.q.options = action.payload.options
       state.q.editing = false
     },
-    openOption(state, action: PayloadAction<{index: number, wrong: boolean, second: boolean}>) {
+    openOption(state, action: PayloadAction<{index: number, wrong: boolean}>) {
       if (state.q?.type !== 'dynamic') return
-      const {index, wrong, second} = action.payload
-      const options = second ? state.q.options2 : state.q.options
+      const {index, wrong} = action.payload
+      const options = state.q.options
       options[index].opened = true
       options[index].wrong = wrong
-      state.currentAttachments = {optionIndex: index, secondGroup: second}
+      state.currentAttachments = {optionIndex: index}
       const team = index % 2 === 0 ? 'leftTeam' : 'rightTeam'
       if (wrong) {
         options[index].score = 0
@@ -434,12 +426,6 @@ const gameSlice = createSlice({
       if (options.every(option => option.opened)) {
         setTimeout(playFinish, 1000)
       }
-    },
-    switchToQuestion2(state) {
-      if (state.q?.type !== 'dynamic') return
-      state.q.showSecond = true
-      state.questionShown = false
-      state.q.editing = true
     },
     startEditingDynamicOptions(state) {
       if (state.q?.type !== 'dynamic') return
@@ -608,7 +594,7 @@ export const {
   utilizeHealthChance, discardHealthChance,
   showQuestion,
 
-  setOptions, openOption, switchToQuestion2,
+  setOptions, openOption,
   startEditingDynamicOptions,
 
   openFinale, openFinaleQuestion,
