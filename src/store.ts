@@ -129,7 +129,7 @@ const GAME_INITIAL_STATE = {
   active: false,
   currentQuestion: -1,
   finale: false,
-  questionShown: false,
+  roundStarted: false,
   currentAttachments: null as null | {
     optionIndex: number
     bonus?: boolean
@@ -237,7 +237,7 @@ const gameSlice = createSlice({
     },
     nextQuestion(state, action: PayloadAction<Question | undefined>) {
       state.currentQuestion++
-      state.questionShown = false
+      state.roundStarted = false
       state.roundFinished = false
       state.leftTeam.health = state.rightTeam.health = 3
       state.leftTeam.score = state.rightTeam.score = 0
@@ -454,8 +454,8 @@ const gameSlice = createSlice({
       if (state.q?.type !== 'finale') return
       state.q.optionsDone[action.payload.teamIndex] = false
     },
-    showQuestion(state) {
-      state.questionShown = true
+    startRound(state) {
+      state.roundStarted = true
     },
   },
 })
@@ -550,7 +550,7 @@ export const {
   correctAnswer, wrongAnswer,
   correctBonus, wrongBonus,
   utilizeHealthChance, discardHealthChance,
-  showQuestion,
+  startRound,
 
   setOptions, openOption,
   startEditingDynamicOptions,
@@ -568,6 +568,8 @@ const visibilitySlice = createSlice({
     attachment: null as null | Attachment,
     gameScreenVisible: true,
     subtotalVisible: false,
+
+    questionHidden: false,
   },
   reducers: {
     showAttachment(state, action: PayloadAction<Attachment>) {
@@ -591,6 +593,13 @@ const visibilitySlice = createSlice({
       state.gameScreenVisible = true
       state.subtotalVisible = false
     },
+
+    toggleQuestion(state) {
+      state.questionHidden = !state.questionHidden
+    },
+    showQuestion(state) {
+      state.questionHidden = false
+    },
   }
 })
 
@@ -600,6 +609,9 @@ export const {
   toggleGameScreen,
   toggleSubtotal,
   hideAll,
+
+  toggleQuestion,
+  showQuestion,
 } = visibilitySlice.actions
 
 

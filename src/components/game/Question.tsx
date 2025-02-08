@@ -5,7 +5,7 @@ import React from 'react'
 const Question: React.FC = () => {
   const question = useSelector(state => state.questions[state.game.present.currentQuestion])
   const attachment = useSelector(state => state.visibility.attachment)
-  const shown = useGameSelector(game => game.questionShown)
+  const shown = useGameSelector(game => game.roundStarted) && useSelector(state => !state.visibility.questionHidden)
   let className = styles.question
   if (attachment?.type === 'text') {
     className += ' ' + styles.attachmentShown

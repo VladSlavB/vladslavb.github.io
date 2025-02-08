@@ -1,6 +1,6 @@
 import React from 'react'
 import Button from '@mui/joy/Button'
-import { nextQuestion, openFinale, useDispatch, useSelector } from '../../../store'
+import { nextQuestion, openFinale, showQuestion, useDispatch, useSelector } from '../../../store'
 
 
 type Props = React.ComponentProps<typeof Button>
@@ -17,6 +17,7 @@ const NextQuestionButton: React.FC<Props> = props => {
       color='primary'
       onClick={() => {
         dispatch(lastQuestion ? openFinale() : nextQuestion(nxtQuestion))
+        dispatch(showQuestion())
       }}
     >
       Следующий вопрос

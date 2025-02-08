@@ -1,5 +1,5 @@
 import React from 'react'
-import { DynamicQuestion, DynamicState, openOption, setOptions, showQuestion, startEditing, startEditingDynamicOptions, useDispatch, useGameSelector, useSelector } from '../../../store'
+import { DynamicQuestion, DynamicState, openOption, setOptions, startEditing, startEditingDynamicOptions, startRound, useDispatch, useGameSelector, useSelector } from '../../../store'
 import { useAutoScroll } from '../scroll'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
@@ -25,10 +25,9 @@ type Props = WrapperProps & DynamicState
 const DynamicQuestion: React.FC<Props> = ({question, options, editing}) => {
   const ref = useAutoScroll()
   const dispatch = useDispatch()
-  const shown = useGameSelector(game => game.questionShown)
   const index = useGameSelector(game => game.currentQuestion)
   const editorStateView = useSelector(state => state.editor.mode === 'view')
-  const questionShown = useGameSelector(game => game.questionShown)
+  const roundStarted = useGameSelector(game => game.roundStarted)
   const allOptionsOpened = options.every(option => option.opened)
 
   return (
@@ -42,16 +41,16 @@ const DynamicQuestion: React.FC<Props> = ({question, options, editing}) => {
             disableDelete
           />
         </Grid>
-        {questionShown && <>
+        {roundStarted && <>
           <Grid xs={6}><Typography color='primary' textAlign='center'>Синяя команда</Typography></Grid>
           <Grid xs={6}><Typography color='danger' textAlign='center'>Красная команда</Typography></Grid>
         </>}
-        {editing && questionShown && (
+        {editing && roundStarted && (
           <OptionsEditor defaultOptions={options} />
         )}
         {!editing && options.map((option, i) => (
           <Grid xs={6} key={i}>
-            <ButtonGroup disabled={option.opened && shown} size='lg' className={styles.optionButton}>
+            <ButtonGroup disabled={option.opened && roundStarted} size='lg' className={styles.optionButton}>
               <Button
                 fullWidth
                 variant='plain'
@@ -130,19 +129,19 @@ export const OptionsEditor: React.FC<OptionsEditorProps> = ({defaultOptions}) =>
 }
 
 const BottomControlsInner: React.FC<DynamicState> = ({options}) => {
-  const questionShown = useGameSelector(game => game.questionShown)
+  const roundStarted = useGameSelector(game => game.roundStarted)
   const dispatch = useDispatch()
   const allOptionsOpened = options.every(option => option.opened)
 
-  return !questionShown || allOptionsOpened ? (
+  return !roundStarted || allOptionsOpened ? (
     <Grid xs={12} display='flex' justifyContent='flex-end'>
-      {questionShown ? (
+      {roundStarted ? (
         <NextQuestionButton />
       ) : (
         <Button
           variant='solid'
           color='primary'
-          onClick={() => dispatch(showQuestion())}
+          onClick={() => dispatch(startRound())}
         >Показать вопрос</Button>
       )}
     </Grid>

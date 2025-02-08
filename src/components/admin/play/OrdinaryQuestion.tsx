@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React from 'react'
-import { correctAnswer, correctBonus, useDispatch, useGameSelector, wrongBonus, OrdinaryQuestion, useSelector, areAllOptionsOpened, wrongAnswer, utilizeHealthChance, discardHealthChance, chooseTeam, showQuestion, OrdinaryState, QuestionName, startEditing, isEveryoneDeadSelector } from '../../../store'
+import { correctAnswer, correctBonus, useDispatch, useGameSelector, wrongBonus, OrdinaryQuestion, useSelector, areAllOptionsOpened, wrongAnswer, utilizeHealthChance, discardHealthChance, chooseTeam, OrdinaryState, startEditing, isEveryoneDeadSelector, startRound } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -27,7 +27,7 @@ const OrdinaryQuestion: React.FC<Props> = ({question, options: optionsState, dra
   const everyoneDead = useGameSelector(isEveryoneDeadSelector)
   const dispatch = useDispatch()
   const ref = useAutoScroll()
-  const shown = useGameSelector(game => game.questionShown)
+  const roundStarted = useGameSelector(game => game.roundStarted)
   const index = useGameSelector(game => game.currentQuestion)
   const editorStateView = useSelector(state => state.editor.mode === 'view')
 
@@ -73,7 +73,7 @@ const OrdinaryQuestion: React.FC<Props> = ({question, options: optionsState, dra
         <Chip variant='outlined' color='primary'>{question.name}</Chip>
         <div className={styles.options}>
           {question.options.map((option, i) => {
-            const canClick = (currentTeam != null || everyoneDead) && shown && !optionsState[i].opened && !healthChanceActive
+            const canClick = (currentTeam != null || everyoneDead) && roundStarted && !optionsState[i].opened && !healthChanceActive
             let className = styles.optionText
             if (optionsState[i].opened) className += ' ' + styles.tiny
             const size = 'lg'
@@ -155,7 +155,7 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawsFinished, healthChan
 
   const roundFinished = useGameSelector(game => game.roundFinished)
 
-  const shown = useGameSelector(game => game.questionShown)
+  const roundStarted = useGameSelector(game => game.roundStarted)
 
   function onFail(punch: boolean = true) {
     if (currentTeam != null) {
@@ -215,7 +215,7 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawsFinished, healthChan
               </Button>
             )}
           </Stack>
-          {currentQuestion >= 0 && (shown ? <>
+          {currentQuestion >= 0 && (roundStarted ? <>
             {drawsFinished < NUM_DRAWS && (
               <Chip color='warning' variant='soft'>Розыгрыш хода...</Chip>
             )}
@@ -244,7 +244,7 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawsFinished, healthChan
               )
             )}
           </> : (
-            <Button color='primary' onClick={() => dispatch(showQuestion())}>Показать вопрос</Button>
+            <Button color='primary' onClick={() => dispatch(startRound())}>Показать вопрос</Button>
           ))}
           {roundFinished && <NextQuestionButton />}
         </>}
