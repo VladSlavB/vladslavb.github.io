@@ -388,6 +388,7 @@ const gameSlice = createSlice({
         playCorrect()
         state[team].score += 5
       }
+      decideIfRoundFinished(state)
     },
     startEditingDynamicOptions(state) {
       if (state.q?.type !== 'dynamic') return
@@ -515,10 +516,13 @@ function decideOnDraw(state: GameState) {
 
 export function areAllOptionsOpened(state: GameState) {
   if (state.currentQuestion >= 0) {
-    if (state.q?.type !== 'ordinary') return false
-    return state.q.options.every(option => (
-      option.opened && (option.bonus == null || option.bonus.opened)
-    ))
+    if (state.q?.type === 'ordinary') {
+      return state.q.options.every(option => (
+        option.opened && (option.bonus == null || option.bonus.opened)
+      ))
+    } else if (state.q?.type === 'dynamic') {
+      return state.q.options.every(option => option.opened)
+    }
   }
   return false
 }
@@ -527,6 +531,7 @@ function decideIfRoundFinished(state: GameState) {
   const everyOneDead = isEveryoneDeadSelector(state)
   const allOptionsOpened = areAllOptionsOpened(state)
   const nobodyCanPlay = !canPlay(state, 'leftTeam') && !canPlay(state, 'rightTeam')
+  console.log(everyOneDead, allOptionsOpened, nobodyCanPlay, state.roundFinished)
   if ((everyOneDead || allOptionsOpened || nobodyCanPlay) && !state.roundFinished) {
     state.roundFinished = true
     state.currentTeam = null
