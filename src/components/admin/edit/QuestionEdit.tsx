@@ -10,33 +10,44 @@ import { InputOption, InputQuestion } from './types'
 import OptionEdit from './OptionEdit'
 import Select from '@mui/joy/Select'
 import Option from '@mui/joy/Option'
-import { NUM_OPTIONS } from '../../../defaults'
+import { NUM_ORDINARY_MIN_OPTIONS, NUM_ORDINARY_MAX_OPTIONS } from '../../../defaults'
 import Typography from '@mui/joy/Typography'
 import TwoColumns from '../../common/TwoColumns'
 
 
-function makeInputQuestion(question: Question): InputQuestion {
+const DEFAULT_OPTIONS = Array<InputOption>(NUM_ORDINARY_MAX_OPTIONS).fill({
+  value: '',
+  score: '',
+  attachments: [],
+})
+
+function makeInputQuestion(question: Question, keepNumOptions: boolean): InputQuestion {
+  let options = [...DEFAULT_OPTIONS]
+  if (question.name !== QuestionName.dynamic) {
+    if (keepNumOptions) {
+      options = DEFAULT_OPTIONS.slice(0, question.options.length)
+    }
+    for (let i = 0; i < question.options.length; i++) {
+      const option = question.options[i]
+      options[i] = {
+        ...option,
+        score: `${option.score}`,
+        bonus: option.bonus != null ? {
+          ...option.bonus,
+          score: `${option.bonus.score}`,
+        } : undefined,
+      }
+    }
+  }
   return {
     ...question,
-    options: question.name !== QuestionName.dynamic ? question.options?.map(option => ({
-      ...option,
-      score: `${option.score}`,
-      bonus: option.bonus != null ? {
-        ...option.bonus,
-        score: `${option.bonus.score}`,
-      } : undefined,
-    })) : DEFAULT_OPTIONS
+    options,
   }
 }
 
 const validateQuestionValue = (value: string) => value.trim() !== ''
 const validateScore = (score: string) => parseInt(score) > 0
 
-const DEFAULT_OPTIONS = Array<InputOption>(NUM_OPTIONS).fill({
-  value: '',
-  score: '',
-  attachments: [],
-})
 const DEFAULT_QUESTION: InputQuestion = {
   name: QuestionName.social,
   value: '',
@@ -50,18 +61,27 @@ type Props = {
 
 const QuestionEdit: React.FC<Props> = ({editIndex}) => {
   const dispatch = useDispatch()
+  // Инфа для редактирования вопроса прямо во время игры
+  const partiallyEditable = useGameSelector(game => game.currentQuestion === editIndex)
+  const options = useGameSelector(game => (
+    game.currentQuestion === editIndex && game.q?.type === 'ordinary' ? (
+      game.q.options
+    ) : undefined
+  ))
+  const numMinOptions = partiallyEditable ? (options?.length ?? 0) : NUM_ORDINARY_MIN_OPTIONS
   const initialState = useSelector<InputQuestion>(state => (
-    editIndex != null ? makeInputQuestion(state.questions[editIndex]) : DEFAULT_QUESTION
+    editIndex != null ? makeInputQuestion(state.questions[editIndex], partiallyEditable) : DEFAULT_QUESTION
   ))
   const [ question, setQuestion ] = useImmer(initialState)
   const noOptions = question.name === QuestionName.dynamic
+  const validOptions = question.options.filter(option => validateQuestionValue(option.value))
   const everythingValid = (
     validateQuestionValue(question.value) && (
       noOptions ? (
         true
       ) : (
-        question.options.every(option => validateQuestionValue(option.value)) &&
-        question.options.every(option => (
+        validOptions.length >= numMinOptions &&
+        validOptions.every(option => (
           validateScore(option.score) && (option.bonus == null || validateScore(option.bonus.score))
         ))
       )
@@ -69,24 +89,31 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
   )
 
   const setAscendingScores = () => setQuestion(draft => {
-    draft.options.forEach((option, i) => {
-      option.score = `${i + 1}`
+    let score = 1
+    draft.options.forEach(option => {
+      if (option.value !== '') {
+        option.score = `${score++}`
+      }
     })
   })
   const setDescendingScores = () => setQuestion(draft => {
-    draft.options.forEach((option, i) => {
-      option.score = `${NUM_OPTIONS - i}`
+    let score = validOptions.length
+    draft.options.forEach(option => {
+      if (option.value !== '') {
+        option.score = `${score--}`
+      }
     })
   })
+  const disableScoreButtons = validOptions.length < numMinOptions
 
   const onSubmit = useCallback((e: FormEvent) => {
     e.preventDefault()
-    const { name, value, options } = question
+    const { name, value } = question
     const newQuestion: Question = name === QuestionName.dynamic ? {
       name, value,
     } : {
       name, value,
-      options: options.map(option => ({
+      options: validOptions.map(option => ({
         value: option.value,
         attachments: option.attachments,
         score: parseInt(option.score),
@@ -103,14 +130,6 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
     }
     dispatch(finishEditing())
   }, [question])
-
-  // Инфа для редактирования вопроса прямо во время игры
-  const partiallyEditable = useGameSelector(game => game.currentQuestion === editIndex)
-  const options = useGameSelector(game => (
-    game.currentQuestion === editIndex && game.q?.type === 'ordinary' ? (
-      game.q.options
-    ) : undefined
-  ))
 
   return (
     <Card variant='soft' size='sm'>
@@ -147,7 +166,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
                 <OptionEdit
                   option={option}
                   onEdit={optionEditFunc => setQuestion(draft => optionEditFunc(draft.options[i]))}
-                  placeholder={`Ответ #${i + 1}`}
+                  placeholder={`Вариант..`}
                   key={i}
                   disabled={options?.[i].opened}
                   disabledBonus={options?.[i].bonus?.opened}
@@ -158,11 +177,11 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
             {!partiallyEditable && (
               <Grid xs={12}>
                 <Stack direction='row' spacing={1}>
-                  <Button variant='outlined' color='neutral' onClick={setAscendingScores} size='sm'>
-                    Установить очки 1 &#10230; {NUM_OPTIONS}
+                  <Button variant='outlined' color='neutral' onClick={setAscendingScores} size='sm' disabled={disableScoreButtons}>
+                    Установить очки {disableScoreButtons ? 'по возрастанию' : <>1 &#10230; {validOptions.length}</>}
                   </Button>
-                  <Button variant='outlined' color='neutral' onClick={setDescendingScores} size='sm'>
-                    Установить очки {NUM_OPTIONS} &#10230; 1
+                  <Button variant='outlined' color='neutral' onClick={setDescendingScores} size='sm' disabled={disableScoreButtons}>
+                    Установить очки {disableScoreButtons ? 'по убыванию' : <>{validOptions.length} &#10230; 1</>}
                   </Button>
                 </Stack>
               </Grid>
@@ -170,7 +189,7 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
           </>}
           <Grid xs={12} display='flex' justifyContent='space-between' alignItems='baseline'>
             <Button type='submit' disabled={!everythingValid}>Сохранить</Button>
-            {!everythingValid && <Typography color='neutral' fontSize='sm'>Все поля обязательны</Typography>}
+            {!everythingValid && <Typography color='neutral' fontSize='sm'>Все поля обязательны{!partiallyEditable && ' (кроме 4 вариантов)'}</Typography>}
             <Button type='reset' variant='outlined' color='danger'>Отмена</Button>
           </Grid>
         </Grid>

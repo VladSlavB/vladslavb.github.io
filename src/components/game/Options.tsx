@@ -34,7 +34,7 @@ const Options: React.FC = () => {
     )
   ))
   if (options != null && optionsState != null) {
-    const rows = options.length / 2
+    const rows = Math.ceil(options.length / 2)
     const optionNodes = options.map((_, i) => {
       let index = dynamic ? i : transposeIndex(i, rows)
       const numberLabel = dynamic ? '?' : `${index + 1}`

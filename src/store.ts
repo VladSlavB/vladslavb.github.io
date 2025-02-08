@@ -7,7 +7,7 @@ import { save, load } from 'redux-localstorage-simple'
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import undoable from 'redux-undo'
 import { playCorrect, playFinish, playWrong } from './Audio'
-import { NUM_DYNAMIC_OPTIONS, NUM_FINALE_OPTIONS, NUM_OPTIONS, NUM_DRAWS } from './defaults'
+import { NUM_DYNAMIC_OPTIONS, NUM_FINALE_OPTIONS, NUM_DRAWS } from './defaults'
 
 
 export type Attachment =
@@ -156,7 +156,7 @@ const GAME_INITIAL_STATE = {
 type GameState = typeof GAME_INITIAL_STATE
 
 function makeDefaultOrdinaryOptions(question: OrdinaryQuestion) {
-  return Array(NUM_OPTIONS).fill(null).map((_, i) => ({
+  return Array(question.options.length).fill(null).map((_, i) => ({
     opened: false,
     bonus: question.options[i].bonus == null ? null : {
       opened: false,
@@ -240,6 +240,7 @@ const gameSlice = createSlice({
       state.currentQuestion++
       state.questionShown = false
       state.subtotalShown = false
+      state.roundFinished = false
       state.leftTeam.health = state.rightTeam.health = 3
       state.leftTeam.score = state.rightTeam.score = 0
       state.currentAttachments = null

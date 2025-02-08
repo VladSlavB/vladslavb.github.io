@@ -5,7 +5,7 @@ import Stack from '@mui/joy/Stack'
 
 export default function TwoColumns({children}: {children: JSX.Element[]}) {
   const total = children.length
-  const half = Math.floor(total / 2)
+  const half = Math.ceil(total / 2)
   return (
     <>
       <Grid xs={6}>
