@@ -15,12 +15,13 @@ const CANVAS_W = 1920, CANVAS_H = 1080
 const GameScreen: React.FC = () => {
   const { scale, left, top } = useAdaptiveTransform()
   const subtotalShown = useGameSelector(game => game.subtotalShown)
+  const gameScreenVisible = useSelector(state => state.visibility.gameScreenVisible)
   return (
     <div className={styles.game} style={{backgroundImage: `url(${background})`}}>
       <div className={styles.canvas} style={{
         transform: `scale(${scale})`, marginLeft: left, marginTop: top
       }}>
-        <div className={styles.wrapper + (subtotalShown ? ` ${styles.hidden}` : '')}>
+        <div className={styles.wrapper + (!gameScreenVisible || subtotalShown ? ` ${styles.hidden}` : '')}>
           <Name />
           <Question />
           <Options />

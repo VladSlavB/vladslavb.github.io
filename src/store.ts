@@ -6,7 +6,7 @@ import {
 import { save, load } from 'redux-localstorage-simple'
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import undoable from 'redux-undo'
-import { playCorrect, playFinish, playWrong } from './Audio'
+import { playCorrect, playWrong } from './Audio'
 import { NUM_DYNAMIC_OPTIONS, NUM_FINALE_OPTIONS, NUM_DRAWS } from './defaults'
 
 
@@ -390,9 +390,6 @@ const gameSlice = createSlice({
         playCorrect()
         state[team].score += 5
       }
-      if (options.every(option => option.opened)) {
-        setTimeout(playFinish, 1000)
-      }
     },
     startEditingDynamicOptions(state) {
       if (state.q?.type !== 'dynamic') return
@@ -542,15 +539,11 @@ export function areAllOptionsOpened(state: GameState) {
 }
 
 function decideIfRoundFinished(state: GameState) {
-  const prevRoundFinished = state.roundFinished
   const everyOneDead = isEveryoneDeadSelector(state)
   const allOptionsOpened = areAllOptionsOpened(state)
   state.roundFinished = everyOneDead || allOptionsOpened
   if (state.roundFinished) {
     state.currentTeam = null
-  }
-  if (state.roundFinished && !prevRoundFinished) {
-    setTimeout(playFinish, 1000)
   }
 }
 
@@ -578,6 +571,7 @@ const visibilitySlice = createSlice({
   name: 'visibility',
   initialState: {
     attachment: null as null | Attachment,
+    gameScreenVisible: true,
   },
   reducers: {
     showAttachment(state, action: PayloadAction<Attachment>) {
@@ -593,6 +587,9 @@ const visibilitySlice = createSlice({
         state.attachment = action.payload
       }
     },
+    toggleGameScreen(state) {
+      state.gameScreenVisible = !state.gameScreenVisible
+    },
   }
 })
 
@@ -600,6 +597,7 @@ export const {
   showAttachment,
   deleteAttachment,
   toggleAttachment,
+  toggleGameScreen,
 } = visibilitySlice.actions
 
 

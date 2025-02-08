@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react'
 import correct from '../assets/correct.wav'
 import wrong from '../assets/wrong.wav'
 import intro from '../assets/intro.mp3'
-import finish from '../assets/finish.mp3'
 import background1 from '../assets/background1.mp3'
 import background2 from '../assets/background2.mp3'
 import background3 from '../assets/background3.mp3'
@@ -33,7 +32,7 @@ function play(src: string) {
   }
 }
 
-export const allAudioUrls = [correct, wrong, intro, finish]
+export const allAudioUrls = [correct, wrong, intro]
 export const backgroundMusic = [background1, background2, background3]
 
 export const playCorrect = () => play(correct)
@@ -48,13 +47,3 @@ export function stopIntro() {
 
 }
 export const getIntroAudioRef = () => audioByUrl[intro]?.current
-export const playFinish = () => {
-  [...backgroundMusic, intro].forEach(url => {
-    const audio = audioByUrl[url]?.current
-    if (audio != null) {
-      audio.pause()
-      audio.currentTime = 0
-    }
-  })
-  play(finish)
-}

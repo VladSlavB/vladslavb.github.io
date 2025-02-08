@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import Audio, { backgroundMusic, getIntroAudioRef, playFinish, playIntro, playWrong, stopIntro } from '../../../Audio'
+import Audio, { backgroundMusic, getIntroAudioRef, playIntro, playWrong, stopIntro } from '../../../Audio'
 import ButtonGroup from '@mui/joy/ButtonGroup'
 import PlaylistIcon from '@mui/icons-material/QueueMusic'
 import AudiotrackIcon from '@mui/icons-material/Audiotrack'
 import Button from '@mui/joy/Button'
-import Done from '@mui/icons-material/Done'
 import Tooltip from '@mui/joy/Tooltip'
 import Stack from '@mui/joy/Stack'
 import HeartBroken from '@mui/icons-material/HeartBroken'
 import styles from './styles.css'
 import StopIcon from '@mui/icons-material/Stop'
-
+import { toggleGameScreen, useDispatch, useSelector } from '../../../store'
 
 const MusicControl: React.FC = () => {
   return (
@@ -31,7 +30,6 @@ const MusicControl: React.FC = () => {
       >
         <Button><PlaylistIcon /></Button>
       </Tooltip>
-      <Button onClick={playFinish} title='Звук конца раунда'><Done /></Button>
       <Button onClick={playWrong} title='Звук промаха'><HeartBroken /></Button>
     </ButtonGroup>
   )
