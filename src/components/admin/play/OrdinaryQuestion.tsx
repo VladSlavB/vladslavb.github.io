@@ -110,6 +110,7 @@ const OrdinaryQuestion: React.FC<Props> = ({question, options: optionsState, dra
                   disabled={disabled}
                   size={size}
                   onClick={() => onBonusClick(i)}
+                  style={{whiteSpace: 'nowrap'}}
                   startDecorator={option.bonus.attachments.length > 0 ? <AttachmentIcon /> : undefined}
                 >
                   +{option.bonus.score}

@@ -89,7 +89,7 @@ function Option(props: Option & {label: string, opened: boolean, bonusOpened: bo
       </div>
       <div className={styles.option}>
         {props.opened && <>
-          <span className={valueClassName}>{props.value}</span>
+          <span className={valueClassName} ref={ref => ref != null && fitOptionText(ref)}>{props.value}</span>
           {props.bonus != null && (
               <span className={starClassName}><Star className={starClassName} /></span>
             )}
@@ -98,4 +98,21 @@ function Option(props: Option & {label: string, opened: boolean, bonusOpened: bo
       </div>
     </div>
   )
+}
+
+function fitOptionText(node?: HTMLSpanElement) {
+  function boxFits(inner: DOMRect, outer: DOMRect) {
+    console.log(inner.width, inner.height, outer.width, outer.height)
+    return inner.width <= outer.width && inner.height <= outer.height
+  }
+  if (node == null) return
+  const parent = node.parentElement
+  if (parent == null) return
+  let ems = 1.0
+  while (!boxFits(node.getBoundingClientRect(), parent.getBoundingClientRect())) {
+    node.style.fontSize = `${ems *= 0.9}em`
+    if (ems < 0.2) {
+      break
+    }
+  }
 }
