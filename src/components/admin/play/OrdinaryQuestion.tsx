@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React from 'react'
-import { correctAnswer, correctBonus, useDispatch, useGameSelector, wrongBonus, OrdinaryQuestion, useSelector, areAllOptionsOpened, wrongAnswer, discardBonusChance, utilizeHealthChance, discardHealthChance, chooseTeam, showQuestion, OrdinaryState, QuestionName, startEditing, isEveryoneDeadSelector } from '../../../store'
+import { correctAnswer, correctBonus, useDispatch, useGameSelector, wrongBonus, OrdinaryQuestion, useSelector, areAllOptionsOpened, wrongAnswer, utilizeHealthChance, discardHealthChance, chooseTeam, showQuestion, OrdinaryState, QuestionName, startEditing, isEveryoneDeadSelector } from '../../../store'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
 import Button from '@mui/joy/Button'
@@ -23,7 +23,7 @@ type WrapperProps = {
   question: OrdinaryQuestion
 }
 type Props = WrapperProps & OrdinaryState
-const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: optionsState, drawsFinished}) => {
+const OrdinaryQuestion: React.FC<Props> = ({question, options: optionsState, drawsFinished}) => {
   const currentTeam = useGameSelector(game => game.currentTeam)
   const everyoneDead = useGameSelector(isEveryoneDeadSelector)
   const dispatch = useDispatch()
@@ -72,7 +72,7 @@ const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: opti
         <Chip variant='outlined' color='primary'>{question.name}</Chip>
         <div className={styles.options}>
           {question.options.map((option, i) => {
-            const canClick = (currentTeam != null || everyoneDead) && shown && !optionsState[i].opened && bonusChance == null
+            const canClick = (currentTeam != null || everyoneDead) && shown && !optionsState[i].opened
             let className = styles.optionText
             if (optionsState[i].opened) className += ' ' + styles.tiny
             const size = 'lg'
@@ -94,8 +94,7 @@ const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: opti
             )]
             const disabled = (
               optionsState[i].bonus?.opened ||
-              !optionsState[i].opened ||
-              bonusChance != null || (
+              !optionsState[i].opened || (
                 currentTeam != null && !optionsState[i].bonus?.vacantFor[currentTeam]
               ) ||
               drawsFinished < NUM_DRAWS
@@ -144,18 +143,11 @@ const OrdinaryQuestion: React.FC<Props> = ({question, bonusChance, options: opti
 
 export default ordinaryWrapper(OrdinaryQuestion)
 
-const BottomControlsInner: React.FC<OrdinaryState> = ({drawsFinished, bonusChance, healthChance, drawHalfFinished}) => {
+const BottomControlsInner: React.FC<OrdinaryState> = ({drawsFinished, healthChance, drawHalfFinished}) => {
   const dispatch = useDispatch()
   const currentTeam = useGameSelector(game => game.currentTeam)
   const currentQuestion = useGameSelector(game => game.currentQuestion)
   const allOptionsOpened = useGameSelector(areAllOptionsOpened)
-  const bonusChanceBonus = useSelector(state => {
-    const question = state.questions[state.game.present.currentQuestion]
-    if (bonusChance != null && question.name !== QuestionName.dynamic) {
-      return question.options[bonusChance.optionIndex].bonus
-    }
-    return null
-  })
   const everyoneDead = useGameSelector(isEveryoneDeadSelector)
 
   const roundFinished = useGameSelector(game => game.roundFinished)
@@ -167,20 +159,6 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawsFinished, bonusChanc
       hitAnimation(currentTeam)
     }
     dispatch(wrongAnswer(punch))
-  }
-
-  function onBonusChanceClick(success: boolean) {
-    if (bonusChance == null || bonusChanceBonus == null || currentTeam == null) return
-    if (success) {
-      dispatch(correctBonus({
-        index: bonusChance.optionIndex,
-        score: bonusChanceBonus.score,
-        attachments: bonusChanceBonus.attachments,
-      }))
-    } else {
-      dispatch(discardBonusChance())
-      hitAnimation(currentTeam)
-    }
   }
 
   function onHealthChanceClick(utilize: boolean) {
@@ -201,15 +179,7 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawsFinished, bonusChanc
   return (
     <>
       <Stack direction='row' spacing={2} className={styles.gameControl} flexWrap='wrap'>
-        {bonusChance != null && currentTeam != null ? <>
-          <Typography>
-            Команда <Typography color={teamColor(currentTeam)}>
-              {currentTeam === 'leftTeam' ? 'синих' : 'красных'}
-            </Typography> правильно ответила на допвопрос?
-          </Typography>
-          <Button color='success' onClick={() => onBonusChanceClick(true)}>Да</Button>
-          <Button color='danger' onClick={() => onBonusChanceClick(false)}>Нет</Button>
-        </> : healthChance != null ? <>
+        {healthChance != null ? <>
           <Typography>
             Оставить команду <Typography color={teamColor(healthChance)}>
               {healthChance === 'leftTeam' ? 'синих' : 'красных'}
@@ -246,7 +216,7 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawsFinished, bonusChanc
             {drawsFinished < NUM_DRAWS && (
               <Chip color='warning' variant='soft'>Розыгрыш хода...</Chip>
             )}
-            {currentTeam == null ? (
+            {currentTeam == null && drawsFinished < NUM_DRAWS ? (
               !everyoneDead && (
                 <ButtonGroup>
                   <Button
@@ -264,7 +234,7 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawsFinished, bonusChanc
                 </ButtonGroup>
               )
             ) : (
-              !allOptionsOpened && (
+              !allOptionsOpened && currentTeam != null && (
                 <Typography color={teamColor(currentTeam)}>
                   Отвечают {currentTeam === 'leftTeam' ? 'синие' : 'красные'}
                 </Typography>

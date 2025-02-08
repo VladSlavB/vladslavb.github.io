@@ -172,10 +172,6 @@ function makeOrdinaryState(question: OrdinaryQuestion) {
     drawsFinished: 0,
     drawHalfFinished: false,
     numFastestDraws: {leftTeam: 0, rightTeam: 0},
-    bonusChance: null as null | {
-      optionPayload: {best?: boolean, score: number},
-      optionIndex: number
-    },
     healthChance: null as null | Team,
   }
 }
@@ -273,31 +269,21 @@ const gameSlice = createSlice({
     ) {
       if (state.q?.type !== 'ordinary') return
       playCorrect()
-      decideIfRoundFinished(state)
       const payload = action.payload
       const option = state.q.options[payload.index]
       option.opened = true
       state.currentAttachments = {optionIndex: payload.index, bonus: false}
-      if (state.currentTeam == null) return
-      state[state.currentTeam].score += payload.score
-      if (payload.hasBonus) {
-        state.q.bonusChance = {
-          optionIndex: payload.index,
-          optionPayload: {
-            best: payload.best ?? false,
-            score: payload.score
-          },
-        }
+      if (state.currentTeam != null) {
+        state[state.currentTeam].score += payload.score
       }
       if (state.q.drawsFinished === NUM_DRAWS) {
         if (!payload.hasBonus) { 
           switchTeamIfPossible(state)
         }
       } else {
-        if (state.q.bonusChance == null) {
-          decideOnDraw(state)
-        }
+        decideOnDraw(state)
       }
+      decideIfRoundFinished(state)
     },
     correctBonus(state, action: PayloadAction<{
       index: number,
@@ -305,18 +291,14 @@ const gameSlice = createSlice({
       attachments: Attachment[],
     }>) {
       if (state.q?.type !== 'ordinary') return
+      if (state.q.drawsFinished < NUM_DRAWS) return
       const bonus = state.q.options[action.payload.index].bonus
       if (bonus != null) bonus.opened = true
       state.currentAttachments = {optionIndex: action.payload.index, bonus: true}
       if (state.currentTeam != null) {
         state[state.currentTeam].score += action.payload.score
-        if (state.q.drawsFinished === NUM_DRAWS) {
-          switchTeamIfPossible(state)
-        } else if (state.q.bonusChance != null) {
-          decideOnDraw(state)
-        }
+        switchTeamIfPossible(state)
       }
-      state.q.bonusChance = null
       decideIfRoundFinished(state)
       playCorrect()
     },
@@ -324,24 +306,22 @@ const gameSlice = createSlice({
       switch (state.q?.type) {
       case 'ordinary':
         if (state.currentTeam == null) return
+        if (punchAction.payload) {
+          state[state.currentTeam].health--
+        }
         if (state[state.currentTeam].health === 0) {
           state.q.healthChance = state.currentTeam
         } else {
-          if (punchAction.payload) {
-            state[state.currentTeam].health--
-          }
           if (state.q.drawsFinished < NUM_DRAWS) {
             decideOnDraw(state)
           } else {
             switchTeamIfPossible(state)
           }
+          decideIfRoundFinished(state)
         }
         break
       case 'dynamic':
         decideIfRoundFinished(state)
-        if (state.roundFinished) {
-          state.currentTeam = null
-        }
         switchTeamIfPossible(state)
         break
       default:
@@ -377,20 +357,6 @@ const gameSlice = createSlice({
       state.q.healthChance = null
       switchTeamIfPossible(state)
       decideIfRoundFinished(state)
-    },
-    discardBonusChance(state) {
-      if (state.q?.type !== 'ordinary') return
-      if (state.q.bonusChance == null || state.currentTeam == null) return
-      const bonus = state.q.options[state.q.bonusChance.optionIndex].bonus
-      if (bonus != null) bonus.vacantFor[state.currentTeam] = false
-      if (state.q.drawsFinished === NUM_DRAWS) {
-        switchTeamIfPossible(state)
-      } else if (state.q.bonusChance != null) {
-        decideOnDraw(state)
-      }
-      state.q.bonusChance = null
-      decideIfRoundFinished(state)
-      playWrong()
     },
     deltaScore(state, action: PayloadAction<{team: Team, value: number}>) {
       state[action.payload.team].score += action.payload.value
@@ -579,6 +545,9 @@ function decideIfRoundFinished(state: GameState) {
   const everyOneDead = isEveryoneDeadSelector(state)
   const allOptionsOpened = areAllOptionsOpened(state)
   state.roundFinished = everyOneDead || allOptionsOpened
+  if (state.roundFinished) {
+    state.currentTeam = null
+  }
   if (state.roundFinished && !prevRoundFinished) {
     setTimeout(playFinish, 1000)
   }
@@ -590,7 +559,7 @@ export const {
   deltaScore, plusHealth,
 
   correctAnswer, wrongAnswer,
-  correctBonus, discardBonusChance, wrongBonus,
+  correctBonus, wrongBonus,
   utilizeHealthChance, discardHealthChance,
   showQuestion,
 
