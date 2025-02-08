@@ -2,7 +2,7 @@ import styles from './styles.css'
 import React from 'react'
 import QuestionsListPreview from '../components/admin/preview/QuestionsList'
 import QuestionsListControl from '../components/admin/play/QuestionsList'
-import { useGameSelector, useSelector } from '../store'
+import { hideAll, useDispatch, useGameSelector, useSelector } from '../store'
 import Typography from '@mui/joy/Typography'
 import StickyControls from '../components/admin/play/SticklyControls'
 import Audio, { allAudioUrls } from '../Audio'
@@ -26,8 +26,21 @@ const AdminScreen: React.FC = () => {
       )}
       {allAudioUrls.map(url => <Audio src={url} key={url} controls style={{overflow: 'hidden', height: 0}} />)}
       <ImportExport />
+      <Overlay />
     </div>
   )
 }
 
 export default AdminScreen
+
+
+const Overlay = () => {
+  const showOverlay = useSelector(state => (
+    state.visibility.attachment != null ||
+    state.visibility.subtotalVisible ||
+    !state.visibility.gameScreenVisible
+  ))
+  const dispatch = useDispatch()
+
+  return showOverlay ? <div className={styles.overlay} onClick={() => dispatch(hideAll())} /> : null
+}

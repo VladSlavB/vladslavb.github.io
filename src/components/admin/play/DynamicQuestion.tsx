@@ -13,7 +13,7 @@ import IconButton from '@mui/joy/IconButton'
 import styles from './styles.css'
 import CurrentAttachments from './CurrentAttachments'
 import { hitAnimation } from '../../game/Teams'
-import SubtotalThenNextQuestion from './SubtotalThenNextQuestion'
+import NextQuestionButton from './NextQuestionButton'
 import HeaderWithActions from '../preview/HeaderWithActions'
 import AttachmentIcon from '@mui/icons-material/Attachment'
 
@@ -137,7 +137,7 @@ const BottomControlsInner: React.FC<DynamicState> = ({options}) => {
   return !questionShown || allOptionsOpened ? (
     <Grid xs={12} display='flex' justifyContent='flex-end'>
       {questionShown ? (
-        <SubtotalThenNextQuestion />
+        <NextQuestionButton />
       ) : (
         <Button
           variant='solid'

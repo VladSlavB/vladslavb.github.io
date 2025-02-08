@@ -6,15 +6,12 @@ import { finishGame, startGame, useDispatch, useSelector, useGameSelector, delta
 import OpenInNew from '@mui/icons-material/OpenInNew'
 import UndoIcon from '@mui/icons-material/Undo'
 import RedoIcon from '@mui/icons-material/Redo';
-import Visibility from '@mui/icons-material/Visibility'
-import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import { ActionCreators } from 'redux-undo'
 import Favorite from '@mui/icons-material/Favorite'
 import { playCorrect, playWrong } from '../../../Audio'
 import MusicControl from './MusicControl'
-import InstantAttachment from './InstantAttachment'
 import NextQuestionButton from './NextQuestionButton'
-import IconButton from '@mui/joy/IconButton/IconButton'
+import VisibilityControl from './VisibilityControl'
 
 export let gameWindow: Window | null = null
 
@@ -102,10 +99,9 @@ const StickyControls: React.FC = () => {
               &minus;1
             </Button>
           </ButtonGroup>
-          <InstantAttachment />
+          <VisibilityControl />
         </>}
         <MusicControl />
-        <GameScreenVisibilityControl />
       </> : (
         <Button
           disabled={editorActive}
@@ -159,18 +155,4 @@ function onClose(w: Window, callback: () => void) {
       callback()
     }
   })
-}
-
-const GameScreenVisibilityControl: React.FC = () => {
-  const dispatch = useDispatch()
-  const gameScreenVisible = useSelector(state => state.visibility.gameScreenVisible)
-  return (
-    <IconButton
-      className={styles.outlined}
-      onClick={() => dispatch(toggleGameScreen())}
-      title={gameScreenVisible ? 'Скрыть экран игры' : 'Показывать экран игры'}
-    >
-      {gameScreenVisible ? <VisibilityOff /> : <Visibility />}
-    </IconButton>
-  )
 }

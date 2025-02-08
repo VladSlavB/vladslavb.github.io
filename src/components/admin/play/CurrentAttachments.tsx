@@ -1,5 +1,5 @@
 import React from 'react'
-import { QuestionName, deleteAttachment, toggleAttachment, useDispatch, useSelector } from '../../../store'
+import { QuestionName, toggleAttachment, useDispatch, useSelector } from '../../../store'
 import AttachmentsList from '../../common/AttachmentsList'
 import styles from './styles.css'
 
@@ -28,12 +28,10 @@ const CurrentAttachments: React.FC = () => {
     }
   })
   const dispatch = useDispatch()
-  const showOverlay = useSelector(state => state.visibility.attachment != null)
 
   if (!attachments?.length) return null
   return (
     <div>
-      {showOverlay && <div className={styles.overlay} onClick={() => dispatch(deleteAttachment())} />}
       <div className={styles.attachments}>
         <AttachmentsList
           option={{attachments}}

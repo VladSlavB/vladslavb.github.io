@@ -130,7 +130,6 @@ const GAME_INITIAL_STATE = {
   currentQuestion: -1,
   finale: false,
   questionShown: false,
-  subtotalShown: false,
   currentAttachments: null as null | {
     optionIndex: number
     bonus?: boolean
@@ -239,7 +238,6 @@ const gameSlice = createSlice({
     nextQuestion(state, action: PayloadAction<Question | undefined>) {
       state.currentQuestion++
       state.questionShown = false
-      state.subtotalShown = false
       state.roundFinished = false
       state.leftTeam.health = state.rightTeam.health = 3
       state.leftTeam.score = state.rightTeam.score = 0
@@ -398,7 +396,6 @@ const gameSlice = createSlice({
 
     openFinale(state) {
       state.currentQuestion++
-      state.subtotalShown = false
       state.finale = true
       const teamsOrder = ['leftTeam', 'rightTeam'] as Team[]
       teamsOrder.sort((a, b) => (state[b].wins - state[a].wins) * 100500 + state[b].cumulativeScore - state[a].cumulativeScore)
@@ -456,18 +453,6 @@ const gameSlice = createSlice({
     startEditingFinaleOptions(state, action: PayloadAction<{teamIndex: number}>) {
       if (state.q?.type !== 'finale') return
       state.q.optionsDone[action.payload.teamIndex] = false
-    },
-
-    makeSubtotal(state) {
-      state.subtotalShown = true
-      state.leftTeam.cumulativeScore += state.leftTeam.score
-      state.rightTeam.cumulativeScore += state.rightTeam.score
-      if (state.leftTeam.score >= state.rightTeam.score) {
-        state.leftTeam.wins++
-      }
-      if (state.leftTeam.score <= state.rightTeam.score) {
-        state.rightTeam.wins++
-      }
     },
     showQuestion(state) {
       state.questionShown = true
@@ -541,15 +526,25 @@ export function areAllOptionsOpened(state: GameState) {
 function decideIfRoundFinished(state: GameState) {
   const everyOneDead = isEveryoneDeadSelector(state)
   const allOptionsOpened = areAllOptionsOpened(state)
-  state.roundFinished = everyOneDead || allOptionsOpened
-  if (state.roundFinished) {
+  const nobodyCanPlay = !canPlay(state, 'leftTeam') && !canPlay(state, 'rightTeam')
+  if ((everyOneDead || allOptionsOpened || nobodyCanPlay) && !state.roundFinished) {
+    state.roundFinished = true
     state.currentTeam = null
+
+    state.leftTeam.cumulativeScore += state.leftTeam.score
+    state.rightTeam.cumulativeScore += state.rightTeam.score
+    if (state.leftTeam.score >= state.rightTeam.score) {
+      state.leftTeam.wins++
+    }
+    if (state.leftTeam.score <= state.rightTeam.score) {
+      state.rightTeam.wins++
+    }
   }
 }
 
 export const {
   startGame, finishGame,
-  nextQuestion, chooseTeam, makeSubtotal,
+  nextQuestion, chooseTeam,
   deltaScore, plusHealth,
 
   correctAnswer, wrongAnswer,
@@ -572,13 +567,11 @@ const visibilitySlice = createSlice({
   initialState: {
     attachment: null as null | Attachment,
     gameScreenVisible: true,
+    subtotalVisible: false,
   },
   reducers: {
     showAttachment(state, action: PayloadAction<Attachment>) {
       state.attachment = action.payload
-    },
-    deleteAttachment(state) {
-      state.attachment = null
     },
     toggleAttachment(state, action: PayloadAction<Attachment>) {
       if (state.attachment === action.payload) {
@@ -590,14 +583,23 @@ const visibilitySlice = createSlice({
     toggleGameScreen(state) {
       state.gameScreenVisible = !state.gameScreenVisible
     },
+    toggleSubtotal(state) {
+      state.subtotalVisible = !state.subtotalVisible
+    },
+    hideAll(state) {
+      state.attachment = null
+      state.gameScreenVisible = true
+      state.subtotalVisible = false
+    },
   }
 })
 
 export const {
   showAttachment,
-  deleteAttachment,
   toggleAttachment,
   toggleGameScreen,
+  toggleSubtotal,
+  hideAll,
 } = visibilitySlice.actions
 
 

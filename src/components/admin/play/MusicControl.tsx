@@ -9,7 +9,6 @@ import Stack from '@mui/joy/Stack'
 import HeartBroken from '@mui/icons-material/HeartBroken'
 import styles from './styles.css'
 import StopIcon from '@mui/icons-material/Stop'
-import { toggleGameScreen, useDispatch, useSelector } from '../../../store'
 
 const MusicControl: React.FC = () => {
   return (

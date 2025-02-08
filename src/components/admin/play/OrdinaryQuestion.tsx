@@ -11,12 +11,11 @@ import IconButton from '@mui/joy/IconButton'
 import { hitAnimation } from '../../game/Teams'
 import { useAutoScroll } from '../scroll'
 import Chip from '@mui/joy/Chip'
-import Box from '@mui/joy/Box'
 import CurrentAttachments from './CurrentAttachments'
-import SubtotalThenNextQuestion from './SubtotalThenNextQuestion'
 import HeaderWithActions from '../preview/HeaderWithActions'
 import AttachmentIcon from '@mui/icons-material/Attachment'
 import { NUM_DRAWS } from '../../../defaults'
+import NextQuestionButton from './NextQuestionButton'
 
 
 type WrapperProps = {
@@ -60,6 +59,8 @@ const OrdinaryQuestion: React.FC<Props> = ({question, options: optionsState, dra
     hitAnimation(currentTeam)
   }
 
+  const healthChanceActive = useGameSelector(game => game.q?.type === 'ordinary' && game.q.healthChance != null)
+
   return (
     <Card variant='soft' ref={ref}>
       <Stack spacing={2}>
@@ -72,7 +73,7 @@ const OrdinaryQuestion: React.FC<Props> = ({question, options: optionsState, dra
         <Chip variant='outlined' color='primary'>{question.name}</Chip>
         <div className={styles.options}>
           {question.options.map((option, i) => {
-            const canClick = (currentTeam != null || everyoneDead) && shown && !optionsState[i].opened
+            const canClick = (currentTeam != null || everyoneDead) && shown && !optionsState[i].opened && !healthChanceActive
             let className = styles.optionText
             if (optionsState[i].opened) className += ' ' + styles.tiny
             const size = 'lg'
@@ -97,7 +98,8 @@ const OrdinaryQuestion: React.FC<Props> = ({question, options: optionsState, dra
               !optionsState[i].opened || (
                 currentTeam != null && !optionsState[i].bonus?.vacantFor[currentTeam]
               ) ||
-              drawsFinished < NUM_DRAWS
+              drawsFinished < NUM_DRAWS ||
+              healthChanceActive
             )
             if (option.bonus != null) {
               buttons.push(
@@ -243,7 +245,7 @@ const BottomControlsInner: React.FC<OrdinaryState> = ({drawsFinished, healthChan
           </> : (
             <Button color='primary' onClick={() => dispatch(showQuestion())}>Показать вопрос</Button>
           ))}
-          {roundFinished && <SubtotalThenNextQuestion />}
+          {roundFinished && <NextQuestionButton />}
         </>}
       </Stack>
       <CurrentAttachments />
