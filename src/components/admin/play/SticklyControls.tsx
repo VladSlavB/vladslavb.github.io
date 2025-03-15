@@ -2,12 +2,11 @@ import styles from './styles.css'
 import React, { useEffect, useState } from 'react'
 import Button from '@mui/joy/Button/Button'
 import ButtonGroup from '@mui/joy/ButtonGroup/ButtonGroup'
-import { finishGame, startGame, useDispatch, useSelector, useGameSelector, deltaScore, plusHealth, Team, toggleGameScreen } from '../../../store'
+import { finishGame, startGame, useDispatch, useSelector, useGameSelector, deltaScore, Team } from '../../../store'
 import OpenInNew from '@mui/icons-material/OpenInNew'
 import UndoIcon from '@mui/icons-material/Undo'
 import RedoIcon from '@mui/icons-material/Redo';
 import { ActionCreators } from 'redux-undo'
-import Favorite from '@mui/icons-material/Favorite'
 import { playCorrect, playWrong } from '../../../Audio'
 import MusicControl from './MusicControl'
 import NextQuestionButton from './NextQuestionButton'
@@ -24,8 +23,6 @@ const StickyControls: React.FC = () => {
   const dispatch = useDispatch()
   const hasPast = useSelector(state => state.game.past.length > 1)
   const hasFuture = useSelector(state => state.game.future.length > 0)
-  const leftAlive = useGameSelector(game => game.leftTeam.health > 0)
-  const rightAlive = useGameSelector(game => game.rightTeam.health > 0)
 
   function openGameWindow() {
     gameWindow = open('.', '_blank', 'popup,width=640,height=360')
@@ -53,11 +50,6 @@ const StickyControls: React.FC = () => {
     playWrong()
   }
 
-  function addHealth(team: Team) {
-    dispatch(plusHealth(team))
-    playCorrect()
-  }
-
   const editing = useSelector(state => state.editor.mode === 'edit' || state.editor.mode === 'editFinale')
   if (editing) return null
 
@@ -77,16 +69,6 @@ const StickyControls: React.FC = () => {
               color='primary' onClick={() => addScore('leftTeam')}
             >
               +1
-            </Button>
-            <Button title='Добавить жизнь синей команде'
-              color='primary' onClick={() => addHealth('leftTeam')} disabled={!leftAlive}
-            >
-              <Favorite />
-            </Button>
-            <Button title='Добавить жизнь красной команде'
-              color='danger' onClick={() => addHealth('rightTeam')} disabled={!rightAlive}
-            >
-              <Favorite />
             </Button>
             <Button title='Добавить балл красной команде'
               color='danger' onClick={() => addScore('rightTeam')}

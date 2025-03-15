@@ -30,11 +30,10 @@ const AttachmentsList: React.FC<Props> = ({option, onEdit, onClick, disabled}) =
               {deleter}
             </div>
           ) : (
-            <span>
+            <span key={i}>
               <Typography
                 className={styles.text}
                 level='body-xs' variant='outlined' color='warning'
-                key={i}
                 onClick={() => onClick?.(attachment)}
               >
                 {attachment.text}

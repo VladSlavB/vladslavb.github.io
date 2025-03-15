@@ -1,5 +1,5 @@
 import React from 'react'
-import { DynamicQuestion, DynamicState, openOption, setOptions, startEditing, startEditingDynamicOptions, startRound, useDispatch, useGameSelector, useSelector } from '../../../store'
+import { DynamicQuestion, DynamicState, openDynamicOption, setOptions, startEditing, startEditingDynamicOptions, startRound, useDispatch, useGameSelector, useSelector } from '../../../store'
 import { useAutoScroll } from '../scroll'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
@@ -55,14 +55,14 @@ const DynamicQuestion: React.FC<Props> = ({question, options, editing}) => {
                 fullWidth
                 variant='plain'
                 color='neutral'
-                onClick={() => dispatch(openOption({index: i, wrong: false}))}
+                onClick={() => dispatch(openDynamicOption({index: i, wrong: false}))}
                 startDecorator={option.attachments.length > 0 ? <AttachmentIcon /> : undefined}
               >{option.wrong ? <s>{option.value}</s> : option.value}</Button>
               <IconButton
                 variant='soft'
                 color='danger'
                 onClick={() => {
-                  dispatch(openOption({index: i, wrong: true}))
+                  dispatch(openDynamicOption({index: i, wrong: true}))
                   hitAnimation(i % 2 == 0 ? 'leftTeam' : 'rightTeam')
                 }}
               >

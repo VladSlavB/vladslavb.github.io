@@ -17,14 +17,14 @@ const Teams: React.FC = () => {
 
 export default Teams
 
-function TeamScoreAndHealth(props: {health: number, score: number, team: Team}) {
+function TeamScoreAndHealth(props: {score: number, team: Team}) {
   return (
     <div className={styles.team + ' ' + styles[props.team]} id={props.team}>
       <div className={styles.score}>{props.score}</div>
       <div className={styles.health}>
         {Array.from(Array(3)).map((_, i) => {
           let className = styles.heartholder
-          if (i < props.health) className += ' ' + styles.holds
+          className += ' ' + styles.holds
           return (
             <div className={styles.wrapper} key={i}>
               <div className={className}>
