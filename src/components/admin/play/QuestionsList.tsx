@@ -1,5 +1,5 @@
-import React from 'react'
-import { QuestionName, useGameSelector, useSelector } from '../../../store'
+import React, { useState } from 'react'
+import { QuestionName, setTeamsNames, Team, useDispatch, useGameSelector, useSelector } from '../../../store'
 import styles from './styles.css'
 import Stack from '@mui/joy/Stack'
 import OrdinaryQuestion from './OrdinaryQuestion'
@@ -9,6 +9,9 @@ import Finale from './Finale'
 import FinalePreview from '../preview/FinalePreview'
 import QuestionEdit from '../edit/QuestionEdit'
 import FinaleEdit from '../edit/FinaleEdit'
+import Input from '@mui/joy/Input'
+import Button from '@mui/joy/Button'
+import Textarea from '@mui/joy/Textarea'
 
 
 const QuestionsList: React.FC = () => {
@@ -20,6 +23,7 @@ const QuestionsList: React.FC = () => {
 
   return (
     <Stack spacing={2} className={styles.list}>
+      <TeamsNamesChanger />
       {questions.map((question, index) => {
         const isEdited = editState.mode === 'edit' && editState.index === index
         return (
@@ -59,3 +63,33 @@ const QuestionsList: React.FC = () => {
 }
 
 export default QuestionsList
+
+const TeamsNamesChanger: React.FC = () => {
+  const dispatch = useDispatch()
+  const initialTeamsNames = useGameSelector(game => ({
+    leftTeam: game.leftTeam.name,
+    rightTeam: game.rightTeam.name,
+  }))
+  const [teamsNames, setTeamNames] = useState(initialTeamsNames)
+
+  function teamNameChanger(team: Team) {
+    return (
+      <Textarea
+        sx={{flexGrow: 1}}
+        placeholder={`Название ${team === 'leftTeam' ? 'синих' : 'красных'}`}
+        value={teamsNames[team]}
+        color={team === 'leftTeam' ? 'primary' : 'danger'}
+        onChange={e => setTeamNames({...teamsNames, [team]: e.target.value})}
+      />
+    )
+  }
+  return (
+    <Stack direction='row' spacing={2} alignItems='flex-start'>
+      {teamNameChanger('leftTeam')}
+      {teamNameChanger('rightTeam')}
+      <Button onClick={() => dispatch(setTeamsNames(teamsNames))}>
+        Сохранить
+      </Button>
+    </Stack>
+  )
+}

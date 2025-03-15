@@ -1,8 +1,8 @@
 import styles from './styles.css'
-import heart from '../../../assets/heart.svg'
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Team, useGameSelector } from '../../store'
 import { gameWindow } from '../admin/play/SticklyControls'
+import textFit from 'textfit'
 
 
 const Teams: React.FC = () => {
@@ -10,29 +10,29 @@ const Teams: React.FC = () => {
   const rightTeam = useGameSelector(game => game.rightTeam)
   const display = useGameSelector(game => game.currentQuestion >= 0 && game.q?.type !== 'finale')
   return display ? <>
-    <TeamScoreAndHealth {...leftTeam} team='leftTeam' />
-    <TeamScoreAndHealth {...rightTeam} team='rightTeam' />
+    <TeamScoreAndName {...leftTeam} team='leftTeam' />
+    <TeamScoreAndName {...rightTeam} team='rightTeam' />
   </> : null
 }
 
 export default Teams
 
-function TeamScoreAndHealth(props: {score: number, team: Team}) {
+export function TeamScoreAndName(props: {score: number, team: Team, name: string, className?: string}) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (ref.current != null) {
+      textFit(ref.current, {maxFontSize: 48})
+    }
+  }, [props.name])
+  let className = styles.team + ' ' + styles[props.team]
+  if (props.className != null) {
+    className += ' ' + props.className
+  }
   return (
-    <div className={styles.team + ' ' + styles[props.team]} id={props.team}>
+    <div className={className} id={props.team}>
       <div className={styles.score}>{props.score}</div>
-      <div className={styles.health}>
-        {Array.from(Array(3)).map((_, i) => {
-          let className = styles.heartholder
-          className += ' ' + styles.holds
-          return (
-            <div className={styles.wrapper} key={i}>
-              <div className={className}>
-                <img src={heart} />
-              </div>
-            </div>
-          )
-        })}
+      <div className={styles.teamName} ref={ref}>
+        {props.name}
       </div>
     </div>
   )

@@ -5,6 +5,8 @@ import intro from '../assets/intro.mp3'
 import background1 from '../assets/background1.mp3'
 import background2 from '../assets/background2.mp3'
 import background3 from '../assets/background3.mp3'
+import background4 from '../assets/background4.mp3'
+import background5 from '../assets/background5.mp3'
 
 
 const audioByUrl: Record<string, React.RefObject<HTMLAudioElement>> = {}
@@ -33,7 +35,7 @@ function play(src: string) {
 }
 
 export const allAudioUrls = [correct, wrong, intro]
-export const backgroundMusic = [background1, background2, background3]
+export const backgroundMusic = [background1, background2, background3, background4, background5]
 
 export const playCorrect = () => play(correct)
 export const playWrong = () => play(wrong)

@@ -137,11 +137,13 @@ const GAME_INITIAL_STATE = {
   },
   roundFinished: false,
   leftTeam: {
+    name: '',
     cumulativeScore: 0,
     wins: 0,
     score: 0,
   },
   rightTeam: {
+    name: '',
     cumulativeScore: 0,
     wins: 0,
     score: 0,
@@ -182,7 +184,7 @@ function makeDynamicOptions() {
   return Array(NUM_DYNAMIC_OPTIONS).fill(null).map(_ => ({
     value: '',
     attachments: [] as Attachment[],
-    score: 5,
+    score: 1,
     opened: false,
     wrong: false,
   }))
@@ -218,6 +220,10 @@ const gameSlice = createSlice({
   name: 'game',
   initialState: GAME_INITIAL_STATE,
   reducers: {
+    setTeamsNames(state, action: PayloadAction<{leftTeam: string, rightTeam: string}>) {
+      state.leftTeam.name = action.payload.leftTeam
+      state.rightTeam.name = action.payload.rightTeam
+    },
     startGame(state) {
       state.active = true
     },
@@ -324,7 +330,7 @@ const gameSlice = createSlice({
         playWrong()
       } else {
         playCorrect()
-        state[team].score += 5
+        state[team].score += 1
       }
       decideIfRoundFinished(state)
     },
@@ -429,6 +435,7 @@ function decideIfRoundFinished(state: GameState) {
 }
 
 export const {
+  setTeamsNames,
   startGame, finishGame,
   nextQuestion,
   deltaScore,

@@ -1,24 +1,15 @@
 import React from 'react'
 import { Team, useGameSelector } from '../../store'
 import styles from './styles.css'
-
+import { TeamScoreAndName } from './Teams'
 
 const Subtotal: React.FC = () => {
   const leftTeam = useGameSelector(game => game.leftTeam)
   const rightTeam = useGameSelector(game => game.rightTeam)
   return <>
-    <TeamScore team='leftTeam' wins={leftTeam.wins} cumulativeScore={leftTeam.cumulativeScore} />
-    <TeamScore team='rightTeam' wins={rightTeam.wins} cumulativeScore={rightTeam.cumulativeScore} />
+    <TeamScoreAndName team='leftTeam' className={styles.subtotal} {...leftTeam} score={leftTeam.wins} />
+    <TeamScoreAndName team='rightTeam' className={styles.subtotal} {...rightTeam} score={rightTeam.wins} />
   </>
 }
 
 export default Subtotal
-
-function TeamScore(props: {team: Team, wins: number, cumulativeScore: number}) {
-  return (
-    <div className={styles.team + ' ' + styles.subtotal + ' ' + styles[props.team]}>
-      <div className={styles.score}>{props.wins}</div>
-      <div className={styles.health}>{props.cumulativeScore}</div>
-    </div>
-  )
-}

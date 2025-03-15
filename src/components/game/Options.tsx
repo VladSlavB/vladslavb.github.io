@@ -77,9 +77,10 @@ function Option(props: Option & {label: string, opened: boolean, bonusOpened: bo
   }
   prevBonusOpened.current = props.bonusOpened
 
-  let valueClassName = styles.value
+  let valueClassName = styles.value, scoreClassName = styles.optionScore
   if (props.score === 0) {
     valueClassName += ' ' + styles.wrong
+    scoreClassName += ' ' + styles.wrong
   }
 
   return (
@@ -89,11 +90,11 @@ function Option(props: Option & {label: string, opened: boolean, bonusOpened: bo
       </div>
       <div className={styles.option}>
         {props.opened && <>
-          <span className={valueClassName} ref={ref => ref != null && fitOptionText(ref)}>{props.value}</span>
+          <span className={valueClassName} ref={ref => ref != null && fitOptionText(ref)}><span>{props.value}</span></span>
           {props.bonus != null && (
               <span className={starClassName}><Star className={starClassName} /></span>
             )}
-          <span className={styles.optionScore}>{props.score}</span>
+          <span className={scoreClassName}>{props.score}</span>
         </>}
       </div>
     </div>
