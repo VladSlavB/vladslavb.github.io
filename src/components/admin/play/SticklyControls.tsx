@@ -11,8 +11,7 @@ import { playCorrect, playWrong } from '../../../Audio'
 import MusicControl from './MusicControl'
 import NextQuestionButton from './NextQuestionButton'
 import VisibilityControl from './VisibilityControl'
-
-export let gameWindow: Window | null = null
+import visuals from '../../../visualEvents'
 
 
 const StickyControls: React.FC = () => {
@@ -25,20 +24,20 @@ const StickyControls: React.FC = () => {
   const hasFuture = useSelector(state => state.game.future.length > 0)
 
   function openGameWindow() {
-    gameWindow = open('.', '_blank', 'popup,width=640,height=360')
-    if (gameWindow != null) {
+    visuals.gameWindow = open('.', '_blank', 'popup,width=640,height=360')
+    if (visuals.gameWindow != null) {
       setGameWindowOpen(true)
-      onClose(gameWindow, () => setGameWindowOpen(false))
+      onClose(visuals.gameWindow, () => setGameWindowOpen(false))
     } else {
       alert('Не удалось открыть игровое коно')
     }
   }
   function closeGameWindow() {
-    gameWindow?.close()
+    visuals.gameWindow?.close()
     setGameWindowOpen(false)
   }
   // on unmount
-  useEffect(() => () => gameWindow?.close(), [])
+  useEffect(() => () => visuals.gameWindow?.close(), [])
 
   function addScore(team: Team) {
     dispatch(deltaScore({team, value: 1}))

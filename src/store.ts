@@ -8,6 +8,7 @@ import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import undoable from 'redux-undo'
 import { playCorrect, playWrong } from './Audio'
 import { NUM_DYNAMIC_OPTIONS, NUM_FINALE_OPTIONS } from './defaults'
+import { hitAnimation } from './visualEvents'
 
 
 export type Attachment =
@@ -302,6 +303,8 @@ const gameSlice = createSlice({
         playCorrect()
       } else {
         playWrong()
+        hitAnimation('leftTeam')
+        hitAnimation('rightTeam')
       }
       decideIfRoundFinished(state)
     },
@@ -341,6 +344,7 @@ const gameSlice = createSlice({
       }
       decideIfRoundFinished(state)
       playWrong()
+      hitAnimation(action.payload.team)
     },
     deltaScore(state, action: PayloadAction<{team: Team, value: number}>) {
       state[action.payload.team].score += action.payload.value
@@ -364,6 +368,7 @@ const gameSlice = createSlice({
       if (wrong) {
         options[index].score = 0
         playWrong()
+        hitAnimation(team)
       } else {
         playCorrect()
         state[team].score += 1
@@ -401,14 +406,24 @@ const gameSlice = createSlice({
       const option = state.q.options[action.payload.index]
       option.opened = true
       state.currentAttachments = {optionIndex: action.payload.index}
+      let anyoneEarnedPoints = false
       for (const team of ['leftTeam', 'rightTeam'] as Team[]) {
         const order = state.q[team].order
         const proposedIndex = order.indexOf(action.payload.index)
         if (proposedIndex == action.payload.index) {
           state[team].score += 2
+          anyoneEarnedPoints = true
         } else if (Math.abs(proposedIndex - action.payload.index) == 1) {
           state[team].score += 1
+          anyoneEarnedPoints = true
         }
+      }
+      if (anyoneEarnedPoints) {
+        playCorrect()
+      } else {
+        playWrong()
+        hitAnimation('leftTeam')
+        hitAnimation('rightTeam')
       }
       decideIfRoundFinished(state)
     },

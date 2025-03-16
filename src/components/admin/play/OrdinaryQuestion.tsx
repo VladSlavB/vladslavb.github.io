@@ -8,7 +8,6 @@ import Stack from '@mui/joy/Stack'
 import Close from '@mui/icons-material/Close'
 import IconButton from '@mui/joy/IconButton'
 import Checkbox from '@mui/joy/Checkbox'
-import { hitAnimation } from '../../game/Teams'
 import { useAutoScroll } from '../scroll'
 import Chip from '@mui/joy/Chip'
 import CurrentAttachments from './CurrentAttachments'
@@ -36,10 +35,6 @@ const OrdinaryQuestion: React.FC<Props> = ({question, options: optionsState}) =>
       index: optionIndex,
       score: option.score,
     }))
-    if (!optionsState[optionIndex].guessedBy.leftTeam && !optionsState[optionIndex].guessedBy.rightTeam) {
-      hitAnimation('leftTeam')
-      hitAnimation('rightTeam')
-    }
   }
 
   function checkboxForTeam(team: Team, index: number) {
@@ -132,7 +127,6 @@ const BottomControlsInner: React.FC<OrdinaryState & {question: OrdinaryQuestion}
           </IconButton>
           <IconButton color='danger' onClick={() => {
             dispatch(wrongBonus({team}))
-            hitAnimation(team)
           }}>
             <Close />
           </IconButton>

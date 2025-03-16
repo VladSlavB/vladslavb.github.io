@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ArangeOption, ArangeQuestion, ArangeState, chooseAranger, openArangeOption, openDynamicOption, setOptions, setProposedIndex, showOptions, startEditing, startEditingDynamicOptions, startRound, startTruthReveal, useDispatch, useGameSelector, useSelector } from '../../../store'
+import { ArangeOption, ArangeQuestion, ArangeState, chooseAranger, openArangeOption, setProposedIndex, showOptions, startEditing, startRound, startTruthReveal, useDispatch, useGameSelector, useSelector } from '../../../store'
 import { useAutoScroll } from '../scroll'
 import Card from '@mui/joy/Card'
 import Typography from '@mui/joy/Typography'
@@ -9,14 +9,12 @@ import ButtonGroup from '@mui/joy/ButtonGroup'
 import IconButton from '@mui/joy/IconButton'
 import styles from './styles.css'
 import CurrentAttachments from './CurrentAttachments'
-import { hitAnimation } from '../../game/Teams'
 import NextQuestionButton from './NextQuestionButton'
 import HeaderWithActions from '../preview/HeaderWithActions'
 import Stack from '@mui/joy/Stack'
 import Sheet from '@mui/joy/Sheet'
 import Undo from '@mui/icons-material/Undo'
 import DragIndicator from '@mui/icons-material/DragIndicator'
-import TwoColumns from '../../common/TwoColumns'
 
 
 type WrapperProps = {

@@ -1,7 +1,6 @@
 import styles from './styles.css'
 import React, { useEffect, useRef } from 'react'
 import { Team, useGameSelector } from '../../store'
-import { gameWindow } from '../admin/play/SticklyControls'
 import textFit from 'textfit'
 
 
@@ -36,10 +35,4 @@ export function TeamScoreAndName(props: {score: number, team: Team, name: string
       </div>
     </div>
   )
-}
-
-export function hitAnimation(team: 'leftTeam' | 'rightTeam') {
-  const element = gameWindow?.document.getElementById(team)
-  element?.classList.add(styles.hit)
-  setTimeout(() => element?.classList.remove(styles.hit), 1000)
 }

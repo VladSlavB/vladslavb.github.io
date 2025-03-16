@@ -12,7 +12,6 @@ import Close from '@mui/icons-material/Close'
 import IconButton from '@mui/joy/IconButton'
 import styles from './styles.css'
 import CurrentAttachments from './CurrentAttachments'
-import { hitAnimation } from '../../game/Teams'
 import NextQuestionButton from './NextQuestionButton'
 import HeaderWithActions from '../preview/HeaderWithActions'
 import AttachmentIcon from '@mui/icons-material/Attachment'
@@ -63,7 +62,6 @@ const DynamicQuestion: React.FC<Props> = ({question, options, editing}) => {
                 color='danger'
                 onClick={() => {
                   dispatch(openDynamicOption({index: i, wrong: true}))
-                  hitAnimation(i % 2 == 0 ? 'leftTeam' : 'rightTeam')
                 }}
               >
                 <Close />
