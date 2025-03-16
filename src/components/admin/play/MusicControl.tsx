@@ -9,6 +9,7 @@ import Stack from '@mui/joy/Stack'
 import HeartBroken from '@mui/icons-material/HeartBroken'
 import styles from './styles.css'
 import StopIcon from '@mui/icons-material/Stop'
+import background5 from '../../../../assets/background5.mp3'
 
 const MusicControl: React.FC = () => {
   return (
@@ -22,7 +23,11 @@ const MusicControl: React.FC = () => {
         title={
           <Stack gap={2}>
             {backgroundMusic.map(src => (
-              <Audio src={src} controls key={src} onPause={e => (e.target as HTMLAudioElement).currentTime = 0} />
+              <Audio src={src} controls key={src} onPause={e => {
+                if (src !== background5) {
+                  (e.target as HTMLAudioElement).currentTime = 0
+                }
+              }} />
             ))}
           </Stack>
         }

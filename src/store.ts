@@ -410,6 +410,7 @@ const gameSlice = createSlice({
           state[team].score += 1
         }
       }
+      decideIfRoundFinished(state)
     },
 
     openFinale(state) {
@@ -484,7 +485,7 @@ export function areAllOptionsOpened(state: GameState) {
       return state.q.options.every(option => (
         option.opened && (option.bonus == null || option.bonus.opened)
       ))
-    } else if (state.q?.type === 'dynamic') {
+    } else if (state.q?.type === 'dynamic' || state.q?.type === 'arange') {
       return state.q.options.every(option => option.opened)
     }
   }

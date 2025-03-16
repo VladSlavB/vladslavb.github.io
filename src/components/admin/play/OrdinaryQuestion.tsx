@@ -83,9 +83,9 @@ const OrdinaryQuestion: React.FC<Props> = ({question, options: optionsState}) =>
                   onClick={() => onOptionOpen(i)}
                   size='lg'
                   disabled={!canClick}
-                  endDecorator={<span className={styles.score}>{score}</span>}
+                  // endDecorator={<span className={styles.score}>{score}</span>}
                 >
-                  <span className={className}>{option.value}</span>
+                  <span className={className}>{i + 1}. {option.value}</span>
                 </Button>
                 {canClick && (
                   <>

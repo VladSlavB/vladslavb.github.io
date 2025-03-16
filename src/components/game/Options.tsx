@@ -2,44 +2,78 @@ import styles from './styles.css'
 import React, { useRef } from 'react'
 import { ArangeOption, Option, optionIsOrdinary, QuestionName, useGameSelector, useSelector } from '../../store'
 import Star from '@mui/icons-material/Star'
-import { NUM_DYNAMIC_OPTIONS } from '../../defaults'
+import { NUM_ARANGE_OPTIONS } from '../../defaults'
 
 
 function transposeIndex(index: number, rows = 5) {
   return Math.floor(index / 2) + (index % 2) * rows
 }
 
+const shuffledIndices = Array.from({length: NUM_ARANGE_OPTIONS}, (_, i) => i + NUM_ARANGE_OPTIONS).map(i => ({i, value: Math.random()})).sort((a, b) => a.value - b.value).map(a => a.i)
+
 const Options: React.FC = () => {
   const options = useSelector(state => {
-    const index = state.game.present.currentQuestion
+    const game = state.game.present
+    const index = game.currentQuestion
     if (index >= state.questions.length || index < 0) return null
     const question = state.questions[index]
     if (question.name !== QuestionName.dynamic) {
-      return question.options.map(scoredOption)
+      if (question.name === QuestionName.arange) {
+        if (game.q?.type === 'arange' && game.q.currentTeam != null) {
+          if (game.q.revealTruth) {
+            return question.options.map(scoredOption)
+          }
+          return [
+            ...game.q[game.q.currentTeam].order.map(i => (
+              i != null ? scoredOption(question.options[i]) : {value: '', score: -1, attachments: []}
+            )),
+            ...question.options.map(scoredOption)
+          ]
+        }
+      } else {
+        return question.options
+      }
     } else {
-      const game = state.game.present
       if (game.q?.type === 'dynamic') { // always true
         return game.q.options
       }
     }
   })
   const dynamic = useGameSelector(game => game.q?.type === 'dynamic')
+  const arange = useGameSelector(game => game.q?.type === 'arange')
   let className = styles.options
-  if (dynamic) {
+  if (dynamic || arange) {
     className += ' ' + styles.dynamic
   }
-  const optionsState = useGameSelector(game => (
-    game.q?.type === 'ordinary' ? game.q.options : (
-      game.q?.type === 'dynamic' ? options : null
-    )
-  ))
+  const optionsState = useGameSelector(game => {
+    if (game.q?.type === 'ordinary') {
+      return game.q.options
+    } else if (game.q?.type === 'dynamic') {
+      return options
+    } else if (game.q?.type === 'arange' && game.q.currentTeam != null) {
+      if (game.q.revealTruth) {
+        return game.q.options
+      }
+      const order = game.q[game.q.currentTeam].order
+      if (!game.q.optionsShown) return Array.from({length: NUM_ARANGE_OPTIONS * 2}, _ => ({opened: false}))
+      return [
+        ...order.map(i => (
+          {opened: i != null}
+        )),
+        ...options?.map((_, i) => ({opened: !order.includes(i) })) || []
+      ]
+    }
+  })
   if (options != null && optionsState != null) {
     const rows = Math.ceil(options.length / 2)
-    const optionNodes = options.map((option, i) => {
-      let index = dynamic ? i : transposeIndex(i, rows)
-      const numberLabel = dynamic ? '?' : `${index + 1}`
+    const optionNodes = options.map((_, i) => {
+      let index = dynamic ? i : arange ? (
+        i < NUM_ARANGE_OPTIONS ? transposeIndex(i, NUM_ARANGE_OPTIONS / 2) : shuffledIndices[i - NUM_ARANGE_OPTIONS]
+      ) : transposeIndex(i, rows)
+      const option = options[index]
+      const numberLabel = dynamic || arange ? '?' : `${index + 1}`
 
-      const isMax = !dynamic && option.score == Math.max(...options.map(o => o.score))
+      const isMax = !dynamic && !arange && option.score == Math.max(...options.map(o => o.score))
       const optionState = optionsState[index] as {opened: boolean, bonus?: {opened: boolean}}
       return (
         <Option
@@ -52,8 +86,8 @@ const Options: React.FC = () => {
         />
       )
     })
-    if (dynamic) {
-      optionNodes.splice(NUM_DYNAMIC_OPTIONS, 0, <div className={styles.sep} />)
+    if (arange && optionNodes.length > NUM_ARANGE_OPTIONS) {
+      optionNodes.splice(NUM_ARANGE_OPTIONS, 0, <div className={styles.sep} />)
     }
     return (
       <div className={className}>
@@ -70,7 +104,7 @@ function scoredOption(option: Option | ArangeOption) {
   } else {
     return {
       ...option,
-      score: 0,
+      score: -1,
     }
   }
 }
@@ -105,7 +139,7 @@ function Option(props: Option & {label: string, opened: boolean, bonusOpened: bo
           {props.bonus != null && (
               <span className={starClassName}><Star className={starClassName} /></span>
             )}
-          <span className={scoreClassName}>{props.score}</span>
+          <span className={scoreClassName}>{props.score === -1 ? '' : props.score}</span>
         </>}
       </div>
     </div>

@@ -75,7 +75,7 @@
   perspective: 1000px;
 }
 .sep {
-  visibility: hidden;
+  /* visibility: hidden; */
   border-top: 2px solid black;
   margin-top: 20px; 
   width: 100%;
