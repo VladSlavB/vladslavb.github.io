@@ -83,3 +83,24 @@
 .score {
     white-space: nowrap;
 }
+.arangeOption {
+    padding: 8px 16px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    font-weight: bold;
+    &.empty {
+        border-color: transparent;
+    }
+}
+.draggable {
+    cursor: move;
+}
+.dropArea {
+    border: 1px dashed rgba(0, 0, 0, 0.25);
+    color: rgba(0, 0, 0, 0.25);
+    padding: 8px 16px;
+    border-radius: 4px;
+    &.hovered {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+}

@@ -10,12 +10,11 @@ import { InputOption, InputQuestion } from './types'
 import OptionEdit from './OptionEdit'
 import Select from '@mui/joy/Select'
 import Option from '@mui/joy/Option'
-import { NUM_ORDINARY_MIN_OPTIONS, NUM_ORDINARY_MAX_OPTIONS } from '../../../defaults'
-import Typography from '@mui/joy/Typography'
+import { NUM_ORDINARY_MIN_OPTIONS, NUM_ORDINARY_MAX_OPTIONS, NUM_ARANGE_OPTIONS } from '../../../defaults'
 import TwoColumns from '../../common/TwoColumns'
 
 
-const DEFAULT_OPTIONS = Array<InputOption>(NUM_ORDINARY_MAX_OPTIONS).fill({
+const DEFAULT_OPTIONS = Array<InputOption>(Math.max(NUM_ORDINARY_MAX_OPTIONS, NUM_ARANGE_OPTIONS)).fill({
   value: '',
   score: '',
   attachments: [],
@@ -24,18 +23,25 @@ const DEFAULT_OPTIONS = Array<InputOption>(NUM_ORDINARY_MAX_OPTIONS).fill({
 function makeInputQuestion(question: Question, keepNumOptions: boolean): InputQuestion {
   let options = [...DEFAULT_OPTIONS]
   if (question.name !== QuestionName.dynamic) {
-    if (keepNumOptions) {
-      options = DEFAULT_OPTIONS.slice(0, question.options.length)
-    }
-    for (let i = 0; i < question.options.length; i++) {
-      const option = question.options[i]
-      options[i] = {
+    if (question.name === QuestionName.arange) {
+      options = question.options.map(option => ({
         ...option,
-        score: `${option.score}`,
-        bonus: option.bonus != null ? {
-          ...option.bonus,
-          score: `${option.bonus.score}`,
-        } : undefined,
+        score: '',
+      }))
+    } else {
+      if (keepNumOptions) {
+        options = DEFAULT_OPTIONS.slice(0, question.options.length)
+      }
+      for (let i = 0; i < question.options.length; i++) {
+        const option = question.options[i]
+        options[i] = {
+          ...option,
+          score: `${option.score}`,
+          bonus: option.bonus != null ? {
+            ...option.bonus,
+            score: `${option.bonus.score}`,
+          } : undefined,
+        }
       }
     }
   }
@@ -61,6 +67,7 @@ type Props = {
 
 const QuestionEdit: React.FC<Props> = ({editIndex}) => {
   const dispatch = useDispatch()
+
   // Инфа для редактирования вопроса прямо во время игры
   const partiallyEditable = useGameSelector(game => game.currentQuestion === editIndex)
   const options = useGameSelector(game => (
@@ -68,11 +75,16 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
       game.q.options
     ) : undefined
   ))
-  const numMinOptions = partiallyEditable ? (options?.length ?? 0) : NUM_ORDINARY_MIN_OPTIONS
+
   const initialState = useSelector<InputQuestion>(state => (
     editIndex != null ? makeInputQuestion(state.questions[editIndex], partiallyEditable) : DEFAULT_QUESTION
   ))
   const [ question, setQuestion ] = useImmer(initialState)
+  const numMinOptions = partiallyEditable ? (
+    options?.length ?? 0
+  ) : (
+    question.name === QuestionName.arange ? NUM_ARANGE_OPTIONS : NUM_ORDINARY_MIN_OPTIONS
+  )
   const noOptions = question.name === QuestionName.dynamic
   const validOptions = question.options.filter(option => validateQuestionValue(option.value))
   const everythingValid = (
@@ -80,10 +92,10 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
       noOptions ? (
         true
       ) : (
-        validOptions.length >= numMinOptions &&
-        validOptions.every(option => (
+        validOptions.length >= numMinOptions && (
+        question.name === QuestionName.arange || validOptions.every(option => (
           validateScore(option.score) && (option.bonus == null || validateScore(option.bonus.score))
-        ))
+        )))
       )
     )
   )
@@ -111,6 +123,12 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
     const { name, value } = question
     const newQuestion: Question = name === QuestionName.dynamic ? {
       name, value,
+    } : name === QuestionName.arange ? {
+      name, value,
+      options: validOptions.slice(0, NUM_ARANGE_OPTIONS).map(option => ({
+        value: option.value,
+        attachments: option.attachments,
+      }))
     } : {
       name, value,
       options: validOptions.map(option => ({
@@ -162,19 +180,33 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
           </Grid>
           {!noOptions && <>
             <TwoColumns>
-              {question.options.map((option, i) => (
-                <OptionEdit
-                  option={option}
-                  onEdit={optionEditFunc => setQuestion(draft => optionEditFunc(draft.options[i]))}
-                  placeholder={`Вариант..`}
-                  key={i}
-                  disabled={options?.[i].opened}
-                  disabledBonus={options?.[i].bonus?.opened}
-                  disableScores={partiallyEditable}
-                />
-              ))}
+              {question.name !== QuestionName.arange ? (
+                question.options.map((option, i) => (
+                  <OptionEdit
+                    option={option}
+                    onEdit={optionEditFunc => setQuestion(draft => optionEditFunc(draft.options[i]))}
+                    placeholder={`Вариант..`}
+                    key={i}
+                    disabled={options?.[i].opened}
+                    disabledBonus={options?.[i].bonus?.opened}
+                    disableScores={partiallyEditable}
+                  />
+                ))
+               ) : (
+                question.options.slice(0, NUM_ARANGE_OPTIONS).map((option, i) => (
+                  <OptionEdit
+                    option={option}
+                    onEdit={optionEditFunc => setQuestion(draft => optionEditFunc(draft.options[i]))}
+                    placeholder={`Вариант..`}
+                    key={i}
+                    disabled={options?.[i].opened}
+                    noBonus
+                    noScore
+                  />
+                ))
+              )}
             </TwoColumns>
-            {!partiallyEditable && (
+            {!partiallyEditable && question.name !== QuestionName.arange && (
               <Grid xs={12}>
                 <Stack direction='row' spacing={1}>
                   <Button variant='outlined' color='neutral' onClick={setAscendingScores} size='sm' disabled={disableScoreButtons}>
@@ -189,7 +221,6 @@ const QuestionEdit: React.FC<Props> = ({editIndex}) => {
           </>}
           <Grid xs={12} display='flex' justifyContent='space-between' alignItems='baseline'>
             <Button type='submit' disabled={!everythingValid}>Сохранить</Button>
-            {!everythingValid && <Typography color='neutral' fontSize='sm'>Все поля обязательны{!partiallyEditable && ' (кроме 4 вариантов)'}</Typography>}
             <Button type='reset' variant='outlined' color='danger'>Отмена</Button>
           </Grid>
         </Grid>

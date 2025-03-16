@@ -1,6 +1,6 @@
 import styles from './styles.css'
 import React, { useRef } from 'react'
-import { Option, QuestionName, useGameSelector, useSelector } from '../../store'
+import { ArangeOption, Option, optionIsOrdinary, QuestionName, useGameSelector, useSelector } from '../../store'
 import Star from '@mui/icons-material/Star'
 import { NUM_DYNAMIC_OPTIONS } from '../../defaults'
 
@@ -15,7 +15,7 @@ const Options: React.FC = () => {
     if (index >= state.questions.length || index < 0) return null
     const question = state.questions[index]
     if (question.name !== QuestionName.dynamic) {
-      return question.options
+      return question.options.map(scoredOption)
     } else {
       const game = state.game.present
       if (game.q?.type === 'dynamic') { // always true
@@ -35,14 +35,15 @@ const Options: React.FC = () => {
   ))
   if (options != null && optionsState != null) {
     const rows = Math.ceil(options.length / 2)
-    const optionNodes = options.map((_, i) => {
+    const optionNodes = options.map((option, i) => {
       let index = dynamic ? i : transposeIndex(i, rows)
       const numberLabel = dynamic ? '?' : `${index + 1}`
-      const isMax = !dynamic && options[index]?.score == Math.max(...options.map(o => o?.score ?? 0))
+
+      const isMax = !dynamic && option.score == Math.max(...options.map(o => o.score))
       const optionState = optionsState[index] as {opened: boolean, bonus?: {opened: boolean}}
       return (
         <Option
-          {...(options[index] ?? {score: 0, value: ''})}
+          {...option}
           opened={optionState.opened}
           key={i}
           bonusOpened={optionState.bonus?.opened ?? false}
@@ -63,6 +64,16 @@ const Options: React.FC = () => {
   return null
 }
 
+function scoredOption(option: Option | ArangeOption) {
+  if (optionIsOrdinary(option)) {
+    return option
+  } else {
+    return {
+      ...option,
+      score: 0,
+    }
+  }
+}
 export default Options
 
 function Option(props: Option & {label: string, opened: boolean, bonusOpened: boolean, highlight: boolean}) {

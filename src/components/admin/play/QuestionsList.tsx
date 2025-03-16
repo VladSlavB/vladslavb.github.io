@@ -12,6 +12,7 @@ import FinaleEdit from '../edit/FinaleEdit'
 import Input from '@mui/joy/Input'
 import Button from '@mui/joy/Button'
 import Textarea from '@mui/joy/Textarea'
+import ArangeQuestion from './ArangeQuestion'
 
 
 const QuestionsList: React.FC = () => {
@@ -31,10 +32,12 @@ const QuestionsList: React.FC = () => {
             <QuestionEdit editIndex={index} key={index} />
           ) : (
             index === currentQuestionIndex ? (
-              question.name !== QuestionName.dynamic ? (
-                <OrdinaryQuestion question={question} key={index} />
-              ) : (
+              question.name === QuestionName.dynamic ? (
                 <DynamicQuestion question={question} key={index} />
+              ) : question.name === QuestionName.arange ? (
+                <ArangeQuestion question={question} key={index} />
+              ) : (
+                <OrdinaryQuestion question={question} key={index} />
               )
             ) : (
               <QuestionPreview

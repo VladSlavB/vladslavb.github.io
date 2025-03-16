@@ -1,5 +1,5 @@
 import React from 'react'
-import { QuestionName, toggleAttachment, useDispatch, useSelector } from '../../../store'
+import { optionIsOrdinary, QuestionName, toggleAttachment, useDispatch, useSelector } from '../../../store'
 import AttachmentsList from '../../common/AttachmentsList'
 import styles from './styles.css'
 
@@ -16,7 +16,7 @@ const CurrentAttachments: React.FC = () => {
         if (question.name !== QuestionName.dynamic) {
           const option = question.options[coordinates.optionIndex]
           if (coordinates.bonus) {
-            return option.bonus?.attachments
+            return optionIsOrdinary(option) ? option.bonus?.attachments : null
           } else {
             return option.attachments
           }

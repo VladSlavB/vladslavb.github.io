@@ -37,14 +37,29 @@ export type DynamicQuestion = {
   value: string
 }
 
-export type Question = OrdinaryQuestion | DynamicQuestion
+export type ArangeOption = {
+  value: string
+  attachments: Attachment[]
+}
+
+export type ArangeQuestion = {
+  name: QuestionName.arange
+  value: string
+  options: ArangeOption[]
+}
+
+export type Question = OrdinaryQuestion | DynamicQuestion | ArangeQuestion
 
 export enum QuestionName {
   social = 'Народный раунд',
   objective = 'Раунд по фактам',
   dynamic = 'Вспомни всё',
+  arange = 'Расставь топ'
 }
 
+export function optionIsOrdinary(option: Option | ArangeOption): option is Option {
+  return 'score' in option
+}
 
 const questionsSlice = createSlice({
   name: 'questions',
@@ -148,7 +163,7 @@ const GAME_INITIAL_STATE = {
     wins: 0,
     score: 0,
   },
-  q: null as null | OrdinaryState | DynamicState | FinaleState,
+  q: null as null | OrdinaryState | DynamicState | ArangeState | FinaleState,
 }
 type GameState = typeof GAME_INITIAL_STATE
 
@@ -179,6 +194,25 @@ function makeDynamicState() {
   }
 }
 export type DynamicState = ReturnType<typeof makeDynamicState>
+
+function makeArangeState(question: ArangeQuestion) {
+  return {
+    type: 'arange' as 'arange',
+    currentTeam: null as null | Team,
+    optionsShown: false,
+    leftTeam: {
+      order: Array(question.options.length).fill(null).map(_ => null as null | number),
+    },
+    rightTeam: {
+      order: Array(question.options.length).fill(null).map(_ => null as null | number),
+    },
+    revealTruth: false,
+    options: question.options.map(_ => ({
+      opened: false,
+    })),
+  }
+}
+export type ArangeState = ReturnType<typeof makeArangeState>
 
 function makeDynamicOptions() {
   return Array(NUM_DYNAMIC_OPTIONS).fill(null).map(_ => ({
@@ -237,10 +271,12 @@ const gameSlice = createSlice({
       state.leftTeam.score = state.rightTeam.score = 0
       state.currentAttachments = null
       state.q = action.payload != null ? (
-        action.payload.name !== QuestionName.dynamic ? (
-          makeOrdinaryState(action.payload)
-        ) : (
+        action.payload.name === QuestionName.dynamic ? (
           makeDynamicState()
+        ) : action.payload.name === QuestionName.arange ? (
+          makeArangeState(action.payload)
+        ) : (
+          makeOrdinaryState(action.payload)
         )
       ) : makeFinaleState()
     },
@@ -337,6 +373,43 @@ const gameSlice = createSlice({
     startEditingDynamicOptions(state) {
       if (state.q?.type !== 'dynamic') return
       state.q.editing = true
+    },
+
+    chooseAranger(state, action: PayloadAction<{team: Team}>) {
+      if (state.q?.type !== 'arange') return
+      state.q.currentTeam = action.payload.team
+      state.q.optionsShown = false
+      state.roundStarted = false
+    },
+    showOptions(state) {
+      if (state.q?.type !== 'arange') return
+      state.q.optionsShown = true
+    },
+    setProposedIndex(state, action: PayloadAction<{indexKey: number, indexValue: number | null}>) {
+      if (state.q?.type !== 'arange') return
+      if (state.q.currentTeam == null) return
+      const team = state.q.currentTeam
+      const order = state.q[team].order
+      order[action.payload.indexKey] = action.payload.indexValue
+    },
+    startTruthReveal(state) {
+      if (state.q?.type !== 'arange') return
+      state.q.revealTruth = true
+    },
+    openArangeOption(state, action: PayloadAction<{index: number}>) {
+      if (state.q?.type !== 'arange') return
+      const option = state.q.options[action.payload.index]
+      option.opened = true
+      state.currentAttachments = {optionIndex: action.payload.index}
+      for (const team of ['leftTeam', 'rightTeam'] as Team[]) {
+        const order = state.q[team].order
+        const proposedIndex = order.indexOf(action.payload.index)
+        if (proposedIndex == action.payload.index) {
+          state[team].score += 2
+        } else if (Math.abs(proposedIndex - action.payload.index) == 1) {
+          state[team].score += 1
+        }
+      }
     },
 
     openFinale(state) {
@@ -446,6 +519,9 @@ export const {
 
   setOptions, openDynamicOption,
   startEditingDynamicOptions,
+
+  chooseAranger, showOptions,
+  setProposedIndex, startTruthReveal, openArangeOption,
 
   openFinale, openFinaleQuestion,
   setFinaleOptions, openFinaleOption, openFinaleScore,

@@ -30,18 +30,29 @@ const QuestionPreview: React.FC<Props> = ({index, canEdit, disableDelete}) => {
         />
         <Chip variant='outlined' color='primary' className={styles.chip}>{question.name}</Chip>
         {question.name !== QuestionName.dynamic ? (
-          <ul className={styles.previewOptions}>
-            {question.options.map((option, i) => (
-              <li key={i}>
-                <Stack direction='row'>
+          question.name === QuestionName.arange ? (
+            <ol>
+              {question.options.map((option, i) => (
+                <li key={i}>
                   {option.value}
-                  <div className={styles.dots} />
-                  <b>{option.score}{option.bonus && `+${option.bonus.score}`}</b>
-                </Stack>
-                <OptionAttachments option={option} />
-              </li>
-            ))}
-          </ul>
+                  <OptionAttachments option={option} />
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <ul className={styles.previewOptions}>
+              {question.options.map((option, i) => (
+                <li key={i}>
+                  <Stack direction='row'>
+                    {option.value}
+                    <div className={styles.dots} />
+                    <b>{option.score}{option.bonus && `+${option.bonus.score}`}</b>
+                  </Stack>
+                  <OptionAttachments option={option} />
+                </li>
+              ))}
+            </ul>
+          )
         ) : (
           null
         )}

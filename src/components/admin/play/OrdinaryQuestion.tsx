@@ -152,7 +152,7 @@ const BottomControlsInner: React.FC<OrdinaryState & {question: OrdinaryQuestion}
           {optionWithVacantBonus != null && (
             <>
               {!optionWithVacantBonus.guessedBy.leftTeam && !optionWithVacantBonus.guessedBy.rightTeam ? (
-                <Button color='primary' variant='outlined' onClick={() => dispatch(correctBonus({
+                <Button color='primary' onClick={() => dispatch(correctBonus({
                   score: optionWithVacantBonus.bonus.score,
                 }))}>Открыть звёздочку</Button>
               ) : (
